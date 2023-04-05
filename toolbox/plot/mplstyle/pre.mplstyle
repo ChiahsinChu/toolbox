@@ -1,0 +1,15 @@
+lines.linewidth: 1.5  
+lines.color: black
+font.family: sans-serif
+font.sans-serif: DejaVu Sans
+font.weight: normal
+font.size : 15.
+axes.labelsize: xx-large
+axes.formatter.limits: -1, 2
+xtick.labelsize: xx-large
+ytick.labelsize: xx-large
+legend.fontsize: large
+figure.figsize: 6, 4
+figure.dpi: 150
+savefig.dpi: 200
+savefig.bbox: tight
