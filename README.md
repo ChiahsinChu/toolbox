@@ -4,6 +4,14 @@
 
 Some python codes used for my project. Please feel free to reach me via email: **jiaxinzhu@stu.xmu.edu.cn** .
 
+## Installation
+
+```bash
+git clone https://github.com/ChiahsinChu/toolbox.git
+cd toolbox
+pip install .
+```
+
 ## CP2K
 
 Create cp2k input files:
