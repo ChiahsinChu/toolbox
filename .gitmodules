@@ -1,0 +1,3 @@
+[submodule "toolbox/exts/cp2kdata"]
+	path = toolbox/exts/cp2kdata
+	url = https://github.com/robinzyb/cp2kdata.git

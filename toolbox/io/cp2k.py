@@ -10,6 +10,8 @@ from .. import CONFIGS
 from ..utils.unit import *
 from ..utils.utils import iterdict, update_dict, save_dict_json
 from .template import cp2k_default_input
+from ..exts.cp2kdata.cp2kdata.pdos import Cp2kPdos as _Cp2kPdos
+from ..exts.cp2kdata.cp2kdata.pdos import gaussian_filter1d
 
 
 class Cp2kInput():
@@ -913,3 +915,85 @@ class Cp2kHartreeCube(Cp2kCube):
 
     def set_cross_area(self, cross_area):
         self.cross_area = cross_area
+
+
+class Cp2kPdos(_Cp2kPdos):
+    def __init__(self, file_name, parse_file_name=True) -> None:
+        super().__init__(file_name, parse_file_name)
+
+    def get_raw_dos(self, dos_type="total", steplen=0.01):
+        energies = self.energies
+        fermi = self.fermi
+
+        weights = self._get_raw_dos(dos_type)
+        bins = int((energies[-1] - energies[0]) / steplen)
+        dos, ener = np.histogram(energies,
+                                 bins,
+                                 weights=weights,
+                                 range=(energies[0], energies[-1]))
+        dos = dos / steplen
+        ener = ener[:-1] - fermi + 0.5 * steplen
+        self.dos = dos
+        self.ener = ener
+        return dos, ener
+
+    def _get_raw_dos(self, dos_type):
+        try:
+            return getattr(self, "_get_raw_dos_%s" % dos_type)()
+        except:
+            raise NameError("dos type does not exist!")
+
+    def _get_raw_dos_total(self):
+        return np.loadtxt(self.file)[:, 3:].sum(axis=1)
+
+    def _get_raw_dos_system(self):
+        tmp_len = len(np.loadtxt(self.file, usecols=2))
+        return np.ones(tmp_len)
+
+    def _get_raw_dos_s(self):
+        return np.loadtxt(self.file, usecols=3)
+
+    def _get_raw_dos_p(self):
+        return np.loadtxt(self.file, usecols=np.arange(4, 7)).sum(axis=1)
+
+    def _get_raw_dos_d(self):
+        return np.loadtxt(self.file, usecols=np.arange(7, 12)).sum(axis=1)
+
+    def _get_raw_dos_f(self):
+        return np.loadtxt(self.file, usecols=np.arange(12, 19)).sum(axis=1)
+
+    def get_dos(self, sigma=0.2, dos_type="total", steplen=0.01):
+        # smooth the dos data
+        dos, ener = self.get_raw_dos(dos_type=dos_type, steplen=steplen)
+        smth_dos = gaussian_filter1d(dos, sigma)
+        self.smth_dos = smth_dos
+        return smth_dos, ener
+
+    @property
+    def homo(self):
+        homo_idx = np.where(self.occupation == 0)[0][0] - 1
+        return self.energies[homo_idx] - self.fermi
+
+    @property
+    def lumo(self):
+        return self.energies[self.occupation == 0][0] - self.fermi
+
+    @property
+    def vbm(self):
+        raw_dos = self._get_raw_dos_total()
+        mask = (self.occupation > 1e-5) & (raw_dos > 1e-3)
+        try:
+            return self.energies[mask].max() - self.fermi
+        except:
+            print("Warning: No VBM is found!")
+            return self.energies.min() - self.fermi
+
+    @property
+    def cbm(self):
+        raw_dos = self._get_raw_dos_total()
+        mask = (self.occupation < 1e-5) & (raw_dos > 1e-3)
+        try:
+            return self.energies[mask].min() - self.fermi
+        except:
+            print("Warning: No CBM is found!")
+            return self.energies.max() - self.fermi
