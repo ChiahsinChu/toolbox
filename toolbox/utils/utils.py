@@ -5,6 +5,8 @@ import pickle
 import h5py
 import numpy as np
 
+from .unit import *
+
 
 def iterdict(input_dict, out_list, loop_idx):
     """ 
@@ -155,3 +157,24 @@ def get_efields(DeltaV, l: list, eps: list):
 def safe_makedirs(dname):
     if not os.path.exists(dname):
         os.makedirs(dname)
+
+
+def calc_density(n: int, v: float, mol_mass: float):
+    """
+    calculate density (g/cm^3) from the number of particles
+    
+    Parameters
+    ----------
+    n: int
+        number of particles
+    v: float
+        volume
+    mol_mass: float
+        mole mass in g/mol
+    """
+    rho = (n / NA * mol_mass) / (v * ANG_TO_CM**3)
+    return rho
+
+
+def calc_water_density(n: int, v: float):
+    return calc_density(n, v, 18.015)
