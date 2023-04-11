@@ -159,15 +159,15 @@ def safe_makedirs(dname):
         os.makedirs(dname)
 
 
-def calc_density(n: int, v: float, mol_mass: float):
+def calc_density(n, v, mol_mass: float):
     """
     calculate density (g/cm^3) from the number of particles
     
     Parameters
     ----------
-    n: int
+    n: int or array
         number of particles
-    v: float
+    v: float or array
         volume
     mol_mass: float
         mole mass in g/mol
@@ -176,5 +176,5 @@ def calc_density(n: int, v: float, mol_mass: float):
     return rho
 
 
-def calc_water_density(n: int, v: float):
+def calc_water_density(n, v):
     return calc_density(n, v, 18.015)
