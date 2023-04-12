@@ -4,6 +4,11 @@
 
 Some python codes used for my project. Please feel free to reach me via email: **jiaxinzhu@stu.xmu.edu.cn** .
 
+## To-do list
+
+- [ ] exception capture class for all calculators
+- [ ] write class for workflow plotting
+
 ## Installation
 
 ```bash
@@ -13,6 +18,8 @@ pip install .
 ```
 
 ## CP2K
+
+> For pre-/post-processing of CP2K, you might also be interested in [pycp2k](https://github.com/SINGROUP/pycp2k) and [cp2kdata](https://github.com/robinzyb/cp2kdata).
 
 Create cp2k input files:
 
