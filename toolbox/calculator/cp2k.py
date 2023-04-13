@@ -22,7 +22,7 @@ class Cp2kCalculator:
         os.chdir(root_dir)
 
     def run_bash(self,
-                 command,
+                 command="mpiexec.hydra cp2k.popt",
                  stdin="input.inp",
                  stdout="output.out",
                  stderr="cp2k.stderr"):
