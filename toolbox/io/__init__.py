@@ -1,1 +1,1 @@
-from . import cp2k
+from . import *
