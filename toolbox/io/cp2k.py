@@ -1,17 +1,16 @@
 import copy
-import os
 import re
 
-import numpy as np
-from ase import Atoms, io
+from ase import Atoms
 from ase.io.cube import read_cube_data
 
 from .. import CONFIGS
-from ..utils.unit import *
-from ..utils.utils import iterdict, update_dict, save_dict_json
-from .template import cp2k_default_input
 from ..exts.cp2kdata.cp2kdata.pdos import Cp2kPdos as _Cp2kPdos
 from ..exts.cp2kdata.cp2kdata.pdos import gaussian_filter1d
+from ..utils import *
+from ..utils.unit import *
+from ..utils.utils import iterdict, save_dict_json, update_dict
+from .template import cp2k_default_input
 
 
 class Cp2kInput():
@@ -997,3 +996,36 @@ class Cp2kPdos(_Cp2kPdos):
         except:
             print("Warning: No CBM is found!")
             return self.energies.max() - self.fermi
+
+
+"""
+smoothing func: Gaussian kernel
+"""
+
+
+def gaussian_kernel(bins, sigma):
+    if sigma == 0:
+        output = np.zeros_like(bins)
+        one_id = np.where(a == 0.)[0][0]
+        output[one_id] = 1
+        return output
+    elif sigma > 0:
+        A = 1 / (sigma * np.sqrt(2 * np.pi))
+        output = np.exp(-bins * bins / (2 * sigma**2))
+        output *= A
+        return output
+    else:
+        raise AttributeError("Sigma should be non-negative value.")
+
+
+def gaussian_convolve(xs, ys, sigma):
+    nbins = len(xs) - 1
+
+    output = []
+    for x in xs:
+        bins = xs - x
+        tmp_out = gaussian_kernel(bins, sigma)
+        bin_width = bins[1:] - bins[:-1]
+        output.append(
+            np.sum(bin_width * ((tmp_out * ys)[1:] + (tmp_out * ys)[:-1]) / 2))
+    return np.array(output)
