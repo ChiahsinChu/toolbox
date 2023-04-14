@@ -36,7 +36,7 @@ def get_int_array(x, ys):
     return x, np.cumsum(ave_y * delta_x.reshape(1, -1), axis=-1)
 
 
-def get_cum_ave(data):
+def cumave(data):
     cum_sum = data.cumsum()
     cum_ave = cum_sum / (np.arange(len(data)) + 1)
     return cum_ave
@@ -45,3 +45,17 @@ def get_cum_ave(data):
 def interp(x, dataset):
     y = np.interp(x, xp=dataset[0], fp=dataset[1])
     return y
+
+
+def handle_zero_division(x, y, threshold=None):
+    """
+    define a function to handle the runtime warning
+    """
+    if threshold is not None:
+        mask = (np.abs(y) <= threshold)
+        y[np.nonzero(mask)] = 0.
+    with np.errstate(divide='ignore', invalid='ignore'):
+        result = np.true_divide(x, y)
+        # replace NaN and Inf values with 0
+        result[~np.isfinite(result)] = 0
+    return result
