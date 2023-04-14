@@ -8,7 +8,7 @@ axes.labelsize: large
 axes.formatter.limits: -1, 2
 xtick.labelsize: large
 ytick.labelsize: large
-legend.fontsize: large
+legend.fontsize: medium
 figure.figsize: 6, 4
 figure.dpi: 150
 savefig.dpi: 200
