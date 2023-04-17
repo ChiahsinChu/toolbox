@@ -77,6 +77,7 @@ def ax_bin_stats(ax, x, y, bins):
     bin_means[np.isnan(bin_means)] = 0.0
     bin_centers = bin_edges[1:] - (bin_edges[1] - bin_edges[0]) / 2
     ax.plot(bin_centers, bin_means, color='black', lw=1.5, label='mean')
+
     # max/min
     bin_maxs, bin_edges, binnumber = stats.binned_statistic(x,
                                                             y,
@@ -104,6 +105,14 @@ def ax_bin_stats(ax, x, y, bins):
                     bin_means + bin_stds,
                     color='gray',
                     label='[mean-std, mean+std]')
+    data = {
+        "grid": bin_centers,
+        "mean": bin_means,
+        "max": bin_maxs,
+        "min": bin_mins,
+        "std": bin_stds
+    }
+    return data
 
 
 def plot_colormap_lines(xs, ys, legends, xlabel, ylabel, colormap='GnBu'):
