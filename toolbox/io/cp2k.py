@@ -376,6 +376,47 @@ class Cp2kInput():
         else:
             return {}
 
+    def set_smear(self, flag):
+        if flag == False:
+            update_d = {
+                "FORCE_EVAL": {
+                    "DFT": {
+                        "SCF": {
+                            "ADDED_MOS": 0,
+                            "CHOLESKY": "RESTORE",
+                            "SMEAR": {
+                                "_": ".FALSE."
+                            },
+                            "DIAGONALIZATION": {
+                                "_": ".FALSE."
+                            }
+                        }
+                    }
+                }
+            }
+            return update_d
+
+    def set_mlwf(self, flag):
+        if flag:
+            update_d = {
+                "FORCE_EVAL": {
+                    "DFT": {
+                        "LOCALIZE": {
+                            "METHOD": "CRAZY",
+                            "EPS_LOCALIZATION": 1e-08,
+                            "PRINT": {
+                                "WANNIER_CENTERS": {
+                                    "IONS+CENTERS": ".TRUE."
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return update_d
+        else:
+            return {}
+
     def set_kind(self, kind_dict: dict):
         """
         Parameter
