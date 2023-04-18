@@ -1,8 +1,9 @@
+from scipy import constants
+
 # physical quantities
 UNIT_CHARGE = 1.60217648700000E-19  # [C]
 VAC_PERMITTIVITY = 8.85418781762039E-12  # [F/m]
-# Boltzmann constant [J/K]
-B_CONST = 1.38065040000000E-23
+
 # Atomic mass unit [kg]
 AMU = 1.66053878200000E-27
 # Avogadro const
@@ -19,6 +20,6 @@ ANG_TO_M = 1E-10
 ANG_TO_CM = 1E-08
 PS_2_S = 1E-12
 # epsilon [e/(V Angstrom)]
-#_EPSILON = VAC_PERMITTIVITY / UNIT_CHARGE * ANG_TO_M
+EPSILON = constants.epsilon_0 / constants.elementary_charge * constants.angstrom
 
 DEBYE_TO_EA = 1. / 4.8

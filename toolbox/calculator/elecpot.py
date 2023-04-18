@@ -7,9 +7,9 @@ import numpy as np
 from scipy import integrate
 from ase.geometry.cell import cellpar_to_cell
 
-from ..utils.unit import *
+from scipy import constants
 
-_EPSILON = VAC_PERMITTIVITY / UNIT_CHARGE * ANG_TO_M
+_EPSILON = constants.epsilon_0 / constants.elementary_charge * constants.angstrom
 
 
 class ElecPotentialCalculator:

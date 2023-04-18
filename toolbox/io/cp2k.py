@@ -12,6 +12,10 @@ from ..utils.unit import *
 from ..utils.utils import iterdict, save_dict_json, update_dict
 from .template import cp2k_default_input
 
+from scipy import constants
+
+_EPSILON = constants.epsilon_0 / constants.elementary_charge * constants.angstrom
+
 
 class Cp2kInput():
     """
@@ -792,8 +796,7 @@ class Cp2kOutput():
     def potdrop(self):
         cross_area = np.linalg.norm(
             np.cross(self.atoms.cell[0], self.atoms.cell[1]))
-        DeltaV = self.surf_dipole_moment / cross_area / (
-            VAC_PERMITTIVITY / UNIT_CHARGE * ANG_TO_M)
+        DeltaV = self.surf_dipole_moment / cross_area / _EPSILON
         return DeltaV
 
     @property
@@ -949,8 +952,7 @@ class Cp2kHartreeCube(Cp2kCube):
         """
         Dipole moment of cell [e A]
         """
-        d = -self.potdrop * self.cross_area * (VAC_PERMITTIVITY / UNIT_CHARGE *
-                                               ANG_TO_M)
+        d = -self.potdrop * self.cross_area * _EPSILON
         return d
 
     def set_cross_area(self, cross_area):
