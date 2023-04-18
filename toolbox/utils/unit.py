@@ -1,3 +1,7 @@
+"""
+Ref:
+    https://docs.scipy.org/doc/scipy/reference/constants.html
+"""
 from scipy import constants
 
 # AU
