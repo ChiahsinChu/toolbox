@@ -6,6 +6,7 @@ MODULE_DIR = Path(__file__).resolve().parent
 
 
 def use_style(style_name):
+    plt.style.use("fivethirtyeight")
     fname = str(MODULE_DIR / ("mplstyle/%s.mplstyle" % style_name))
     # print(fname)
     try:
