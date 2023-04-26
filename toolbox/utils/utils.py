@@ -172,7 +172,8 @@ def calc_density(n, v, mol_mass: float):
     mol_mass: float
         mole mass in g/mol
     """
-    rho = (n / NA * mol_mass) / (v * ANG_TO_CM**3)
+    rho = (n / constants.Avogadro *
+           mol_mass) / (v * (constants.angstrom / constants.centi)**3)
     return rho
 
 
