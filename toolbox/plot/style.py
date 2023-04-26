@@ -1,3 +1,9 @@
+"""
+References:
+- https://matplotlib.org/stable/tutorials/introductory/customizing.html
+- https://matplotlib.org/stable/users/prev_whats_new/dflt_style_changes.html
+- https://matplotlib.org/stable/gallery/style_sheets/style_sheets_reference.html
+"""
 import matplotlib.pyplot as plt
 from matplotlib import colors
 from pathlib import Path

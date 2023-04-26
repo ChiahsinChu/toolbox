@@ -4,12 +4,14 @@ font.family: sans-serif
 font.sans-serif: DejaVu Sans
 font.weight: normal
 font.size : 15.
-axes.labelsize: large
+axes.labelsize: medium
 axes.formatter.limits: -1, 2
-xtick.labelsize: large
-ytick.labelsize: large
+axes.edgecolor:  black
+axes.linewidth: 1.0
+xtick.labelsize: medium
+ytick.labelsize: medium
 legend.fontsize: medium
 figure.figsize: 6, 4
-figure.dpi: 150
+figure.dpi: 200
 savefig.dpi: 200
 savefig.bbox: tight

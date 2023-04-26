@@ -6,9 +6,11 @@ font.weight: normal
 font.size : 15.
 axes.labelsize: xx-large
 axes.formatter.limits: -1, 2
+axes.edgecolor:     black
+axes.linewidth: 1.0
 xtick.labelsize: xx-large
 ytick.labelsize: xx-large
-legend.fontsize: large
+legend.fontsize: medium
 figure.figsize: 6, 4
 figure.dpi: 150
 savefig.dpi: 200
