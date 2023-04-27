@@ -1,4 +1,4 @@
-from ase import io, Atoms
+from ..exts.ase.ase import io, Atoms
 import numpy as np
 
 
