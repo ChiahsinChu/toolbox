@@ -1,0 +1,34 @@
+variable TEMP equal 330
+
+units           metal
+boundary        p p p 
+atom_style      atomic
+
+neighbor        2.0 bin 
+neigh_modify    every 10 delay 0 check no
+
+read_data       conf.lmp
+mass            1 15.999
+mass            2 1.0079
+mass            3 195.08
+pair_style      deepmd ./graph.pb
+pair_coeff
+
+variable temp equal temp
+variable etotal equal etotal
+variable pe equal pe
+variable ke equal ke
+variable step equal step
+fix             sys_info all print 1 "${temp} ${etotal} ${pe} ${ke} ${step}" file energy.log
+
+velocity        all create ${TEMP} 3452344
+
+fix             1 all nvt temp ${TEMP} ${TEMP} 0.05
+timestep        0.0005 
+thermo_style    custom step pe ke etotal temp 
+thermo          1 
+dump            1 all custom 1 traj.dump id type x y z fx fy fz 
+
+rerun validate.xyz dump x y z box no format xyz
+write_restart       restart.out
+

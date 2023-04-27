@@ -1,0 +1,34 @@
+variable TEMP equal 330
+variable THERMO_FREQ equal 10
+
+units           metal
+boundary        p p p
+atom_style      atomic
+
+neighbor        2.0 bin
+neigh_modify    every 1
+
+read_data       conf.lmp
+mass            1 15.999
+mass            2 1.0079
+mass            3 195.08
+pair_style      deepmd ./full.pb ./part.pb  out_freq ${THERMO_FREQ} out_file model_devi.out
+pair_coeff
+
+velocity        all create ${TEMP} 3452344
+velocity        all scale ${TEMP}
+fix             1 all nvt temp ${TEMP} ${TEMP} 0.05
+timestep        0.0005
+thermo_style    custom step pe ke etotal temp
+thermo          10
+dump            1 all custom 10 ${TEMP}.lammpstrj id type x y z fx fy fz vx vy vz
+dump_modify     1 sort id
+dump_modify     1 element O H Pt
+variable temp equal temp
+variable etotal equal etotal
+variable pe equal pe
+variable ke equal ke
+variable step equal step
+fix             sys_info all print 10 "${temp} ${etotal} ${pe} ${ke} ${step}" title "temp etotal pe ke step" file energy.log
+restart 50000 poly.restart
+run             200000

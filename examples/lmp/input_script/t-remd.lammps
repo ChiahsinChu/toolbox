@@ -1,0 +1,62 @@
+clear
+print "T-REMD (NVT) with DP model"
+
+# --------------------- VARIABLES -------------------------
+variable        NSTEPS          equal 20000
+variable        THERMO_FREQ     equal 10
+variable        DUMP_FREQ       equal 10
+variable        RESTART_FREQ    equal 1000
+variable        EXCHANGE_FREQ   equal 100
+variable        TEMP            world 300.0 310.0 320.0 330.0
+variable        REP             world 0 1 2 3
+  
+# ---------------------- INITIALIZAITION ------------------
+units           metal
+boundary        p p p
+atom_style      atomic
+
+# --------------------- ATOM DEFINITION ------------------
+box             tilt large
+read_data       conf.lmp
+change_box      all triclinic
+
+mass            1 15.999
+mass            2 1.0079
+mass            3 195.08
+group           slab type 3
+
+# --------------------- FORCE FIELDS ---------------------
+pair_style      deepmd graph.pb
+pair_coeff      * *
+          
+# --------------------- PRINT SECTION ----------------------
+variable        time equal step*dt
+variable        temp equal temp
+variable        pe equal pe
+variable        ke equal ke
+variable        float1 format time %10.4f
+variable        float2 format temp %.7f
+variable        float3 format pe   %.7f
+variable        float4 format ke   %.7f
+fix             sys_info all print 1 "${float1} ${float2} ${float3} ${float4}" title "time temp pe ke" file energy.${REP}.log screen "no"
+
+# --------------------- MD SETTINGS ----------------------
+# set velocity
+velocity        all create ${TEMP} 34524
+velocity        all scale ${TEMP}
+
+neighbor        2.0 bin
+neigh_modify    every 1
+
+# set ensemble
+timestep        0.0005  
+fix             1 all nvt temp ${TEMP} ${TEMP} $(100.0*dt)
+fix             2 slab recenter INIT INIT INIT
+
+dump            TRAJ all custom ${DUMP_FREQ} dump.temper.${REP} id element x y z
+dump_modify     TRAJ element O H Pt sort id
+
+# --------------------- RUN T-REMD ----------------------
+temper          ${NSTEPS} ${EXCHANGE_FREQ} ${TEMP} 1 3847 58382
+
+

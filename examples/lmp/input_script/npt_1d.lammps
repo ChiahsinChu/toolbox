@@ -1,0 +1,71 @@
+clear
+print "MD simulation (1D-NpT) with DP model"
+
+# --------------------- VARIABLES-------------------------
+variable        NSTEPS          equal 200000
+variable        THERMO_FREQ     equal 10
+variable        DUMP_FREQ       equal 10
+variable        RESTART_FREQ    equal 10000
+variable        TEMP            equal 330
+variable        PRES            equal 1.000000
+  
+# ---------------------- INITIALIZAITION ------------------
+units           metal
+boundary        p p p
+atom_style      atomic
+
+# --------------------- ATOM DEFINITION ------------------
+box             tilt large
+read_data       conf.lmp
+change_box      all triclinic
+
+mass            1 15.999
+mass            2 1.0079
+mass            3 195.08
+group           slab type 3
+  
+# --------------------- FORCE FIELDS ---------------------
+pair_style      deepmd graph.pb
+pair_coeff      * *
+          
+# --------------------- PRINT SECTION ----------------------
+variable        time equal step*dt
+variable        temp equal temp
+variable        press equal press
+variable        pe equal pe
+variable        ke equal ke
+
+variable        float1 format time %10.4f
+variable        float2 format temp %.7f
+variable        float3 format press %.7f
+variable        float4 format pe   %.7f
+variable        float5 format ke   %.7f
+fix             sys_info all print 1 "${float1} ${float2} ${float3} ${float4} ${float5}" title "time temp pressure pe ke" file energy.log screen "no"
+
+# --------------------- MD SETTINGS ----------------------
+# set velocity
+velocity        all create ${TEMP} 34524
+velocity        all scale ${TEMP}
+
+neighbor        2.0 bin
+neigh_modify    every 1
+
+# set ensemble
+timestep        0.0005
+fix             1 all npt temp ${TEMP} ${TEMP} $(100.0*dt) z ${PRES} ${PRES} $(1000.0*dt)
+fix             2 slab recenter INIT INIT INIT
+
+# print info to screen/log file
+thermo          ${THERMO_FREQ}
+thermo_style    custom step pe ke etotal temp press
+thermo_modify   format float %15.7f
+
+# save trajectory to file
+dump            TRAJ all custom ${DUMP_FREQ} lammps.dump id element x y z fx fy fz vx vy vz
+dump_modify     TRAJ element O H Pt sort id
+
+# --------------------- RUN ------------------------------
+restart         ${RESTART_FREQ} poly.restart
+run             ${NSTEPS}
+
+
