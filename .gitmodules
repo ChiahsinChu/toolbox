@@ -1,6 +1,8 @@
 [submodule "toolbox/exts/cp2kdata"]
 	path = toolbox/exts/cp2kdata
 	url = https://github.com/robinzyb/cp2kdata.git
+	branch = main
 [submodule "toolbox/exts/ase"]
 	path = toolbox/exts/ase
 	url = git@gitlab.com:ChiahsinChu/ase.git
+	branch = jxzhu_dev

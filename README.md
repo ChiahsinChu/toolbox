@@ -20,7 +20,7 @@ pip install .
 If you don't use `--recursive`, you will miss the submodule(s). You can, alternatively, download the submodule(s) in two steps:
 
 ```bash
-git clone --recursive https://github.com/ChiahsinChu/toolbox.git
+git clone https://github.com/ChiahsinChu/toolbox.git
 cd toolbox
 git submodule update --init --recursive
 ```
