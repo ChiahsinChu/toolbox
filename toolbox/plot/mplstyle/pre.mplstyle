@@ -15,3 +15,8 @@ figure.figsize: 6, 4
 figure.dpi: 150
 savefig.dpi: 200
 savefig.bbox: tight
+
+savefig.facecolor: w
+figure.facecolor: w
+axes.facecolor: w
+patch.edgecolor: w
