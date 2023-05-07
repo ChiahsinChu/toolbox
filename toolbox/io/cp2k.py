@@ -629,7 +629,7 @@ class Cp2kOutput():
 
         data_list = []
         elem_list = []
-        for line in data_lines[:, 4:-4].reshape(-1):
+        for line in data_lines[:, 3:-4].reshape(-1):
             line_list = line.split()
             data_list.append([
                 float(line_list[4]),
@@ -654,6 +654,14 @@ class Cp2kOutput():
         atoms.set_cell([a, b, c, alpha, beta, gamma])
         atoms.set_pbc(True)
         return atoms
+
+    # @property
+    # def natoms(self):
+    #     start_pattern = "TOTAL NUMBERS AND MAXIMUM NUMBERS"
+    #     nframe, data_lines = self.grep_texts_by_nlines(start_pattern, 4)
+    #     data_lines = np.reshape(data_lines, (nframe, -1))
+    #     line_list = data_lines[0][-1].split()
+    #     return int(line_list[-1])
 
     @property
     def force(self):
