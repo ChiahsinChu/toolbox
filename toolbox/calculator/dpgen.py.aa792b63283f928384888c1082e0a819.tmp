@@ -31,7 +31,8 @@ class FPTask:
                                  hartree=True,
                                  eden=True,
                                  totden=True,
-                                 dip_cor=dip_cor, mlwf=mlwf)
+                                 dip_cor=dip_cor, 
+                                 mlwf=mlwf)
             cp2k_inp.write(os.path.join(
                 self.work_dir, "iter.000000/02.fp/task.000.%06d" % ii), fp_params=fp_params,
                            save_dict=True)
