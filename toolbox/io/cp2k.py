@@ -486,14 +486,18 @@ class Cp2kInput():
 
 
 class Cp2kOutput():
-    def __init__(self, fname="output.out", ignore_warning=False) -> None:
+    def __init__(self,
+                 fname="output.out",
+                 ignore_warning=False,
+                 cp2k9: bool = True) -> None:
         self.output_file = fname
+        self.cp2k9 = cp2k9
         with open(fname, "r") as f:
             self.content = f.readlines()
         self.natoms = len(self.atoms)
         if not ignore_warning:
             if self.scf_loop == -1:
-                raise Warning("SCF run NOT converged")\
+                raise Warning("SCF run NOT converged")
 
     @property
     def worktime(self):
@@ -629,14 +633,24 @@ class Cp2kOutput():
 
         data_list = []
         elem_list = []
-        for line in data_lines[:, 3:-4].reshape(-1):
-            line_list = line.split()
-            data_list.append([
-                float(line_list[4]),
-                float(line_list[5]),
-                float(line_list[6])
-            ])
-            elem_list.append(line_list[2])
+        if self.cp2k9:
+            for line in data_lines[:, 3:-4].reshape(-1):
+                line_list = line.split()
+                data_list.append([
+                    float(line_list[4]),
+                    float(line_list[5]),
+                    float(line_list[6])
+                ])
+                elem_list.append(line_list[2])
+        else:
+            for line in data_lines[:, 4:-4].reshape(-1):
+                line_list = line.split()
+                data_list.append([
+                    float(line_list[4]),
+                    float(line_list[5]),
+                    float(line_list[6])
+                ])
+                elem_list.append(line_list[2])
         coord = np.reshape(data_list, (nframe, -1, 3))
         self.chemical_symbols = np.reshape(elem_list, (nframe, -1))[0].tolist()
         return coord
