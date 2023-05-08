@@ -25,13 +25,16 @@ class FPTask:
 
         dip_cor = kwargs.pop("dip_cor", False)
         mlwf = kwargs.pop("mlwf", False)
+        smear = kwargs.pop("smear", True)
         fp_params = kwargs.pop("fp_params", {})
         for ii, atoms in enumerate(self.configs):
             cp2k_inp = Cp2kInput(atoms,
                                  hartree=True,
                                  eden=True,
                                  totden=True,
-                                 dip_cor=dip_cor, mlwf=mlwf)
+                                 dip_cor=dip_cor, 
+                                 smear=smear, 
+                                 mlwf=mlwf)
             cp2k_inp.write(os.path.join(
                 self.work_dir, "iter.000000/02.fp/task.000.%06d" % ii), fp_params=fp_params,
                            save_dict=True)
