@@ -53,6 +53,7 @@ class Cp2kInput():
     >>>                   eden=True)
     >>> input.write()
     """
+
     def __init__(self, atoms, input_type="energy", **kwargs) -> None:
         self.atoms = atoms
         self.input_dict = copy.deepcopy(cp2k_default_input[input_type])
@@ -486,12 +487,11 @@ class Cp2kInput():
 
 
 class Cp2kOutput():
+
     def __init__(self,
                  fname="output.out",
-                 ignore_warning=False,
-                 cp2k9: bool = True) -> None:
+                 ignore_warning=False) -> None:
         self.output_file = fname
-        self.cp2k9 = cp2k9
         with open(fname, "r") as f:
             self.content = f.readlines()
         self.natoms = len(self.atoms)
@@ -633,24 +633,16 @@ class Cp2kOutput():
 
         data_list = []
         elem_list = []
-        if self.cp2k9:
-            for line in data_lines[:, 3:-4].reshape(-1):
-                line_list = line.split()
-                data_list.append([
-                    float(line_list[4]),
-                    float(line_list[5]),
-                    float(line_list[6])
-                ])
-                elem_list.append(line_list[2])
-        else:
-            for line in data_lines[:, 4:-4].reshape(-1):
-                line_list = line.split()
-                data_list.append([
-                    float(line_list[4]),
-                    float(line_list[5]),
-                    float(line_list[6])
-                ])
-                elem_list.append(line_list[2])
+        for line in data_lines[:, 3:-4].reshape(-1):
+            if len(line) == 0:
+                continue
+            line_list = line.split()
+            data_list.append([
+                float(line_list[4]),
+                float(line_list[5]),
+                float(line_list[6])
+            ])
+            elem_list.append(line_list[2])
         coord = np.reshape(data_list, (nframe, -1, 3))
         self.chemical_symbols = np.reshape(elem_list, (nframe, -1))[0].tolist()
         return coord
@@ -904,6 +896,7 @@ class Cp2kOutput():
 
 
 class Cp2kCube():
+
     def __init__(self, fname) -> None:
         self.cube_data, self.atoms = read_cube_data(fname)
 
@@ -931,6 +924,7 @@ class Cp2kCube():
 
 
 class Cp2kHartreeCube(Cp2kCube):
+
     def __init__(
         self,
         fname,
@@ -982,6 +976,7 @@ class Cp2kHartreeCube(Cp2kCube):
 
 
 class Cp2kPdos(_Cp2kPdos):
+
     def __init__(self, file_name, parse_file_name=True) -> None:
         super().__init__(file_name, parse_file_name)
 
