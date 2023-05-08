@@ -24,6 +24,7 @@ class FPTask:
             raise AttributeError("Unknown type of configs: %s" % type(configs))
 
         dip_cor = kwargs.pop("dip_cor", False)
+        fp_params = kwargs.pop("fp_params", {})
         for ii, atoms in enumerate(self.configs):
             cp2k_inp = Cp2kInput(atoms,
                                  hartree=True,
@@ -31,7 +32,7 @@ class FPTask:
                                  totden=True,
                                  dip_cor=dip_cor)
             cp2k_inp.write(os.path.join(
-                self.work_dir, "iter.000000/02.fp/task.000.%06d" % ii),
+                self.work_dir, "iter.000000/02.fp/task.000.%06d" % ii), fp_params=fp_params,
                            save_dict=True)
 
         self._setup(**kwargs)
