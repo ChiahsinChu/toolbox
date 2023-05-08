@@ -44,7 +44,7 @@ class FPTask:
         ms.to_deepmd_npy("tmp_dpdata")
 
         fname_type_map = glob.glob("tmp_dpdata/**/type_map.raw", recursive=True)[0]
-        _type_map = np.loadtxt(fname_type_map)
+        _type_map = np.loadtxt(fname_type_map, dtype=str)
         dname_dpdata = os.path.dirname(fname_type_map)
         _atype = np.loadtxt(os.path.join(dname_dpdata, "type.raw"), dtype=np.int32)
 
