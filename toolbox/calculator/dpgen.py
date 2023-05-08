@@ -51,10 +51,10 @@ class FPTask:
         # npy data
         shutil.move(os.path.join(dname_dpdata, "set.000"), os.path.join(out_dir, "set.000"))
         # type_map.raw
-        np.savetxt(type_map, os.path.join(out_dir, "type_map.raw"), fmt="%s")
+        np.savetxt(os.path.join(out_dir, "type_map.raw"), type_map, fmt="%s")
         # type.raw
         atype = [type_map.index(_type_map[ii]) for ii in _atype]
-        np.savetxt(atype, os.path.join(out_dir, "type.raw"), fmt="%d")
+        np.savetxt(os.path.join(out_dir, "type.raw"), atype, fmt="%d")
         
         os.removedirs("tmp_dpdata")
 
