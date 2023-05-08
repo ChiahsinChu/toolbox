@@ -20,13 +20,13 @@ params = {
                 "rcut_smth": 0.5,
                 "rcut": 6.0,
                 "neuron": [25, 50, 100],
-                "resnet_dt": false,
+                "resnet_dt": False,
                 "axis_neuron": 16,
                 "seed": 1
             },
             "fitting_net": {
                 "neuron": [240, 240, 240],
-                "resnet_dt": true,
+                "resnet_dt": True,
                 "seed": 1
             }
         },
@@ -65,7 +65,7 @@ params = {
     "model_devi_f_trust_hi":
     0.5,
     "model_devi_clean_traj":
-    false,
+    False,
     "model_devi_jobs": [{
         "temps": [330, 430, 530],
         "sys_idx": [1],
@@ -77,7 +77,7 @@ params = {
     "fp_style":
     "cp2k",
     "shuffle_poscar":
-    false,
+    False,
     "fp_task_max":
     100,
     "fp_task_min":
@@ -106,9 +106,9 @@ machine = {
             "queue_name": "gpu3",
             "group_size": 1,
             "kwargs": {
-                "gpu_usage": true,
-                "gpu_new_syntax": true,
-                "gpu_exclusive": true
+                "gpu_usage": True,
+                "gpu_new_syntax": True,
+                "gpu_exclusive": True
             },
             "custom_flags": ["#BSUB -J train", "#BSUB -W 24:00"],
             "module_list": ["deepmd/2.0"]
