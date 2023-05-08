@@ -63,7 +63,7 @@ class FPTask:
         # record.dpgen
         a = np.zeros((7, 2))
         a[:, 1] = np.arange(7)
-        np.savetxt(os.path.join(self.work_dir, "record.dpgen"), fmt="%d")
+        np.savetxt(os.path.join(self.work_dir, "record.dpgen"), a, fmt="%d")
         # params.json
         save_dict(params, os.path.join(self.work_dir, "params.json"))
         # machine.json
