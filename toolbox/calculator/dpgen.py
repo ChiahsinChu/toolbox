@@ -37,11 +37,11 @@ class FPTask:
         self._setup(**kwargs)
 
     def collect(self, type_map, out_dir="deepmd"):
-        safe_makedirs(out_dir)
+        safe_makedirs(os.path.join(self.work_dir, out_dir))
 
         ms = dpdata.MultiSystems.from_dir(dir_name=os.path.join(
                 self.work_dir, "iter.000000/02.fp"), file_name="output", fmt="cp2k/output")
-        ms.to_deepmd_npy("tmp_dpdata")
+        ms.to_deepmd_npy(os.path.join(self.work_dir, "tmp_dpdata"))
 
         fname_type_map = glob.glob("tmp_dpdata/**/type_map.raw", recursive=True)[0]
         _type_map = np.loadtxt(fname_type_map, dtype=str)
@@ -56,8 +56,7 @@ class FPTask:
         atype = [type_map.index(_type_map[ii]) for ii in _atype]
         np.savetxt(os.path.join(out_dir, "type.raw"), atype, fmt="%d")
         
-        os.removedirs("tmp_dpdata")
-
+        safe_makedirs(os.path.join(self.work_dir, "tmp_dpdata"))
 
     def _setup(self, **kwargs):
         # record.dpgen
