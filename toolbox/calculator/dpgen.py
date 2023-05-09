@@ -23,23 +23,16 @@ class FPTask:
         else:
             raise AttributeError("Unknown type of configs: %s" % type(configs))
 
-        dip_cor = kwargs.pop("dip_cor", False)
-        mlwf = kwargs.pop("mlwf", False)
-        smear = kwargs.pop("smear", True)
         fp_params = kwargs.pop("fp_params", {})
+        queue = kwargs.pop("queue", "c52-medium")
+        kwargs.update({"hartree": True, "eden": True, "totden": True})
         for ii, atoms in enumerate(self.configs):
-            cp2k_inp = Cp2kInput(atoms,
-                                 hartree=True,
-                                 eden=True,
-                                 totden=True,
-                                 dip_cor=dip_cor, 
-                                 smear=smear, 
-                                 mlwf=mlwf)
+            cp2k_inp = Cp2kInput(atoms, **kwargs)
             cp2k_inp.write(os.path.join(
                 self.work_dir, "iter.000000/02.fp/task.000.%06d" % ii), fp_params=fp_params,
                            save_dict=True)
 
-        self._setup(**kwargs)
+        self._setup(queue)
 
     def collect(self, type_map, out_dir="deepmd"):
         safe_makedirs(os.path.join(self.work_dir, out_dir))
@@ -63,7 +56,7 @@ class FPTask:
         
         safe_makedirs(os.path.join(self.work_dir, "tmp_dpdata"))
 
-    def _setup(self, **kwargs):
+    def _setup(self, queue):
         # record.dpgen
         a = np.zeros((7, 2))
         a[:, 1] = np.arange(7)
@@ -71,11 +64,11 @@ class FPTask:
         # params.json
         save_dict(params, os.path.join(self.work_dir, "params.json"))
         # machine.json
-        self._set_queue(machine, **kwargs)
+        self._set_queue(machine, queue)
         save_dict(machine, os.path.join(self.work_dir, "machine.json"))
 
     @staticmethod
-    def _set_queue(machine, queue="c52-medium"):
+    def _set_queue(machine, queue):
         machine["fp"][0]["resources"]["queue_name"] = queue
 
         if "c51" in queue:
