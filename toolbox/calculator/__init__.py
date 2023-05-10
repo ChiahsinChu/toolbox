@@ -26,3 +26,15 @@ class BashCalculator:
 
         logging.info("{:=^50}".format(" End calculation "))
         os.chdir(root_dir)
+
+
+class LammpsCalculator(BashCalculator):
+    def __init__(self, work_dir) -> None:
+        super().__init__(work_dir)
+
+    def run(self,
+            command: str = "mpiexec.hydra lmp",
+            stdin: str = "-in input.lmp",
+            stdout: str = "lammps.stdout",
+            stderr: str = "lammps.stderr"):
+        super().run(command, stdin, stdout, stderr)
