@@ -75,6 +75,13 @@ def update_dict(old_d, update_d):
             old_d[k] = update_d[k]
 
 
+def dict_to_cp2k_input(input_dict):
+    input_str = iterdict(input_dict, out_list=["\n"], loop_idx=0)
+    s = "\n".join(input_str)
+    s = s.strip("\n")
+    return s
+
+
 def symlink(src, _dst):
     dst = os.path.abspath(_dst)
     os.symlink(src, dst)

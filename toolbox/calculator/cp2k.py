@@ -1,14 +1,40 @@
 import logging
 import os
 import sys
+
 from ase import io
 from ase.calculators.cp2k import CP2K
 
 from ..io.cp2k import Cp2kOutput
 from ..utils.utils import iterdict, load_dict
+from . import BashCalculator
 
 
-class Cp2kCalculator:
+class Cp2kCalculator(BashCalculator):
+    def __init__(self, work_dir) -> None:
+        super().__init__(work_dir)
+
+    def run(self,
+            ignore_err=False,
+            command="mpiexec.hydra cp2k.popt",
+            stdin="input.inp",
+            stdout="output.out",
+            stderr="cp2k.stderr"):
+        super().run(command, stdin, stdout, stderr)
+
+        try:
+            cp2k_out = Cp2kOutput(os.path.join(self.work_dir, stdout))
+            with open(os.path.join(self.work_dir, "finished_tag"), 'w') as f:
+                pass
+        except:
+            warning_msg = "CP2K calculation does not finish!"
+            if ignore_err:
+                logging.warning(warning_msg)
+            else:
+                sys.exit(warning_msg)
+
+
+class DeprecatedCp2kCalculator:
     def __init__(self, work_dir) -> None:
         self.work_dir = work_dir
 
