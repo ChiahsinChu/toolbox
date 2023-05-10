@@ -34,7 +34,14 @@ class LammpsCalculator(BashCalculator):
 
     def run(self,
             command: str = "mpiexec.hydra lmp",
-            stdin: str = "-in input.lmp",
+            stdin: str = "input.lmp",
             stdout: str = "lammps.stdout",
-            stderr: str = "lammps.stderr"):
+            stderr: str = "lammps.stderr",
+            modifier: str = None):
+        """
+        https://docs.lammps.org/Run_options.html
+        """
+        stdin = "-i " + stdin
+        if modifier is not None:
+            stdin += " %s " % modifier
         super().run(command, stdin, stdout, stderr)
