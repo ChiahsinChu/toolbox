@@ -28,12 +28,25 @@ class BashCalculator:
         os.chdir(root_dir)
 
 
-class LammpsCalculator(BashCalculator):
+class HPCCalculator(BashCalculator):
     def __init__(self, work_dir) -> None:
         super().__init__(work_dir)
 
     def run(self,
-            command: str = "mpiexec.hydra lmp",
+            command: str = None,
+            stdin: str = None,
+            stdout: str = "job.stdout",
+            stderr: str = "job.stderr"):
+        command = "mpiexec.hydra " + command
+        super().run(command, stdin, stdout, stderr)
+
+
+class LammpsCalculator(HPCCalculator):
+    def __init__(self, work_dir) -> None:
+        super().__init__(work_dir)
+
+    def run(self,
+            command: str = "lmp",
             stdin: str = "input.lmp",
             stdout: str = "lammps.stdout",
             stderr: str = "lammps.stderr",
