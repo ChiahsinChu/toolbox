@@ -1,3 +1,12 @@
+"""
+CP2K input files:
+- energy (metal with smearing)
+- geo_opt
+- cell_opt
+- bomd
+- qmmm
+"""
+
 import copy
 
 from ..utils.utils import update_dict
@@ -109,8 +118,7 @@ cp2k_default_input = {
                     "_": "Mg",
                     "POTENTIAL": "GTH-PBE-q10",
                     "BASIS_SET": "DZVP-MOLOPT-SR-GTH"
-                }
-                , {
+                }, {
                     "_": "Al",
                     "POTENTIAL": "GTH-PBE-q3",
                     "BASIS_SET": "DZVP-MOLOPT-SR-GTH"
@@ -140,7 +148,7 @@ cp2k_default_input.update({
         },
         "MOTION": {
             "GEO_OPT": {
-                "TYPE": "minimization",
+                "TYPE": "MINIMIZATION",
                 "OPTIMIZER": "BFGS",
                 "MAX_ITER": 200,
                 "MAX_FORCE": 4.5E-5
@@ -160,6 +168,29 @@ cp2k_default_input.update({
     }
 })
 
+# >>>>>>>>>>>>>>>>>>>> CELL_OPT >>>>>>>>>>>>>>>>>>>>
+cp2k_default_input["cell_opt"] = copy.deepcopy(cp2k_default_input["geo_opt"])
+update_d = {
+    "GLOBAL": {
+        "RUN_TYPE": "CELL_OPT"
+    },
+    "MOTION": {
+        "PRINT": {
+            "TRAJECTORY": {},
+            "VELOCITIES": {}
+        },
+        "CELL_OPT": {
+            "OPTIMIZER": "BFGS",
+            "KEEP_ANGLES": ".TRUE.",
+            "MAX_ITER": 200,
+            "MAX_FORCE": 4.5E-5
+        }
+    }
+}
+update_dict(cp2k_default_input["cell_opt"], update_d)
+# <<<<<<<<<<<<<<<<<<<< CELL_OPT <<<<<<<<<<<<<<<<<<<<
+
+# >>>>>>>>>>>>>>>>>>>> BOMD >>>>>>>>>>>>>>>>>>>>
 cp2k_default_input["bomd"] = copy.deepcopy(cp2k_default_input["energy"])
 
 update_d = {
@@ -186,6 +217,7 @@ update_d = {
 }
 
 update_dict(cp2k_default_input["bomd"], update_d)
+# <<<<<<<<<<<<<<<<<<<< BOMD <<<<<<<<<<<<<<<<<<<<
 
 cp2k_restart_pbc = {
     "FORCE_EVAL": {
@@ -205,6 +237,7 @@ cp2k_restart_pbc = {
     }
 }
 
+# >>>>>>>>>>>>>>>>>>>> QMMM >>>>>>>>>>>>>>>>>>>>
 cp2k_default_input.update({
     "qmmm": {
         "FORCE_EVAL": {
@@ -326,6 +359,8 @@ cp2k_default_input.update({
         }
     }
 })
+# <<<<<<<<<<<<<<<<<<<< QMMM <<<<<<<<<<<<<<<<<<<<
+
 ####################################### setup in the following has not been checked #######################################
 
 # turn off smearing, etc in sgcpmd (incompatible with OT)
