@@ -1,0 +1,2 @@
+/data/jxzhu/software/ase/ase/io/extxyz.py:302: UserWarning: Skipping unhashable information adsorbate_info
+  warnings.warn('Skipping unhashable information '
