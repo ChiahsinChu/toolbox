@@ -6,7 +6,6 @@ Some python codes used for my project. Please feel free to reach me via email: *
 
 ## To-do list
 
-- [ ] exception capture class for all calculators
 - [ ] write class for workflow plotting
 
 ## Installation
@@ -23,6 +22,12 @@ If you don't use `--recursive`, you will miss the submodule(s). You can, alterna
 git clone https://github.com/ChiahsinChu/toolbox.git
 cd toolbox
 git submodule update --init --recursive
+```
+
+You can check if the installation succeeds by running:
+
+```bash
+python -c "import toolbox; toolbox.test()"
 ```
 
 ## CP2K

@@ -7,10 +7,10 @@ from ase.calculators.cp2k import CP2K
 
 from ..io.cp2k import Cp2kOutput
 from ..utils.utils import iterdict, load_dict
-from . import HPCCalculator
+from . import BashCalculator
 
 
-class Cp2kCalculator(HPCCalculator):
+class Cp2kCalculator(BashCalculator):
     def __init__(self, work_dir) -> None:
         super().__init__(work_dir)
 
@@ -19,8 +19,9 @@ class Cp2kCalculator(HPCCalculator):
             command="cp2k.popt",
             stdin="input.inp",
             stdout="output.out",
-            stderr="cp2k.stderr"):
-        super().run(command, stdin, stdout, stderr)
+            stderr="cp2k.stderr",
+            mpi_command: str = "mpiexec.hydra"):
+        super().run(command, stdin, stdout, stderr, mpi_command)
 
         try:
             cp2k_out = Cp2kOutput(os.path.join(self.work_dir, stdout))

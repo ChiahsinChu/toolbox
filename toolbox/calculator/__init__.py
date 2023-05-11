@@ -10,7 +10,11 @@ class BashCalculator:
             command: str = None,
             stdin: str = None,
             stdout: str = "job.stdout",
-            stderr: str = "job.stderr"):
+            stderr: str = "job.stderr",
+            mpi_command: str = "mpiexec.hydra"):
+        if mpi_command is not None:
+            command = "%s %s" % (mpi_command, command)
+
         root_dir = os.getcwd()
         os.chdir(self.work_dir)
         logging.info("{:=^50}".format(" Start calculation "))
@@ -28,20 +32,7 @@ class BashCalculator:
         os.chdir(root_dir)
 
 
-class HPCCalculator(BashCalculator):
-    def __init__(self, work_dir) -> None:
-        super().__init__(work_dir)
-
-    def run(self,
-            command: str = None,
-            stdin: str = None,
-            stdout: str = "job.stdout",
-            stderr: str = "job.stderr"):
-        command = "mpiexec.hydra " + command
-        super().run(command, stdin, stdout, stderr)
-
-
-class LammpsCalculator(HPCCalculator):
+class LammpsCalculator(BashCalculator):
     def __init__(self, work_dir) -> None:
         super().__init__(work_dir)
 
@@ -50,6 +41,7 @@ class LammpsCalculator(HPCCalculator):
             stdin: str = "input.lmp",
             stdout: str = "lammps.stdout",
             stderr: str = "lammps.stderr",
+            mpi_command: str = "mpiexec.hydra",
             modifier: str = None):
         """
         https://docs.lammps.org/Run_options.html
@@ -57,4 +49,4 @@ class LammpsCalculator(HPCCalculator):
         stdin = "-i " + stdin
         if modifier is not None:
             stdin += " %s " % modifier
-        super().run(command, stdin, stdout, stderr)
+        super().run(command, stdin, stdout, stderr, mpi_command)
