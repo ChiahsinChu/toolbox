@@ -105,6 +105,15 @@ cp2k_default_input = {
                     "_": "F",
                     "POTENTIAL": "GTH-PBE-q7",
                     "BASIS_SET": "DZVP-MOLOPT-SR-GTH"
+                }, {
+                    "_": "Mg",
+                    "POTENTIAL": "GTH-PBE-q10",
+                    "BASIS_SET": "DZVP-MOLOPT-SR-GTH"
+                }
+                , {
+                    "_": "Al",
+                    "POTENTIAL": "GTH-PBE-q3",
+                    "BASIS_SET": "DZVP-MOLOPT-SR-GTH"
                 }],
             },
             "PRINT": {
