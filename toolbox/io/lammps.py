@@ -52,7 +52,7 @@ class LammpsData:
     def _make_header(self, out_file):
         cell = self.atoms.cell.cellpar()
         nat = len(self.atoms)
-        s = "%s (written by IntDielec)\n\n" % out_file
+        s = "%s (written by toolbox by Jia-Xin Zhu)\n\n" % out_file
         s += "%d atoms\n" % nat
         s += "%d atom types\n" % len(np.unique(self.atoms.numbers))
         if self.bonds is not None:
