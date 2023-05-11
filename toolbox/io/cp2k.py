@@ -616,6 +616,8 @@ class Cp2kOutput():
                 data_lines.append(self.content[ii:ii + nlines])
                 nframe += 1
                 continue
+        if nframe == 0:
+            raise AttributeError("No data is found in this file.")
         return nframe, data_lines
 
     @property
@@ -745,36 +747,14 @@ class Cp2kOutput():
 
     @property
     def dipole_moment(self):
-        start_pattern = 'Dipole moment'
-        end_pattern = r' ENERGY| Total FORCE_EVAL '
-
-        start_pattern = re.compile(start_pattern)
-        end_pattern = re.compile(end_pattern)
-
-        flag = False
-        data_lines = []
-        nframe = 0
-        for line in self.content:
-            line = line.strip('\n')
-            if start_pattern.search(line) is not None:
-                flag = True
-            if end_pattern.match(line):
-                assert flag is True, (flag, 'No data is found in this file.')
-                flag = False
-                nframe += 1
-            if flag is True:
-                data_lines.append(line)
-
+        pattern = 'Dipole moment'
+        nframe, data_lines = self.grep_texts_by_nlines(pattern, 2)
         data_lines = np.reshape(data_lines, (nframe, -1))
 
         data_list = []
-        for line in data_lines[:, 1]:
+        for line in data_lines[:, 1:].reshape(-1):
             line_list = line.split()
-            data_list.append([
-                float(line_list[1]),
-                float(line_list[3]),
-                float(line_list[5])
-            ])
+            data_list.append(list(map(float, line_list[1:-1:2])))
         return np.reshape(data_list, (nframe, 3))
 
     @property
@@ -784,24 +764,11 @@ class Cp2kOutput():
         the slab [electrons-Angstroem]:              -1.5878220042
         """
         pattern = 'Total dipole moment perpendicular to'
-        pattern = re.compile(pattern)
+        nframe, data_lines = self.grep_texts_by_nlines(pattern, 2)
+        data_lines = np.reshape(data_lines, (nframe, -1))
 
-        flag = False
-        data_lines = []
-        nframe = 0
-        for line in self.content:
-            line = line.strip('\n')
-            if pattern.search(line) is not None:
-                flag = True
-                nframe += 1
-                continue
-            if flag:
-                data_lines.append(line)
-                flag = False
-
-        data_lines = np.reshape(data_lines, (nframe))
         data_list = []
-        for line in data_lines:
+        for line in data_lines[:, 1:].reshape(-1):
             line_list = line.split()
             data_list.append(float(line_list[-1]))
         return np.reshape(data_list, (nframe))
