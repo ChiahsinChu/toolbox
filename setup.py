@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="toolbox",
-    version="0.1",
+    version="1.0",
     # include all packages in src
     packages=find_packages(),
     # exclude by
