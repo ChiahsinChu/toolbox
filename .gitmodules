@@ -1,7 +1,7 @@
-[submodule "toolbox/exts/cp2kdata"]
-	path = toolbox/exts/cp2kdata
-	url = git@github.com:ChiahsinChu/cp2kdata.git
 [submodule "toolbox/exts/ase"]
 	path = toolbox/exts/ase
 	url = git@gitlab.com:ChiahsinChu/ase.git
 	branch = jxzhu_dev
+[submodule "toolbox/exts/cp2kdata"]
+	path = toolbox/exts/cp2kdata
+	url = git@github.com:ChiahsinChu/cp2kdata.git
