@@ -1,0 +1,16 @@
+name: sync-gitee-mirror
+
+on: [ push, delete, create ]
+
+concurrency:
+  group: git-mirror
+
+jobs:
+  git-mirror:
+    if: github.repository_owner == 'ChiahsinChu'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: wearerequired/git-mirror-action@v1
+        with:
+          source-repo: "https://github.com/ChiahsinChu/toolbox.git"
+          destination-repo: "https://gitee.com/chiahsinchu/toolbox.git"
