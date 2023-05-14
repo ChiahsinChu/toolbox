@@ -10,7 +10,8 @@ jobs:
     if: github.repository_owner == 'ChiahsinChu'
     runs-on: ubuntu-latest
     steps:
-      - uses: wearerequired/git-mirror-action@v1
+      - uses: abersheeran/sync-gitee-mirror@v1-beta
         with:
-          source-repo: "https://github.com/ChiahsinChu/toolbox.git"
-          destination-repo: "https://gitee.com/chiahsinchu/toolbox.git"
+          repository: ChiahsinChu/toolbox
+          username: ${{ secrets.GITTE_USERNAME }}
+          password: ${{ secrets.GITEE_PASSWORD }}
