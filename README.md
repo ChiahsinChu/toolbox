@@ -38,7 +38,7 @@ Create cp2k input files:
 
 ```python
 from toolbox.utils import *
-from toolbox.io import Cp2kInput
+from toolbox.io.cp2k import Cp2kInput
 
 atoms = io.read("coord.xyz")
 # remember to set cell parameters and pbc!
@@ -71,7 +71,7 @@ You can modify the internal template by setting the variables when initializing 
 Read data from cp2k standard output:
 
 ```python
-from toolbox.io import Cp2kOutput
+from toolbox.io.cp2k import Cp2kOutput
 
 cp2k_out = Cp2kOutput("output.out")
 print(cp2k_out.fermi)
@@ -85,7 +85,7 @@ Read and do the average of cp2k cube file:
 
 ```python
 from toolbox.utils import *
-from toolbox.io import Cp2kCube, Cp2kHartreeCube
+from toolbox.io.cp2k import Cp2kCube, Cp2kHartreeCube
 
 e_cube = Cp2kCube("cp2k-TOTAL_DENSITY-1_0.cube")
 output = e_cube.get_ave_cube(axis=2, gaussian_sigma=0.)
