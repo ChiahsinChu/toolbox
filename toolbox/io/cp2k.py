@@ -560,11 +560,18 @@ class Cp2kOutput():
         worktime = t[-1] + t[-2] * 60 + t[-3] * 60 * 60
         return worktime
 
-    def grep_text(self, pattern):
+    def grep_text_match(self, pattern, check_scf=False):
         search_pattern = re.compile(pattern)
+        scf_pattern = re.compile(r"SCF run converged in")
+
         flag = False
+        scf_flag = (not check_scf)
         for line in self.content:
             line = line.strip('\n')
+            if scf_pattern.search(line) is not None:
+                scf_flag = True
+            if scf_flag == False:
+                continue
             if search_pattern.match(line):
                 flag = True
                 break
@@ -573,15 +580,41 @@ class Cp2kOutput():
         else:
             return ""
 
-    def grep_texts(self, start_pattern, end_pattern):
+    def grep_text_search(self, pattern, check_scf=False):
+        search_pattern = re.compile(pattern)
+        scf_pattern = re.compile(r"SCF run converged in")
+        
+        flag = False
+        scf_flag = (not check_scf)
+        for line in self.content:
+            line = line.strip('\n')
+            if scf_pattern.search(line) is not None:
+                scf_flag = True
+            if scf_flag == False:
+                continue
+            if search_pattern.search(line) is not None:
+                flag = True
+                break
+        if flag:
+            return line
+        else:
+            return ""
+        
+    def grep_texts(self, start_pattern, end_pattern, check_scf=False):
         start_pattern = re.compile(start_pattern)
         end_pattern = re.compile(end_pattern)
+        scf_pattern = re.compile(r"SCF run converged in")
 
         flag = False
+        scf_flag = (not check_scf)
         data_lines = []
         nframe = 0
         for line in self.content:
             line = line.strip('\n')
+            if scf_pattern.search(line) is not None:
+                scf_flag = True
+            if scf_flag == False:
+                continue
             if start_pattern.match(line):
                 flag = True
             if end_pattern.match(line):
@@ -590,35 +623,28 @@ class Cp2kOutput():
                 nframe += 1
             if flag is True:
                 data_lines.append(line)
-        return nframe, data_lines
+        return nframe, np.reshape(data_lines, (nframe, -1))
 
-    def grep_text_2(self, pattern):
-        search_pattern = re.compile(pattern)
-        flag = False
-        for line in self.content:
-            line = line.strip('\n')
-            if search_pattern.search(line) is not None:
-                flag = True
-                break
-        if flag:
-            return line
-        else:
-            return ""
-
-    def grep_texts_by_nlines(self, start_pattern, nlines):
+    def grep_texts_by_nlines(self, start_pattern, nlines, check_scf=False):
         start_pattern = re.compile(start_pattern)
+        scf_pattern = re.compile(r"SCF run converged in")
 
         data_lines = []
         nframe = 0
+        scf_flag = (not check_scf)
         for ii, line in enumerate(self.content):
             line = line.strip('\n')
+            if scf_pattern.search(line) is not None:
+                scf_flag = True
+            if scf_flag == False:
+                continue
             if start_pattern.search(line) is not None:
                 data_lines.append(self.content[ii:ii + nlines])
                 nframe += 1
                 continue
         if nframe == 0:
             raise AttributeError("No data is found in this file.")
-        return nframe, data_lines
+        return nframe, np.reshape(data_lines, (nframe, -1))
 
     @property
     def coord(self):
@@ -653,12 +679,151 @@ class Cp2kOutput():
     def atoms(self):
         positions = self.coord[-1]
         atoms = Atoms(symbols=self.chemical_symbols, positions=positions)
-        a = float(self.grep_text_2(r"Vector a").split()[-1])
-        b = float(self.grep_text_2(r"Vector b").split()[-1])
-        c = float(self.grep_text_2(r"Vector c").split()[-1])
-        alpha = float(self.grep_text_2(r"Angle | alpha").split()[-1])
-        beta = float(self.grep_text_2(r"Angle | beta").split()[-1])
-        gamma = float(self.grep_text_2(r"Angle | gamma").split()[-1])
+        a = float(self.grep_text_search(r"Vector a").split()[-1])
+        b = float(self.grep_text_search(r"Vector b").split()[-1])
+        c = float(self.grep_text_search(r"Vector c").split()[-1])
+        alpha = float(self.grep_text_search(r"Angle | alpha").split()[-1])
+        beta = float(self.grep_text_search(r"Angle | beta").split()[-1])
+        gamma = float(self.grep_text_search(r"Angle | gamma").split()[-1])
+        atoms.set_cell([a, b, c, alpha, beta, gamma])
+        atoms.set_pbc(True)
+        return atoms
+
+    @property
+    def force(self):
+        """
+        get atomic force from cp2k output
+
+        Return:
+            force numpy array (n_atom, 3)
+        """
+        start_pattern = r' ATOMIC FORCES in'
+        end_pattern = r' SUM OF ATOMIC FORCES'
+        nframe, data_lines = self.grep_texts(start_pattern, end_pattern)
+        data_lines = np.reshape(data_lines, (nframe, -1))
+
+        data_list = []
+        for line in data_lines[:, 3:].reshape(-1):
+            line_list = line.split()
+            data_list.append([
+                float(line_list[3]) * AU_TO_EV_EVERY_ANG,
+                float(line_list[4]) * AU_TO_EV_EVERY_ANG,
+                float(line_list[5]) * AU_TO_EV_EVERY_ANG
+            ])
+        return np.reshape(data_list, (nframe, -1, 3))
+
+    @property
+    def energy(self):
+        data = self.grep_text_search("Total energy: ", check_scf=True)
+        # data = self.grep_text_search("Total FORCE_EVAL")
+        data = data.replace('\n', ' ')
+        data = data.split(' ')
+        return float(data[-1]) * AU_TO_EV
+
+    @property
+    def scf_loop(self):
+        data = self.grep_text_search(r"SCF run converged in")
+        if len(data) == 0:
+            return -1
+        else:
+            data = data.replace('\n', ' ')
+            data = data.split(' ')
+            return int(data[-3])
+
+    @property
+    def fermi(self):
+        line = self.grep_text_match(r"  Fermi energy:", check_scf=True)
+        line = line.replace('\n', ' ')
+        line = line.split(' ')
+        return float(line[-1]) * AU_TO_EV
+
+    @property
+    def m_charge(self):
+        start_pattern = 'Mulliken Population Analysis'
+        nframe, data_lines = self.grep_texts_by_nlines(start_pattern,
+                                                       self.natoms + 3, check_scf=True)
+        data_list = []
+        for line in data_lines[-1, 3:]:
+            line_list = line.split()
+            data_list.append(float(line_list[-1]))
+        return np.reshape(data_list, -1)
+
+    @property
+    def h_charge(self):
+        start_pattern = 'Hirshfeld Charges'
+        nframe, data_lines = self.grep_texts_by_nlines(start_pattern,
+                                                       self.natoms + 3, check_scf=True)
+        data_list = []
+        for line in data_lines[-1, 3:]:
+            line_list = line.split()
+            data_list.append(float(line_list[-1]))
+        return np.reshape(data_list, -1)
+
+    @property
+    def dipole_moment(self):
+        pattern = 'Dipole moment'
+        nframe, data_lines = self.grep_texts_by_nlines(pattern, 2, check_scf=True)
+        
+        data_list = []
+        for line in data_lines[-1, 1:]:
+            line_list = line.split()
+            data_list.append(list(map(float, line_list[1:-1:2])))
+        return np.reshape(data_list, 3)
+
+    @property
+    def surf_dipole_moment(self):
+        """
+        Total dipole moment perpendicular to
+        the slab [electrons-Angstroem]:              -1.5878220042
+        """
+        pattern = 'Total dipole moment perpendicular to'
+        nframe, data_lines = self.grep_texts_by_nlines(pattern, 2, check_scf=True)
+        
+        line  = data_lines[-1, 1]
+        line_list = line.split()
+        return float(line_list[-1])
+
+    @property
+    def potdrop(self):
+        cross_area = np.linalg.norm(
+            np.cross(self.atoms.cell[0], self.atoms.cell[1]))
+        DeltaV = self.surf_dipole_moment / cross_area / _EPSILON
+        return DeltaV
+
+    @property
+    def energy_dict(self):
+        energy_dict = {}
+
+        start_pattern = r"  Total charge density g-space grids:"
+        end_pattern = r"  Total energy:"
+        nframe, data_lines = self.grep_texts(start_pattern, end_pattern)
+        
+        tot_e = 0.
+        for kw in data_lines[-1, 2:-1]:
+            kw = kw.split(":")
+            k = kw[0].strip(' ')
+            v = float(kw[1]) * AU_TO_EV
+            energy_dict[k] = v
+            tot_e += v
+
+        energy_dict.pop("Fermi energy", None)
+        energy_dict["total"] = tot_e
+        return energy_dict
+
+class MultiFrameCp2kOutput(Cp2kOutput):
+    def __init__(self, fname="output.out", ignore_warning=False) -> None:
+        super().__init__(fname, ignore_warning)
+
+    @property
+    def atoms(self):
+        positions = self.coord[-1]
+        atoms = Atoms(symbols=self.chemical_symbols, positions=positions)
+        a = float(self.grep_text_search(r"Vector a").split()[-1])
+        b = float(self.grep_text_search(r"Vector b").split()[-1])
+        c = float(self.grep_text_search(r"Vector c").split()[-1])
+        alpha = float(self.grep_text_search(r"Angle | alpha").split()[-1])
+        beta = float(self.grep_text_search(r"Angle | beta").split()[-1])
+        gamma = float(self.grep_text_search(r"Angle | gamma").split()[-1])
         atoms.set_cell([a, b, c, alpha, beta, gamma])
         atoms.set_pbc(True)
         return atoms
@@ -696,15 +861,15 @@ class Cp2kOutput():
 
     @property
     def energy(self):
-        data = self.grep_text_2("Total energy: ")
-        # data = self.grep_text_2("Total FORCE_EVAL")
+        data = self.grep_text_search("Total energy: ")
+        # data = self.grep_text_search("Total FORCE_EVAL")
         data = data.replace('\n', ' ')
         data = data.split(' ')
         return float(data[-1]) * AU_TO_EV
 
     @property
     def scf_loop(self):
-        data = self.grep_text_2(r"SCF run converged in")
+        data = self.grep_text_search(r"SCF run converged in")
         if len(data) == 0:
             return -1
         else:
@@ -714,7 +879,7 @@ class Cp2kOutput():
 
     @property
     def fermi(self):
-        line = self.grep_text(r"  Fermi energy:")
+        line = self.grep_text_match(r"  Fermi energy:")
         line = line.replace('\n', ' ')
         line = line.split(' ')
         return float(line[-1]) * AU_TO_EV
@@ -790,22 +955,22 @@ class Cp2kOutput():
         data_lines = np.reshape(data_lines, (nframe, -1))
 
         tot_e = 0.
-        for kw in data_lines[0, 2:-1].reshape(-1):
+        for kw in data_lines[-1, 2:-1].reshape(-1):
             kw = kw.split(":")
             k = kw[0].strip(' ')
             v = float(kw[1]) * AU_TO_EV
             energy_dict[k] = [v]
             tot_e += v
         # energy_dict["Total energy"].append(tot_e)
-        for kws in data_lines[1:, 2:-1].reshape(-1):
-            tot_e = 0.
-            for kw in kws:
-                kw = kw.split(":")
-                k = kw[0].strip(' ')
-                v = float(kw[1]) * AU_TO_EV
-                energy_dict[k].append(v)
-                tot_e += v
-            # energy_dict["Total energy"].append(tot_e)
+        # for kws in data_lines[1:, 2:-1].reshape(-1):
+        #     tot_e = 0.
+        #     for kw in kws:
+        #         kw = kw.split(":")
+        #         k = kw[0].strip(' ')
+        #         v = float(kw[1]) * AU_TO_EV
+        #         energy_dict[k].append(v)
+        #         tot_e += v
+        #     # energy_dict["Total energy"].append(tot_e)
 
         energy_dict.pop("Fermi energy", None)
 
@@ -813,21 +978,21 @@ class Cp2kOutput():
 
     # @property
     # def xc_energy(self):
-    #     data = self.grep_text_2("Exchange-correlation energy")
+    #     data = self.grep_text_search("Exchange-correlation energy")
     #     data = data.replace('\n', ' ')
     #     data = data.split(' ')
     #     return float(data[-1]) * AU_TO_EV
 
     # @property
     # def core_hmt_energy(self):
-    #     data = self.grep_text_2("Core Hamiltonian energy")
+    #     data = self.grep_text_search("Core Hamiltonian energy")
     #     data = data.replace('\n', ' ')
     #     data = data.split(' ')
     #     return float(data[-1]) * AU_TO_EV
 
     # @property
     # def overlap_energy(self):
-    #     data = self.grep_text_2(
+    #     data = self.grep_text_search(
     #         "Overlap energy of the core charge distribution")
     #     data = data.replace('\n', ' ')
     #     data = data.split(' ')
@@ -835,33 +1000,31 @@ class Cp2kOutput():
 
     # @property
     # def self_energy(self):
-    #     data = self.grep_text_2("Self energy of the core charge distribution")
+    #     data = self.grep_text_search("Self energy of the core charge distribution")
     #     data = data.replace('\n', ' ')
     #     data = data.split(' ')
     #     return float(data[-1]) * AU_TO_EV
 
     # @property
     # def hartree_energy(self):
-    #     data = self.grep_text_2("Hartree energy")
+    #     data = self.grep_text_search("Hartree energy")
     #     data = data.replace('\n', ' ')
     #     data = data.split(' ')
     #     return float(data[-1]) * AU_TO_EV
 
     # @property
     # def vdw_energy(self):
-    #     data = self.grep_text_2("Dispersion energy")
+    #     data = self.grep_text_search("Dispersion energy")
     #     data = data.replace('\n', ' ')
     #     data = data.split(' ')
     #     return float(data[-1]) * AU_TO_EV
 
     # @property
     # def entropy_e_energy(self):
-    #     data = self.grep_text_2("Electronic entropic energy")
+    #     data = self.grep_text_search("Electronic entropic energy")
     #     data = data.replace('\n', ' ')
     #     data = data.split(' ')
     #     return float(data[-1]) * AU_TO_EV
-
-
 class Cp2kCube():
 
     def __init__(self, fname) -> None:
