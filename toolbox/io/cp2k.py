@@ -45,7 +45,7 @@ class Cp2kInput():
     Examples
     --------
     >>> from ase import io
-    >>> from zjxpack.io.cp2k import Cp2kInput
+    >>> from toolbox.io.cp2k import Cp2kInput
     >>> atoms = io.read("POSCAR")
     >>> input = Cp2kInput(atoms, 
     >>>                   pp_dir="/data/basis", 
