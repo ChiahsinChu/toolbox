@@ -15,21 +15,24 @@ class Cp2kCalculator(BashCalculator):
         super().__init__(work_dir)
 
     def run(self,
-            ignore_err=False,
             command="cp2k.popt",
             stdin="input.inp",
             stdout="output.out",
             stderr="cp2k.stderr",
-            mpi_command: str = "mpiexec.hydra"):
-        super().run(command, stdin, stdout, stderr, mpi_command)
+            mpi_command: str = "mpiexec.hydra", 
+            ignore_finished_tag=False, 
+            ignore_err=True):
+        self.ignore_err = ignore_err
+        super().run(command, stdin, stdout, stderr, mpi_command, ignore_finished_tag)
 
+    def _make_finished_tag(self, stdout):
         try:
-            cp2k_out = Cp2kOutput(os.path.join(self.work_dir, stdout))
-            with open(os.path.join(self.work_dir, "finished_tag"), 'w') as f:
+            cp2k_out = Cp2kOutput(stdout)
+            with open(os.path.join("finished_tag"), 'w') as f:
                 pass
         except:
             warning_msg = "CP2K calculation does not finish!"
-            if ignore_err:
+            if self.ignore_err:
                 logging.warning(warning_msg)
             else:
                 sys.exit(warning_msg)
