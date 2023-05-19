@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 
 class BashCalculator:
     def __init__(self, work_dir) -> None:
@@ -61,5 +62,21 @@ class LammpsCalculator(BashCalculator):
 
     @staticmethod
     def _make_finished_tag(stdout):
-        # TODO: check if lammps task finished successfully 
-        pass
+        with open(stdout, 'rb') as f: 
+            offset = -50 
+            while True:
+                f.seek(offset, 2) 
+                lines = f.readlines()  
+                if len(lines) >= 2: 
+                    last_line = lines[-1] 
+                    break
+                offset *= 2
+
+        pattern = re.compile(r"Total wall time")
+        if pattern.search(last_line.decode()) is not None:
+            with open(os.path.join("finished_tag"), 'w') as f:
+                pass
+        else:
+            warning_msg = "LAMMPS calculation does not finish!"
+            logging.warning(warning_msg)
+        
