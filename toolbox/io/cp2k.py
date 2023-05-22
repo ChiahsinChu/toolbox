@@ -501,33 +501,30 @@ class Cp2kOutput():
 
     @property
     def worktime(self):
-        start, end = self.grep_time(self.output_file)
+        start, end = self.grep_time()
         return self.time_gap(start, end)
 
-    @staticmethod
-    def grep_time(output_file):
+    def grep_time(self):
         """
         grep the time info from cp2k output file
 
         Return:
             float list of time ["hour", "minute", "second"]
         """
-        time_info = "".join(
-            os.popen("grep 'PROGRAM STARTED AT' " + output_file).readlines())
+        time_info = self.grep_text_search(r"PROGRAM STARTED AT")
         time_info = time_info.replace('\n', ' ')
         time_info = time_info.split(' ')
         start = []
         # ["hour", "minute", "second"]
-        data = time_info[-2].split(":")
+        data = time_info[-1].split(":")
         for item in data:
             start.append(float(item))
 
-        time_info = "".join(
-            os.popen("grep 'PROGRAM ENDED AT' " + output_file).readlines())
+        time_info = self.grep_text_search(r"PROGRAM ENDED AT")
         time_info = time_info.replace('\n', ' ')
         time_info = time_info.split(' ')
         end = []
-        data = time_info[-2].split(":")
+        data = time_info[-1].split(":")
         for item in data:
             end.append(float(item))
         return start, end
