@@ -7,6 +7,7 @@ Some python codes used for my project. Please feel free to reach me via email: *
 ## To-do list
 
 - [ ] MultiFrameCp2kOutput
+- [ ] [unittest](doc/unittest.md)
 - [ ] write class for workflow plotting
 
 ## Installation
