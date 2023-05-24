@@ -494,10 +494,12 @@ class Cp2kOutput():
         self.output_file = fname
         with open(fname, "r") as f:
             self.content = f.readlines()
+            
+        self.check_scf = (not ignore_warning)
+        if (self.check_scf) and (self.scf_loop == -1):
+            raise Warning("SCF run NOT converged")
+        
         self.natoms = len(self.atoms)
-        if not ignore_warning:
-            if self.scf_loop == -1:
-                raise Warning("SCF run NOT converged")
 
     @property
     def worktime(self):
@@ -511,6 +513,9 @@ class Cp2kOutput():
         Return:
             float list of time ["hour", "minute", "second"]
         """
+        check_scf = self.check_scf
+        self.check_scf = False 
+        
         time_info = self.grep_text_search(r"PROGRAM STARTED AT")
         time_info = time_info.replace('\n', ' ')
         time_info = time_info.split(' ')
@@ -527,6 +532,8 @@ class Cp2kOutput():
         data = time_info[-1].split(":")
         for item in data:
             end.append(float(item))
+            
+        self.check_scf = check_scf
         return start, end
 
     @staticmethod
@@ -557,12 +564,12 @@ class Cp2kOutput():
         worktime = t[-1] + t[-2] * 60 + t[-3] * 60 * 60
         return worktime
 
-    def grep_text_match(self, pattern, check_scf=False):
+    def grep_text_match(self, pattern):
         search_pattern = re.compile(pattern)
         scf_pattern = re.compile(r"SCF run converged in")
 
         flag = False
-        scf_flag = (not check_scf)
+        scf_flag = (not self.check_scf)
         for line in self.content:
             line = line.strip('\n')
             if scf_pattern.search(line) is not None:
@@ -577,12 +584,12 @@ class Cp2kOutput():
         else:
             return ""
 
-    def grep_text_search(self, pattern, check_scf=False):
+    def grep_text_search(self, pattern):
         search_pattern = re.compile(pattern)
         scf_pattern = re.compile(r"SCF run converged in")
         
         flag = False
-        scf_flag = (not check_scf)
+        scf_flag = (not self.check_scf)
         for line in self.content:
             line = line.strip('\n')
             if scf_pattern.search(line) is not None:
@@ -597,13 +604,13 @@ class Cp2kOutput():
         else:
             return ""
         
-    def grep_texts(self, start_pattern, end_pattern, check_scf=False):
+    def grep_texts(self, start_pattern, end_pattern):
         start_pattern = re.compile(start_pattern)
         end_pattern = re.compile(end_pattern)
         scf_pattern = re.compile(r"SCF run converged in")
 
         flag = False
-        scf_flag = (not check_scf)
+        scf_flag = (not self.check_scf)
         data_lines = []
         nframe = 0
         for line in self.content:
@@ -622,13 +629,13 @@ class Cp2kOutput():
                 data_lines.append(line)
         return nframe, np.reshape(data_lines, (nframe, -1))
 
-    def grep_texts_by_nlines(self, start_pattern, nlines, check_scf=False):
+    def grep_texts_by_nlines(self, start_pattern, nlines):
         start_pattern = re.compile(start_pattern)
         scf_pattern = re.compile(r"SCF run converged in")
 
         data_lines = []
         nframe = 0
-        scf_flag = (not check_scf)
+        scf_flag = (not self.check_scf)
         for ii, line in enumerate(self.content):
             line = line.strip('\n')
             if scf_pattern.search(line) is not None:
@@ -653,12 +660,15 @@ class Cp2kOutput():
         """
         start_pattern = r' MODULE QUICKSTEP:  ATOMIC COORDINATES IN angstrom'
         end_pattern = r' SCF PARAMETERS'
+        check_scf = self.check_scf
+        self.check_scf = False 
         nframe, data_lines = self.grep_texts(start_pattern, end_pattern)
+        self.check_scf = check_scf
         data_lines = np.reshape(data_lines, (nframe, -1))
 
         data_list = []
         elem_list = []
-        for line in data_lines[:, 3:-4].reshape(-1):
+        for line in data_lines[-1, 3:-4].reshape(-1):
             if len(line) == 0:
                 continue
             line_list = line.split()
@@ -676,12 +686,17 @@ class Cp2kOutput():
     def atoms(self):
         positions = self.coord[-1]
         atoms = Atoms(symbols=self.chemical_symbols, positions=positions)
+
+        check_scf = self.check_scf
+        self.check_scf = False 
         a = float(self.grep_text_search(r"Vector a").split()[-1])
         b = float(self.grep_text_search(r"Vector b").split()[-1])
         c = float(self.grep_text_search(r"Vector c").split()[-1])
         alpha = float(self.grep_text_search(r"Angle | alpha").split()[-1])
         beta = float(self.grep_text_search(r"Angle | beta").split()[-1])
         gamma = float(self.grep_text_search(r"Angle | gamma").split()[-1])
+        self.check_scf = check_scf
+
         atoms.set_cell([a, b, c, alpha, beta, gamma])
         atoms.set_pbc(True)
         return atoms
@@ -711,7 +726,7 @@ class Cp2kOutput():
 
     @property
     def energy(self):
-        data = self.grep_text_search("Total energy: ", check_scf=True)
+        data = self.grep_text_search("Total energy: ")
         # data = self.grep_text_search("Total FORCE_EVAL")
         data = data.replace('\n', ' ')
         data = data.split(' ')
@@ -729,7 +744,7 @@ class Cp2kOutput():
 
     @property
     def fermi(self):
-        line = self.grep_text_match(r"  Fermi energy:", check_scf=True)
+        line = self.grep_text_match(r"  Fermi energy:")
         line = line.replace('\n', ' ')
         line = line.split(' ')
         return float(line[-1]) * AU_TO_EV
@@ -738,7 +753,7 @@ class Cp2kOutput():
     def m_charge(self):
         start_pattern = 'Mulliken Population Analysis'
         nframe, data_lines = self.grep_texts_by_nlines(start_pattern,
-                                                       self.natoms + 3, check_scf=True)
+                                                       self.natoms + 3)
         data_list = []
         for line in data_lines[-1, 3:]:
             line_list = line.split()
@@ -749,7 +764,7 @@ class Cp2kOutput():
     def h_charge(self):
         start_pattern = 'Hirshfeld Charges'
         nframe, data_lines = self.grep_texts_by_nlines(start_pattern,
-                                                       self.natoms + 3, check_scf=True)
+                                                       self.natoms + 3)
         data_list = []
         for line in data_lines[-1, 3:]:
             line_list = line.split()
@@ -759,7 +774,7 @@ class Cp2kOutput():
     @property
     def dipole_moment(self):
         pattern = 'Dipole moment'
-        nframe, data_lines = self.grep_texts_by_nlines(pattern, 2, check_scf=True)
+        nframe, data_lines = self.grep_texts_by_nlines(pattern, 2)
         
         data_list = []
         for line in data_lines[-1, 1:]:
@@ -774,7 +789,7 @@ class Cp2kOutput():
         the slab [electrons-Angstroem]:              -1.5878220042
         """
         pattern = 'Total dipole moment perpendicular to'
-        nframe, data_lines = self.grep_texts_by_nlines(pattern, 2, check_scf=True)
+        nframe, data_lines = self.grep_texts_by_nlines(pattern, 2)
         
         line  = data_lines[-1, 1]
         line_list = line.split()
