@@ -20,6 +20,11 @@ class ElecPotentialCalculator:
         charge density in e/A^3
     grid:
         grid in A
+    
+    Return
+    ------
+    Electrostatic potential in eV
+    (different from Hartree potential with a negative sign!)
     """
     def __init__(self, charge, grid) -> None:
         if len(grid) != len(charge):
@@ -59,6 +64,9 @@ class ElecPotentialCalculator:
         return self.int2
 
     def _calculate_dirichlet(self):
+        pass
+
+    def _calculate_neumann(self):
         pass
 
     def _calculate_dip_cor(self, cell):

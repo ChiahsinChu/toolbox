@@ -186,3 +186,13 @@ def calc_density(n, v, mol_mass: float):
 
 def calc_water_density(n, v):
     return calc_density(n, v, 18.015)
+
+
+def calc_number(rho, v, mol_mass: float):
+    n = rho * (v * (constants.angstrom / constants.centi)**
+               3) * constants.Avogadro / mol_mass
+    return n
+
+
+def calc_water_number(rho, v):
+    return calc_number(rho, v, 18.015)
