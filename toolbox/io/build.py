@@ -18,8 +18,8 @@ class WaterBox:
 
         slit = np.reshape(slit, (-1))
         if (len(slit) == 1) or (len(slit) == 3):
-            box[:, 0] += slit[0]
-            box[:, 1] -= slit[0]
+            box[:, 0] += slit
+            box[:, 1] -= slit
         else:
             raise AttributeError("")
         self.box_string = np.array2string(np.transpose(box).flatten())[1:-1]
