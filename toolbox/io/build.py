@@ -28,6 +28,7 @@ class WaterBox:
         atoms = build.molecule("H2O")
         io.write("water.pdb", atoms)
         water = mda.Universe("water.pdb")
+
         system = mdapackmol.packmol([
             mdapackmol.PackmolStructure(
                 water,
@@ -65,6 +66,7 @@ class Interface:
         self.atoms = waterbox + slab
         self.atoms.set_cell(new_cell)
         self.atoms.set_pbc(True)
+        os.remove("waterbox.xyz")
 
     def relax(self):
         # TODO: add relaxation step with lammps
