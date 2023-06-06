@@ -8,6 +8,7 @@ from ..utils.utils import calc_water_number
 
 class WaterBox:
     def __init__(self, box=None, rho=1.0, slit=1.0) -> None:
+        box = np.array(box)
         assert len(box) == 3
         _box = np.reshape(box, (3, -1))
         if len(_box[0]) == 1:
