@@ -13,12 +13,12 @@ class Graph:
     def __init__(self, dp_model="graph.pb") -> None:
         self.model = dp_model
 
-    def run(self):
+    def run(self, port=6006):
         graph = self._load_graph(self.model)
         with tf.Session(graph=graph) as sess:
             writer = tf.summary.FileWriter("dp_logs", sess.graph)
             writer.close()
-        os.system("tensorboard --logdir=dp_logs --port=6006")
+        os.system("tensorboard --logdir=dp_logs --port=%d" % port)
 
     @staticmethod
     def _load_graph(frozen_graph_filename,
