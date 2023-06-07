@@ -684,7 +684,8 @@ class Cp2kOutput():
 
     @property
     def atoms(self):
-        atoms = Atoms(symbols=self.chemical_symbols, positions=self.coord)
+        positions = self.coord
+        atoms = Atoms(symbols=self.chemical_symbols, positions=positions)
         check_scf = self.check_scf
         self.check_scf = False 
         a = float(self.grep_text_search(r"Vector a").split()[-1])
@@ -826,7 +827,8 @@ class MultiFrameCp2kOutput(Cp2kOutput):
 
     @property
     def atoms(self):
-        atoms = Atoms(symbols=self.chemical_symbols, positions=self.coord)
+        positions = self.coord
+        atoms = Atoms(symbols=self.chemical_symbols, positions=positions)
         a = float(self.grep_text_search(r"Vector a").split()[-1])
         b = float(self.grep_text_search(r"Vector b").split()[-1])
         c = float(self.grep_text_search(r"Vector c").split()[-1])
