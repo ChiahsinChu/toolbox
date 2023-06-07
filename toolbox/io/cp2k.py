@@ -678,15 +678,13 @@ class Cp2kOutput():
                 float(line_list[6])
             ])
             elem_list.append(line_list[2])
-        coord = np.reshape(data_list, (nframe, -1, 3))
-        self.chemical_symbols = np.reshape(elem_list, (nframe, -1))[0].tolist()
+        coord = np.reshape(data_list, (-1, 3))
+        self.chemical_symbols = np.reshape(elem_list, (-1)).tolist()
         return coord
 
     @property
     def atoms(self):
-        positions = self.coord[-1]
-        atoms = Atoms(symbols=self.chemical_symbols, positions=positions)
-
+        atoms = Atoms(symbols=self.chemical_symbols, positions=self.coord)
         check_scf = self.check_scf
         self.check_scf = False 
         a = float(self.grep_text_search(r"Vector a").split()[-1])
@@ -722,7 +720,7 @@ class Cp2kOutput():
                 float(line_list[4]) * AU_TO_EV_EVERY_ANG,
                 float(line_list[5]) * AU_TO_EV_EVERY_ANG
             ])
-        return np.reshape(data_list, (nframe, -1, 3))
+        return np.reshape(data_list, (-1, 3))
 
     @property
     def energy(self):
@@ -828,8 +826,7 @@ class MultiFrameCp2kOutput(Cp2kOutput):
 
     @property
     def atoms(self):
-        positions = self.coord[-1]
-        atoms = Atoms(symbols=self.chemical_symbols, positions=positions)
+        atoms = Atoms(symbols=self.chemical_symbols, positions=self.coord)
         a = float(self.grep_text_search(r"Vector a").split()[-1])
         b = float(self.grep_text_search(r"Vector b").split()[-1])
         c = float(self.grep_text_search(r"Vector c").split()[-1])
