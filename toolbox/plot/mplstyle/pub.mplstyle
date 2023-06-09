@@ -10,7 +10,7 @@ axes.edgecolor:  black
 axes.linewidth: 1.0
 xtick.labelsize: medium
 ytick.labelsize: medium
-legend.fontsize: medium
+legend.fontsize: small
 figure.figsize: 6, 4
 figure.dpi: 200
 savefig.dpi: 200

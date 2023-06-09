@@ -1,2 +1,2 @@
 from .core import *
-from .style import *
+from .style import use_style
