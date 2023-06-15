@@ -809,16 +809,20 @@ class Cp2kOutput():
         end_pattern = r"  Total energy:"
         nframe, data_lines = self.grep_texts(start_pattern, end_pattern)
         
-        tot_e = 0.
+        
         for kw in data_lines[-1, 2:-1]:
             kw = kw.split(":")
             k = kw[0].strip(' ')
             v = float(kw[1]) * AU_TO_EV
             energy_dict[k] = v
-            tot_e += v
 
         energy_dict.pop("Fermi energy", None)
+
+        tot_e = 0.
+        for v in energy_dict.values():
+            tot_e += v
         energy_dict["total"] = tot_e
+        
         return energy_dict
 
 class MultiFrameCp2kOutput(Cp2kOutput):
