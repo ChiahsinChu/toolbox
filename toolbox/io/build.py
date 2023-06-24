@@ -68,7 +68,9 @@ class Interface:
         self.atoms.set_cell(new_cell)
         self.atoms.set_pbc(True)
         os.remove("waterbox.xyz")
-
+        
     def relax(self):
         # TODO: add relaxation step with lammps
-        pass
+        
+        pass    
+
