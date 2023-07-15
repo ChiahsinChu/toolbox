@@ -1,4 +1,5 @@
 import numpy as np
+from sklearn import metrics
 
 
 def get_dev(x, y):
@@ -59,3 +60,16 @@ def handle_zero_division(x, y, threshold=None):
         # replace NaN and Inf values with 0
         result[~np.isfinite(result)] = 0
     return result
+
+
+def error_test(y_true, y_pred):
+    """
+    https://scikit-learn.org/stable/modules/model_evaluation.html#regression-metrics
+    """
+    y_true = np.reshape(y_true, (-1,))
+    y_pred = np.reshape(y_pred, (-1,))
+    max_error = metrics.max_error(y_true, y_pred)
+    mae = metrics.mean_absolute_error(y_true, y_pred)
+    rmse = np.sqrt(metrics.mean_squared_error(y_true, y_pred))
+    r2 = metrics.r2_score(y_true, y_pred)
+    return (max_error, mae, rmse, r2)
