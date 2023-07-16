@@ -66,10 +66,13 @@ def error_test(y_true, y_pred):
     """
     https://scikit-learn.org/stable/modules/model_evaluation.html#regression-metrics
     """
+    results_dict = {}
     y_true = np.reshape(y_true, (-1,))
     y_pred = np.reshape(y_pred, (-1,))
-    max_error = metrics.max_error(y_true, y_pred)
-    mae = metrics.mean_absolute_error(y_true, y_pred)
-    rmse = np.sqrt(metrics.mean_squared_error(y_true, y_pred))
-    r2 = metrics.r2_score(y_true, y_pred)
-    return (max_error, mae, rmse, r2)
+    
+    results_dict["max_err"] = metrics.max_error(y_true, y_pred)
+    results_dict["mae"] = metrics.mean_absolute_error(y_true, y_pred)
+    results_dict["rmse"] = np.sqrt(metrics.mean_squared_error(y_true, y_pred))
+    results_dict["r2"] = metrics.r2_score(y_true, y_pred)
+    results_dict["mape"] = metrics.mean_absolute_percentage_error(y_true, y_pred)
+    return results_dict
