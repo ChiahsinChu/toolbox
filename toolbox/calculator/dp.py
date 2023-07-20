@@ -120,9 +120,11 @@ class CP2KDPDispatcher(DPDispatcher):
             "command": "mpiexec.hydra cp2k.popt input.inp", 
             "forward_files": ["input.inp", "coord.xyz"], 
             "backward_files": [
+                "output",
                 "cp2k-v_hartree-1_0.cube",
                 "cp2k-ELECTRON_DENSITY-1_0.cube",
-                "cp2k-TOTAL_DENSITY-1_0.cube", "cp2k-RESTART.wfn"
+                "cp2k-TOTAL_DENSITY-1_0.cube", 
+                "cp2k-RESTART.wfn"
             ],
             "outlog":"output"
         }
