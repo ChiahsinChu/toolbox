@@ -18,7 +18,7 @@ def gaussian_int(x, mu, sigma, norm=True):
     Gaussian integral
     """
     if norm:
-        coeff = 1 / (2 * sigma)
+        coeff = 1 / 2
     else:
         coeff = np.sqrt(np.pi / 2)
     return coeff * sigma * erf((x - mu) / (np.sqrt(2) * sigma))
