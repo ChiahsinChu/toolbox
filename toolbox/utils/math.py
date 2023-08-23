@@ -20,7 +20,7 @@ def gaussian_int(x, mu, sigma, norm=True):
     if norm:
         coeff = 1 / 2
     else:
-        coeff = np.sqrt(np.pi / 2)
+        coeff = np.sqrt(np.pi / 2) * sigma
     return coeff * sigma * erf((x - mu) / (np.sqrt(2) * sigma))
 
 
