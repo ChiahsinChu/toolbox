@@ -2,27 +2,21 @@ import numpy as np
 from sklearn import metrics
 from scipy.special import erf
 
-def gaussian_func(x, mu, sigma, norm=True):
+
+def gaussian_func(x, mu, sigma):
     """
     Gaussian function
     """
-    if norm:
-        coeff = 1 / (sigma * np.sqrt(2 * np.pi))
-    else:
-        coeff = 1
-    return coeff * np.exp(-np.power(x - mu, 2.) /
-                            (2 * np.power(sigma, 2.)))
+    coeff = 1 / (sigma * np.sqrt(2 * np.pi))
+    return coeff * np.exp(-np.power(x - mu, 2.) / (2 * np.power(sigma, 2.)))
 
-def gaussian_int(x, mu, sigma, norm=True):
+
+def gaussian_int(x, mu, sigma):
     """
     Gaussian integral
     """
-    if norm:
-        coeff = 1 / 2
-    else:
-        coeff = np.sqrt(np.pi / 2) * sigma
-    return coeff * sigma * erf((x - mu) / (np.sqrt(2) * sigma))
-
+    coeff = 1 / 2
+    return coeff * erf((x - mu) / (np.sqrt(2) * sigma))
 
 
 def get_dev(x, y):
@@ -90,12 +84,13 @@ def error_test(y_true, y_pred):
     https://scikit-learn.org/stable/modules/model_evaluation.html#regression-metrics
     """
     results_dict = {}
-    y_true = np.reshape(y_true, (-1,))
-    y_pred = np.reshape(y_pred, (-1,))
-    
+    y_true = np.reshape(y_true, (-1, ))
+    y_pred = np.reshape(y_pred, (-1, ))
+
     results_dict["max_err"] = metrics.max_error(y_true, y_pred)
     results_dict["mae"] = metrics.mean_absolute_error(y_true, y_pred)
     results_dict["rmse"] = np.sqrt(metrics.mean_squared_error(y_true, y_pred))
     results_dict["r2"] = metrics.r2_score(y_true, y_pred)
-    results_dict["mape"] = metrics.mean_absolute_percentage_error(y_true, y_pred)
+    results_dict["mape"] = metrics.mean_absolute_percentage_error(
+        y_true, y_pred)
     return results_dict
