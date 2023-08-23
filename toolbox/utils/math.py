@@ -1,5 +1,28 @@
 import numpy as np
 from sklearn import metrics
+from scipy.special import erf
+
+def gaussian_func(x, mu, sigma, norm=True):
+    """
+    Gaussian function
+    """
+    if norm:
+        coeff = 1 / (sigma * np.sqrt(2 * np.pi))
+    else:
+        coeff = 1
+    return coeff * np.exp(-np.power(x - mu, 2.) /
+                            (2 * np.power(sigma, 2.)))
+
+def gaussian_int(x, mu, sigma, norm=True):
+    """
+    Gaussian integral
+    """
+    if norm:
+        coeff = 1 / (2 * sigma)
+    else:
+        coeff = np.sqrt(np.pi / 2)
+    return coeff * sigma * erf((x - mu) / (np.sqrt(2) * sigma))
+
 
 
 def get_dev(x, y):
