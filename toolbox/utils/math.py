@@ -1,6 +1,8 @@
+import math
+
 import numpy as np
-from sklearn import metrics
 from scipy.special import erf
+from sklearn import metrics
 
 
 def gaussian_func(x, mu, sigma):
@@ -17,6 +19,16 @@ def gaussian_int(x, mu, sigma):
     """
     coeff = 1 / 2
     return coeff * erf((x - mu) / (np.sqrt(2) * sigma))
+
+
+def block_ave(_x, _y, l_block):
+    assert len(_x) == len(_y)
+    n_block = math.floor(len(_x) / l_block)
+    x = _x[:(n_block * l_block)]
+    y = _y[:(n_block * l_block)]
+    x = np.reshape(x, (-1, l_block)).mean(axis=-1)
+    y = np.reshape(y, (-1, l_block)).mean(axis=-1)
+    return x, y
 
 
 def get_dev(x, y):
