@@ -196,3 +196,21 @@ def calc_number(rho, v, mol_mass: float):
 
 def calc_water_number(rho, v):
     return calc_number(rho, v, 18.015)
+
+
+def calc_coord_number(atoms, c_ids, neigh_ids, cutoff):
+    from MDAnalysis.analysis import distances
+
+    p = atoms.get_positions()
+    p_c = p[c_ids]
+    p_n = p[neigh_ids]
+    results = np.empty((len(c_ids), len(neigh_ids)), dtype=np.float64)
+    distances.distance_arrays(p_c, p_n, box=atoms.cell.cellpar(), result=results)
+    out = np.count_nonzero(results <= cutoff, axis=1)
+    return out
+
+def calc_water_coord_number(atoms):
+    atype = np.array(atoms.get_chemical_symbols())
+    c_ids = np.where(atype == "O")[0]
+    neigh_ids = np.where(atype == "H")[0]
+    return calc_coord_number(atoms, c_ids, neigh_ids, 1.3)
