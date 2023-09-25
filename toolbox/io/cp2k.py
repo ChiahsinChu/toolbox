@@ -725,8 +725,8 @@ class Cp2kOutput():
 
     @property
     def energy(self):
-        data = self.grep_text_search("Total energy: ")
-        # data = self.grep_text_search("Total FORCE_EVAL")
+        # data = self.grep_text_search("Total energy: ")
+        data = self.grep_text_search("Total FORCE_EVAL")
         data = data.replace('\n', ' ')
         data = data.split(' ')
         return float(data[-1]) * AU_TO_EV
