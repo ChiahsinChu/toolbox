@@ -106,3 +106,7 @@ def error_test(y_true, y_pred):
     results_dict["mape"] = metrics.mean_absolute_percentage_error(
         y_true, y_pred)
     return results_dict
+
+
+def vec_project(vec, unit_vec):
+    return np.dot(vec, unit_vec) * unit_vec
