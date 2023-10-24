@@ -11,5 +11,5 @@ setup(
     #package_dir = {'':'zjxpack'},
     include_package_data=True,
     install_requires=[
-        "monty", "regex", "ase", "scipy", "scikit-learn", "h5py"
+        "monty", "regex", "ase", "scipy", "scikit-learn", "h5py", "cp2kdata",
     ])

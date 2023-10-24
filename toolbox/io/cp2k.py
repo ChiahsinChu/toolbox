@@ -1,12 +1,15 @@
 import copy
 import re
+import datetime
 
 from ase import Atoms
 from ase.io.cube import read_cube_data
 
+from cp2kdata.pdos.pdos import Cp2kPdos as _Cp2kPdos
+from cp2kdata.pdos.pdos import gaussian_filter1d
+from cp2kdata.paser_func import *
+
 from .. import CONFIGS
-from ..exts.cp2kdata.cp2kdata.pdos import Cp2kPdos as _Cp2kPdos
-from ..exts.cp2kdata.cp2kdata.pdos import gaussian_filter1d
 from ..utils import *
 from ..utils.unit import *
 from ..utils.utils import iterdict, save_dict_json, update_dict
@@ -494,6 +497,7 @@ class Cp2kOutput():
         self.output_file = fname
         with open(fname, "r") as f:
             self.content = f.readlines()
+        self.string = "".join(self.content)
             
         self.check_scf = (not ignore_warning)
         if (self.check_scf) and (self.scf_loop == -1):
@@ -503,86 +507,15 @@ class Cp2kOutput():
 
     @property
     def worktime(self):
-        start, end = self.grep_time()
-        return self.time_gap(start, end)
-
-    def grep_time(self):
-        """
-        grep the time info from cp2k output file
-
-        Return:
-            float list of time ["hour", "minute", "second"]
-        """
-        check_scf = self.check_scf
-        self.check_scf = False 
-        
-        time_info = self.grep_text_search(r"PROGRAM STARTED AT")
-        time_info = time_info.replace('\n', ' ')
-        time_info = time_info.split(' ')
-        start = []
-        # ["hour", "minute", "second"]
-        data = time_info[-1].split(":")
-        for item in data:
-            start.append(float(item))
-
-        time_info = self.grep_text_search(r"PROGRAM ENDED AT")
-        time_info = time_info.replace('\n', ' ')
-        time_info = time_info.split(' ')
-        end = []
-        data = time_info[-1].split(":")
-        for item in data:
-            end.append(float(item))
-            
-        self.check_scf = check_scf
-        return start, end
-
-    @staticmethod
-    def time_gap(start, end):
-        """
-        Args:
-            start: float list for inital time 
-            end: float list for final time 
-            in ['hour','minute','second']
-        Return:
-            time consuming for calculation 
-            in second
-        """
-        t_i = np.array(start)
-        t_f = np.array(end)
-        t = t_f - t_i
-        # second
-        if t[-1] < 0:
-            t[-1] = t[-1] + 60
-            t[-2] = t[-2] - 1
-        # minute
-        if t[-2] < 0:
-            t[-2] = t[-2] + 60
-            t[-3] = t[-3] - 1
-        # hour
-        if t[-3] < 0:
-            t[-3] = t[-3] + 24
-        worktime = t[-1] + t[-2] * 60 + t[-3] * 60 * 60
-        return worktime
-
-    def grep_text_match(self, pattern):
-        search_pattern = re.compile(pattern)
-        scf_pattern = re.compile(r"SCF run converged in")
-
-        flag = False
-        scf_flag = (not self.check_scf)
-        for line in self.content:
-            line = line.strip('\n')
-            if scf_pattern.search(line) is not None:
-                scf_flag = True
-            if scf_flag == False:
-                continue
-            if search_pattern.match(line):
-                flag = True
-                break
-        if flag:
-            return line
-        else:
-            return ""
+        pattern = r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}'
+        out = re.findall(pattern, self.string)
+        t = re.split(r'\.|:|-|\s', out[0])
+        start_time = datetime.datetime(int(t[0]), int(t[1]), int(t[2]), int(t[3]), int(t[4]), int(t[5]), int(t[6]))
+        t = re.split(r'\.|:|-|\s', out[-1])
+        end_time = datetime.datetime(int(t[0]), int(t[1]), int(t[2]), int(t[3]), int(t[4]), int(t[5]), int(t[6]))
+        delta_t = end_time - start_time
+        run_time = delta_t.total_seconds()
+        return run_time
 
     def grep_text_search(self, pattern):
         search_pattern = re.compile(pattern)
@@ -658,29 +591,9 @@ class Cp2kOutput():
         Return:
             coord numpy array (n_atom, 3)
         """
-        start_pattern = r' MODULE QUICKSTEP:  ATOMIC COORDINATES IN angstrom'
-        end_pattern = r' SCF PARAMETERS'
-        check_scf = self.check_scf
-        self.check_scf = False 
-        nframe, data_lines = self.grep_texts(start_pattern, end_pattern)
-        self.check_scf = check_scf
-        data_lines = np.reshape(data_lines, (nframe, -1))
-
-        data_list = []
-        elem_list = []
-        for line in data_lines[-1, 3:-4].reshape(-1):
-            if len(line) == 0:
-                continue
-            line_list = line.split()
-            data_list.append([
-                float(line_list[4]),
-                float(line_list[5]),
-                float(line_list[6])
-            ])
-            elem_list.append(line_list[2])
-        coord = np.reshape(data_list, (-1, 3))
-        self.chemical_symbols = np.reshape(elem_list, (-1)).tolist()
-        return coord
+        out = parse_init_atomic_coordinates(self.string)
+        self.chemical_symbols = out[2]
+        return out[0]
 
     @property
     def atoms(self):
@@ -688,15 +601,10 @@ class Cp2kOutput():
         atoms = Atoms(symbols=self.chemical_symbols, positions=positions)
         check_scf = self.check_scf
         self.check_scf = False 
-        a = float(self.grep_text_search(r"Vector a").split()[-1])
-        b = float(self.grep_text_search(r"Vector b").split()[-1])
-        c = float(self.grep_text_search(r"Vector c").split()[-1])
-        alpha = float(self.grep_text_search(r"Angle | alpha").split()[-1])
-        beta = float(self.grep_text_search(r"Angle | beta").split()[-1])
-        gamma = float(self.grep_text_search(r"Angle | gamma").split()[-1])
+        out = parse_all_cells(self.string)
         self.check_scf = check_scf
 
-        atoms.set_cell([a, b, c, alpha, beta, gamma])
+        atoms.set_cell(out[0])
         atoms.set_pbc(True)
         return atoms
 
@@ -708,45 +616,28 @@ class Cp2kOutput():
         Return:
             force numpy array (n_atom, 3)
         """
-        start_pattern = r' ATOMIC FORCES in'
-        end_pattern = r' SUM OF ATOMIC FORCES'
-        nframe, data_lines = self.grep_texts(start_pattern, end_pattern)
-        data_lines = np.reshape(data_lines, (nframe, -1))
-
-        data_list = []
-        for line in data_lines[:, 3:].reshape(-1):
-            line_list = line.split()
-            data_list.append([
-                float(line_list[3]) * AU_TO_EV_EVERY_ANG,
-                float(line_list[4]) * AU_TO_EV_EVERY_ANG,
-                float(line_list[5]) * AU_TO_EV_EVERY_ANG
-            ])
-        return np.reshape(data_list, (-1, 3))
+        out = parse_atomic_forces_list(self.string)
+        return out[0] * AU_TO_EV_EVERY_ANG
 
     @property
     def energy(self):
-        # data = self.grep_text_search("Total energy: ")
-        data = self.grep_text_search("Total FORCE_EVAL")
-        data = data.replace('\n', ' ')
-        data = data.split(' ')
-        return float(data[-1]) * AU_TO_EV
+        out = parse_energies_list(self.string)
+        return out[0] * AU_TO_EV
 
     @property
     def scf_loop(self):
-        data = self.grep_text_search(r"SCF run converged in")
-        if len(data) == 0:
+        pattern = r"\s+SCF\srun\sconverged\sin\s+\d+"
+        out = re.findall(pattern, self.string)
+        if len(out) == 0:
             return -1
         else:
-            data = data.replace('\n', ' ')
-            data = data.split(' ')
-            return int(data[-3])
+            return int(out[0].split(" ")[-1])
 
     @property
     def fermi(self):
-        line = self.grep_text_match(r"  Fermi energy:")
-        line = line.replace('\n', ' ')
-        line = line.split(' ')
-        return float(line[-1]) * AU_TO_EV
+        pattern = r"\s+Fermi\sEnergy\s\[eV\]\s:\s+.\d\.\d+"
+        out = re.findall(pattern, self.string)
+        return float(out[0].split(" ")[-1]) * AU_TO_EV
 
     @property
     def m_charge(self):
@@ -843,14 +734,6 @@ class MultiFrameCp2kOutput(Cp2kOutput):
         atoms.set_pbc(True)
         return atoms
 
-    # @property
-    # def natoms(self):
-    #     start_pattern = "TOTAL NUMBERS AND MAXIMUM NUMBERS"
-    #     nframe, data_lines = self.grep_texts_by_nlines(start_pattern, 4)
-    #     data_lines = np.reshape(data_lines, (nframe, -1))
-    #     line_list = data_lines[0][-1].split()
-    #     return int(line_list[-1])
-
     @property
     def force(self):
         """
@@ -884,20 +767,18 @@ class MultiFrameCp2kOutput(Cp2kOutput):
 
     @property
     def scf_loop(self):
-        data = self.grep_text_search(r"SCF run converged in")
-        if len(data) == 0:
+        pattern = r"\s+SCF\srun\sconverged\sin\s+\d+"
+        out = re.findall(pattern, self.string)
+        if len(out) == 0:
             return -1
         else:
-            data = data.replace('\n', ' ')
-            data = data.split(' ')
-            return int(data[-3])
+            return int(out[0].split(" ")[-1])
 
     @property
     def fermi(self):
-        line = self.grep_text_match(r"  Fermi energy:")
-        line = line.replace('\n', ' ')
-        line = line.split(' ')
-        return float(line[-1]) * AU_TO_EV
+        pattern = r"\s+Fermi\sEnergy\s\[eV\]\s:\s+.\d\.\d+"
+        out = re.findall(pattern, self.string)
+        return float(out[0].split(" ")[-1]) * AU_TO_EV
 
     @property
     def m_charge(self):
