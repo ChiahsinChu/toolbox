@@ -925,18 +925,62 @@ class Cp2kCube():
 
     def __init__(self, fname) -> None:
         self.cube_data, self.atoms = read_cube_data(fname)
+        cell_params = self.atoms.cell.cellpar()
+        try:
+            assert not (False in (90. == cell_params[-3:]))
+            self.cell_params = cell_params[:3]
+        except:
+            raise ValueError("Cell is not orthogonal")
+        
+    @property
+    def cube_volume(self):
+        """
+        cube volume [A^3]
+        """
+        n_grid = np.array(self.cube_data.shape)
+        cube_volume = np.prod(self.cell_params / n_grid)
+        return cube_volume
+    
+    @property
+    def cube_grids(self):
+        cube_grids = []
+        for ii in range(3):
+            cube_grids.append(
+                np.arange(
+                    0, self.cell_params[ii],
+                    self.cell_params[ii] / self.cube_data.shape[ii]
+                )
+            )
+        return cube_grids
 
+    @property
+    def mesh(self):
+        mesh = np.zeros_like(self.cube_data)
+        mesh = np.reshape(mesh, [mesh.shape[0], mesh.shape[1], mesh.shape[2], 1])
+        # dimx * dimy * dimz * 3
+        mesh = np.repeat(mesh, 3, axis=3)
+        np.copyto(mesh[:, :, :, 0], np.tile(self.cube_grids[0].reshape(-1, 1, 1), [1, mesh.shape[1], mesh.shape[2]]))
+        np.copyto(mesh[:, :, :, 1], np.tile(self.cube_grids[1].reshape(1, -1, 1), [mesh.shape[0], 1, mesh.shape[2]]))
+        np.copyto(mesh[:, :, :, 2], np.tile(self.cube_grids[2].reshape(1, 1, -1), [mesh.shape[0], mesh.shape[1], 1]))
+        return mesh
+    
+    @property
+    def dipole(self):
+        """
+        Dipole moment [e A]
+        """
+        charge = self.cube_data * (self.cube_volume / AU_TO_ANG**3)
+        charge = np.reshape(charge, [charge.shape[0], charge.shape[1], charge.shape[2], 1])
+        dipole = np.sum(self.mesh * charge, axis=(0, 1, 2))
+        return -dipole
+        
     def get_ave_cube(self, axis=2, gaussian_sigma=0.):
         if hasattr(self, 'axis') and self.axis == axis and hasattr(
                 self, 'ave_cube_data'):
             pass
         else:
-            cell_param = self.atoms.cell.cellpar()
             self.axis = axis
-            # assert cell_param[-3:]
-            self.ave_grid = np.arange(
-                0, cell_param[self.axis],
-                cell_param[self.axis] / self.cube_data.shape[self.axis])
+            self.ave_grid = self.cube_grids[self.axis]
             ave_axis = tuple(np.delete(np.arange(3), self.axis).tolist())
             self.ave_cube_data = np.mean(self.cube_data, axis=ave_axis)
 
