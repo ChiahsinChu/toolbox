@@ -199,13 +199,13 @@ def calc_water_number(rho, v):
 
 
 def calc_coord_number(atoms, c_ids, neigh_ids, cutoff):
-    from MDAnalysis.analysis import distances
+    from MDAnalysis.lib.distances import distance_array
 
     p = atoms.get_positions()
     p_c = p[c_ids]
     p_n = p[neigh_ids]
     results = np.empty((len(c_ids), len(neigh_ids)), dtype=np.float64)
-    distances.distance_arrays(p_c, p_n, box=atoms.cell.cellpar(), result=results)
+    distance_array(p_c, p_n, box=atoms.cell.cellpar(), result=results)
     out = np.count_nonzero(results <= cutoff, axis=1)
     return out
 
