@@ -154,8 +154,16 @@ cp2k_default_input.update({
                 "MAX_FORCE": 4.5E-5
             },
             "PRINT": {
-                "TRAJECTORY": {},
-                "VELOCITIES": {},
+                "TRAJECTORY": {
+                    "EACH": {
+                        "GEO_OPT": 1
+                    }
+                },
+                "VELOCITIES": {
+                    "EACH": {
+                        "GEO_OPT": 1
+                    }
+                },
                 "FORCES": {
                     "_": "ON"
                 },
@@ -176,8 +184,16 @@ update_d = {
     },
     "MOTION": {
         "PRINT": {
-            "TRAJECTORY": {},
-            "VELOCITIES": {}
+            "TRAJECTORY": {
+                "EACH": {
+                    "CELL_OPT": 1
+                }
+            },
+            "VELOCITIES": {
+                "EACH": {
+                    "CELL_OPT": 1
+                }
+            }
         },
         "CELL_OPT": {
             "OPTIMIZER": "BFGS",
