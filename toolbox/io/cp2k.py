@@ -635,7 +635,7 @@ class Cp2kOutput():
 
     @property
     def fermi(self):
-        pattern = r"\s+Fermi\sEnergy\s\[eV\]\s:\s+.\d\.\d+"
+        pattern = r"\s+Fermi\senergy:\s+.\d\.\d+"
         out = re.findall(pattern, self.string)
         return float(out[0].split(" ")[-1]) * AU_TO_EV
 
