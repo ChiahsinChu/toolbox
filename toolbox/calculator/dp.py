@@ -57,7 +57,8 @@ class DPDispatcher:
             resources_setup["cpu_per_node"] = 32
         elif queue in ["large_s", "medium_s", "small_s", "large_l", "medium_l", "small_l"]:
             # add queue in ikkem
-            resources_setup["cpu_per_node"] = 64
+            cpu_per_node = resources_setup.get("cpu_per_node", 64)
+            resources_setup["cpu_per_node"] = cpu_per_node
         else:
             raise AttributeError("Unknown queue: %s" % queue)
 
