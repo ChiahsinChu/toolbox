@@ -949,7 +949,7 @@ class Cp2kCube():
                 np.arange(
                     0, self.cell_params[ii],
                     self.cell_params[ii] / self.cube_data.shape[ii]
-                )
+                )[:self.cube_data.shape[ii]]
             )
         return cube_grids
 
