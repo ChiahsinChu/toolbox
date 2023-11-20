@@ -653,9 +653,17 @@ spce_wat = {
 """
 **Lennard-Jones potential**
 
-Parameters from DOI: 10.1021/jp801931d 
-In CP2K V(r) = 4.0 * EPSILON * [(SIGMA/r)^12-(SIGMA/r)^6]
+In CP2K/lammps V(r) = 4.0 * EPSILON * [(SIGMA/r)^12-(SIGMA/r)^6]
 In lj_param dict, epsilon in eV and simga in angstrom
+
+Parameters from:
+- https://pubs.acs.org/doi/10.1021/jp801931d (metal)
+- https://pubs.acs.org/doi/full/10.1021/ct500918t (ion)
+- https://ambermd.org/AmberModels_ions.php
+
+Other sources:
+- https://pubs.acs.org/doi/10.1021/acs.jctc.9b00941 (Na, K, Cl)
+- https://pubs.acs.org/doi/10.1021/ct600252r
 """
 lj_param = {
     "O": {
@@ -699,20 +707,39 @@ lj_param = {
         "sigma": 2.53460685310927
     },
     "Li": {
-        "epsilon": 0.015292,
-        "sigma": 2.16
+        "epsilon": 0.00011884929615156104,
+        "sigma": 2.2415011748410936
     },
     "Na": {
-        "epsilon": 0.0035,
-        "sigma": 2.73
+        "epsilon": 0.0011443043742500188,
+        "sigma": 2.5907334723521065
     },
-    # new paper: 10.1021/acs.jctc.9b00941
     "K": {
-        "epsilon": 0.023,
-        "sigma": 2.791
+        "epsilon": 0.0055040382958084725,
+        "sigma": 2.998765085260382
+    },
+    "Rb": {
+        "epsilon": 0.008960668723948352,
+        "sigma": 3.192981005814976
+    },
+    "Cs": {
+        "epsilon": 0.015034737974310267,
+        "sigma": 3.4798503930561653
+    },
+    "F": {
+        "epsilon": 0.009920532966770708,
+        "sigma": 3.2410895365945542
     },
     "Cl": {
-        "epsilon": 0.000284169912,
-        "sigma": 5.029
+        "epsilon": 0.027910343472532066,
+        "sigma": 4.112388482935805
+    },
+    "Br": {
+        "epsilon": 0.03227630190217819,
+        "sigma": 4.401039667613277
+    },
+    "I": {
+        "epsilon": 0.03767096013259918,
+        "sigma": 4.9355788984974795
     }
 }
