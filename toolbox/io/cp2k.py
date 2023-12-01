@@ -5,9 +5,12 @@ import datetime
 from ase import Atoms
 from ase.io.cube import read_cube_data
 
-from cp2kdata.pdos.pdos import Cp2kPdos as _Cp2kPdos
-from cp2kdata.pdos.pdos import gaussian_filter1d
 from cp2kdata.paser_func import *
+try:
+    from cp2kdata.pdos.pdos import Cp2kPdos as _Cp2kPdos
+    from cp2kdata.pdos.pdos import gaussian_filter1d
+except:
+    pass
 
 from .. import CONFIGS
 from ..utils import *
@@ -925,43 +928,49 @@ class Cp2kCube():
 
     def __init__(self, fname) -> None:
         self.cube_data, self.atoms = read_cube_data(fname)
-        cell_params = self.atoms.cell.cellpar()
-        try:
-            assert not (False in (90. == cell_params[-3:]))
-            self.cell_params = cell_params[:3]
-        except:
-            raise ValueError("Cell is not orthogonal")
+        self.n_grid = np.array(self.cube_data.shape)
+        # 3 * 3
+        self.cube_vectors = self.atoms.get_cell() / self.n_grid.reshape(3, 1)
+        # cube volume [A^3]
+        self.cube_volume = self.atoms.get_volume() / np.prod(self.n_grid)
         
-    @property
-    def cube_volume(self):
-        """
-        cube volume [A^3]
-        """
-        n_grid = np.array(self.cube_data.shape)
-        cube_volume = np.prod(self.cell_params / n_grid)
-        return cube_volume
+        # cell_params = self.atoms.cell.cellpar()
+        # try:
+        #     assert not (False in (90. == cell_params[-3:]))
+        #     self.cell_params = cell_params[:3]
+        # except:
+        #     raise ValueError("Cell is not orthogonal")
     
-    @property
-    def cube_grids(self):
-        cube_grids = []
-        for ii in range(3):
-            cube_grids.append(
-                np.arange(
-                    0, self.cell_params[ii],
-                    self.cell_params[ii] / self.cube_data.shape[ii]
-                )[:self.cube_data.shape[ii]]
-            )
-        return cube_grids
+    # @property
+    # def cube_grids(self):
+    #     cube_grids = []
+    #     for ii in range(3):
+    #         cube_grids.append(
+    #             np.arange(
+    #                 0, self.cell_params[ii],
+    #                 self.cell_params[ii] / self.cube_data.shape[ii]
+    #             )[:self.cube_data.shape[ii]]
+    #         )
+    #     return cube_grids
 
     @property
     def mesh(self):
-        mesh = np.zeros_like(self.cube_data)
-        mesh = np.reshape(mesh, [mesh.shape[0], mesh.shape[1], mesh.shape[2], 1])
+        """
+        mesh for cube data
+        """
+        # generate mesh from self.cube_vectors
+        x = np.arange(self.n_grid[0])
+        y = np.arange(self.n_grid[1])
+        z = np.arange(self.n_grid[2])
+        coeff = np.meshgrid(x, y, z, indexing="ij")
+        coeff_x = coeff[0].reshape(self.n_grid[0], self.n_grid[1], self.n_grid[2], 1)
+        coeff_y = coeff[1].reshape(self.n_grid[0], self.n_grid[1], self.n_grid[2], 1)
+        coeff_z = coeff[2].reshape(self.n_grid[0], self.n_grid[1], self.n_grid[2], 1)
+        unit_x = self.cube_vectors[0].reshape(1, 1, 1, 3)
+        unit_y = self.cube_vectors[1].reshape(1, 1, 1, 3)
+        unit_z = self.cube_vectors[2].reshape(1, 1, 1, 3)
         # dimx * dimy * dimz * 3
-        mesh = np.repeat(mesh, 3, axis=3)
-        np.copyto(mesh[:, :, :, 0], np.tile(self.cube_grids[0].reshape(-1, 1, 1), [1, mesh.shape[1], mesh.shape[2]]))
-        np.copyto(mesh[:, :, :, 1], np.tile(self.cube_grids[1].reshape(1, -1, 1), [mesh.shape[0], 1, mesh.shape[2]]))
-        np.copyto(mesh[:, :, :, 2], np.tile(self.cube_grids[2].reshape(1, 1, -1), [mesh.shape[0], mesh.shape[1], 1]))
+        mesh = coeff_x * unit_x + coeff_y * unit_y + coeff_z * unit_z
         return mesh
     
     @property
@@ -969,9 +978,11 @@ class Cp2kCube():
         """
         Dipole moment [e A]
         """
+        # cube_data: charge density [e / bohr^3]
         charge = self.cube_data * (self.cube_volume / AU_TO_ANG**3)
-        charge = np.reshape(charge, [charge.shape[0], charge.shape[1], charge.shape[2], 1])
+        charge = np.reshape(charge, [self.n_grid[0], self.n_grid[1], self.n_grid[2], 1])
         dipole = np.sum(self.mesh * charge, axis=(0, 1, 2))
+        # in cp2k, the electron density is positive
         return -dipole
         
     def get_ave_cube(self, axis=2, gaussian_sigma=0.):
@@ -980,7 +991,7 @@ class Cp2kCube():
             pass
         else:
             self.axis = axis
-            self.ave_grid = self.cube_grids[self.axis]
+            self.ave_grid = self.cube_vectors[self.axis][self.axis] * np.arange(self.n_grid[self.axis])
             ave_axis = tuple(np.delete(np.arange(3), self.axis).tolist())
             self.ave_cube_data = np.mean(self.cube_data, axis=ave_axis)
 
