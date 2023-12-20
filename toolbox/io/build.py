@@ -74,3 +74,102 @@ class Interface:
         
         pass    
 
+
+def add_ion(atoms, ion, region, cutoff=2.0):
+    """
+    Example
+    
+        atoms = io.read("coord.xyz")
+        ion = Atoms("K")
+        atoms = add_ion(atoms, ion, [8.0, 13.0])
+        print(atoms)
+    """
+    is_overlap = 1
+    while is_overlap != 0:
+        random_positions = get_region_random_location(atoms, region)
+        # print(random_positions)
+        ion.set_positions(random_positions.reshape(1, 3))
+        new_atoms = atoms.copy()
+        new_atoms.extend(ion)
+        is_overlap = is_atom_overlap(new_atoms, -1, r=cutoff)
+    return new_atoms
+
+def add_water(atoms, region, cutoff=2.0):
+    """
+    Example
+    
+        atoms = io.read("coord.xyz")
+        ion = Atoms("K")
+        atoms = add_ion(atoms, ion, [8.0, 13.0])
+        print(atoms)
+    """
+    water = build.molecule("H2O")
+    coords = water.get_positions()
+    coords -= coords[0].reshape(1, 3)
+    rotation_matrix = random_rotation_matrix()
+    coords = np.dot(coords, rotation_matrix)
+    
+    is_overlap = 1
+    while is_overlap != 0:
+        random_positions = get_region_random_location(atoms, region)
+        # print(random_positions)
+        water.set_positions(coords + random_positions.reshape(1, 3))
+        new_atoms = atoms.copy()
+        new_atoms.extend(water)
+        is_overlap = sum([is_atom_overlap(new_atoms, -i, 3, r=cutoff) for i in range(1, 3+1)])
+    return new_atoms
+    
+def get_region_random_location(atoms, region, extent=0.9):
+    x_region = [atoms.get_cell()[0][0] * (1 - extent), atoms.get_cell()[0][0] * extent]
+    y_region = [atoms.get_cell()[1][1] * (1 - extent), atoms.get_cell()[1][1] * extent]
+
+    location_x = np.random.uniform(x_region[0], x_region[1])
+    location_y = np.random.uniform(y_region[0], y_region[1])
+    location_z = np.random.uniform(region[0], region[1])
+
+    return np.array([location_x, location_y, location_z])
+
+def is_atom_overlap(atoms, index, atom_num=1, r=1.5):
+    """
+    judge the overlap situation for such atom and atoms in molecule or ions by index
+    Args:
+        atoms: atoms for adding
+        index: index in added atoms. example: O and H1 and H2 index for such added H2O
+        atom_num: Number of atoms of an added single molecule, such as 3 for added H2O, 1 for added F
+        r: recommended: 1.0-1.8: set up this factor to specify the minimum distance between two atoms
+
+    Returns:
+
+    """
+    distance = atoms.get_all_distances(mic=True)[index]
+    min_index = np.argsort(distance)[atom_num]
+
+    if distance[min_index] < r:
+        overlap = True
+    else:
+        overlap = False
+    return overlap
+
+def random_rotation_matrix():
+    random_rotvec = np.random.randn(3)
+    random_rotvec /= np.linalg.norm(random_rotvec)
+    angle = np.random.rand() * 2 * np.pi
+    cos_theta = np.cos(angle)
+    sin_theta = np.sin(angle)
+    one_minus_cos_theta = 1 - cos_theta
+
+    rot_matrix = np.zeros((3, 3))
+    rot_matrix[0, 0] = cos_theta + random_rotvec[0] ** 2 * one_minus_cos_theta
+    rot_matrix[1, 1] = cos_theta + random_rotvec[1] ** 2 * one_minus_cos_theta
+    rot_matrix[2, 2] = cos_theta + random_rotvec[2] ** 2 * one_minus_cos_theta
+
+    rot_matrix[0, 1] = random_rotvec[0] * random_rotvec[1] * one_minus_cos_theta - random_rotvec[2] * sin_theta
+    rot_matrix[1, 0] = random_rotvec[0] * random_rotvec[1] * one_minus_cos_theta + random_rotvec[2] * sin_theta
+
+    rot_matrix[0, 2] = random_rotvec[0] * random_rotvec[2] * one_minus_cos_theta + random_rotvec[1] * sin_theta
+    rot_matrix[2, 0] = random_rotvec[0] * random_rotvec[2] * one_minus_cos_theta - random_rotvec[1] * sin_theta
+
+    rot_matrix[1, 2] = random_rotvec[1] * random_rotvec[2] * one_minus_cos_theta - random_rotvec[0] * sin_theta
+    rot_matrix[2, 1] = random_rotvec[1] * random_rotvec[2] * one_minus_cos_theta + random_rotvec[0] * sin_theta
+
+    return rot_matrix
