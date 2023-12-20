@@ -214,3 +214,11 @@ def calc_water_coord_number(atoms):
     c_ids = np.where(atype == "O")[0]
     neigh_ids = np.where(atype == "H")[0]
     return calc_coord_number(atoms, c_ids, neigh_ids, 1.3)
+
+def check_water(atoms):
+    cns = calc_water_coord_number(atoms)
+    flags = (cns == 2)
+    if False in flags:
+        return False
+    else:
+        return True

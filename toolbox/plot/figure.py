@@ -55,12 +55,13 @@ class HalfCellFigure(Figure):
         
 
 label_dict = {
-    "density": [r"z [A]", r"$\rho [g/cm^3]$"],
-    "orient_inveps": [r"z [A]", r"$\epsilon_{ori,\perp}^{-1}$"],
-    "orient_eps": [r"z [A]", r"$\epsilon_{ori,\perp}$"],
-    "elec_inveps": [r"z [A]", r"$\epsilon_{elec,\perp}^{-1}$"],
-    "elec_eps": [r"z [A]", r"$\epsilon_{elec,\perp}$"],
-    "hartree": [r"z [A]", r"$V_H$ [eV]"],
-    "rho": [r"z [A]", r"$\rho$"],
-    "polarization": [r"z [A]", r"P [eA$^{-2}$]"]
+    "density": [r"z [Å]", r"$\rho [g/cm^3]$"],
+    "orient_inveps": [r"z [Å]", r"$\epsilon_{ori,\perp}^{-1}$"],
+    "orient_eps": [r"z [Å]", r"$\epsilon_{ori,\perp}$"],
+    "elec_inveps": [r"z [Å]", r"$\epsilon_{elec,\perp}^{-1}$"],
+    "elec_eps": [r"z [Å]", r"$\epsilon_{elec,\perp}$"],
+    "hartree": [r"z [Å]", r"$V_H$ [eV]"],
+    "rho": [r"z [Å]", r"$\rho$"],
+    "rho_pol": [r"z [Å]", r"$\rho_{pol}$"],
+    "polarization": [r"z [Å]", r"P [eA$^{-2}$]"]
 }
