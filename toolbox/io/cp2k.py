@@ -5,12 +5,12 @@ import datetime
 from ase import Atoms
 from ase.io.cube import read_cube_data
 
-from cp2kdata.paser_func import *
-try:
-    from cp2kdata.pdos.pdos import Cp2kPdos as _Cp2kPdos
-    from cp2kdata.pdos.pdos import gaussian_filter1d
-except:
-    pass
+from cp2kdata.block_parser.forces import parse_atomic_forces_list
+from cp2kdata.block_parser.energies import parse_energies_list
+from cp2kdata.block_parser.coordinates import parse_init_atomic_coordinates
+from cp2kdata.block_parser.cells import parse_all_cells
+from cp2kdata import Cp2kPdos as _Cp2kPdos
+from cp2kdata.pdos.pdos import gaussian_filter1d
 
 from .. import CONFIGS
 from ..utils import *
