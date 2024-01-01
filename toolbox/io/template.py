@@ -654,92 +654,171 @@ spce_wat = {
 **Lennard-Jones potential**
 
 In CP2K/lammps V(r) = 4.0 * EPSILON * [(SIGMA/r)^12-(SIGMA/r)^6]
-In lj_param dict, epsilon in eV and simga in angstrom
+In lj_param dict, epsilon in kcal/mol and simga in angstrom
 
 Parameters from:
+- https://docs.lammps.org/Howto_spc.html# (SPC/E water)
 - https://pubs.acs.org/doi/10.1021/jp801931d (metal)
 - https://pubs.acs.org/doi/full/10.1021/ct500918t (ion)
-- https://ambermd.org/AmberModels_ions.php
 
 Other sources:
 - https://pubs.acs.org/doi/10.1021/acs.jctc.9b00941 (Na, K, Cl)
 - https://pubs.acs.org/doi/10.1021/ct600252r
+- https://ambermd.org/AmberModels_ions.php
 """
 lj_param = {
     "O": {
-        "epsilon": 0.0067,
+        "epsilon": 0.1553,
         "sigma": 3.166
     },
     "H": {
         "epsilon": 0.0,
-        "sigma": 3.305
+        "sigma": 0.4
     },
     "Ag": {
-        "epsilon": 0.19608,
+        "epsilon": 4.56,
         "sigma": 2.6326057121047
     },
     "Al": {
-        "epsilon": 0.17286,
+        "epsilon": 4.02,
         "sigma": 2.60587875056049
     },
     "Au": {
-        "epsilon": 0.22747,
+        "epsilon": 5.29,
         "sigma": 2.62904211723214
     },
     "Cu": {
-        "epsilon": 0.20296,
+        "epsilon": 4.72,
         "sigma": 2.33059104665513
     },
     "Ni": {
-        "epsilon": 0.24295,
+        "epsilon": 5.65,
         "sigma": 2.27357352869415
     },
     "Pb": {
-        "epsilon": 0.12599,
+        "epsilon": 2.93,
         "sigma": 3.17605393017031
     },
     "Pd": {
-        "epsilon": 0.26445,
+        "epsilon": 6.15,
         "sigma": 2.51144348643762
     },
     "Pt": {
-        "epsilon": 0.26445,
+        "epsilon": 7.80,
         "sigma": 2.53460685310927
     },
     "Li": {
-        "epsilon": 0.00011884929615156104,
+        "epsilon": 0.00274091,
         "sigma": 2.2415011748410936
     },
     "Na": {
-        "epsilon": 0.0011443043742500188,
+        "epsilon": 0.02639002,
         "sigma": 2.5907334723521065
     },
     "K": {
-        "epsilon": 0.0055040382958084725,
+        "epsilon": 0.12693448,
         "sigma": 2.998765085260382
     },
     "Rb": {
-        "epsilon": 0.008960668723948352,
+        "epsilon": 0.20665151,
         "sigma": 3.192981005814976
     },
     "Cs": {
-        "epsilon": 0.015034737974310267,
+        "epsilon": 0.34673208,
         "sigma": 3.4798503930561653
     },
     "F": {
-        "epsilon": 0.009920532966770708,
+        "epsilon": 0.22878796,
         "sigma": 3.2410895365945542
     },
     "Cl": {
-        "epsilon": 0.027910343472532066,
+        "epsilon": 0.64367011,
         "sigma": 4.112388482935805
     },
     "Br": {
-        "epsilon": 0.03227630190217819,
+        "epsilon": 0.74435812,
         "sigma": 4.401039667613277
     },
     "I": {
-        "epsilon": 0.03767096013259918,
+        "epsilon": 0.86877007,
         "sigma": 4.9355788984974795
     }
 }
+# lj_param = {
+#     "O": {
+#         "epsilon": 0.0067,
+#         "sigma": 3.166
+#     },
+#     "H": {
+#         "epsilon": 0.0,
+#         "sigma": 3.305
+#     },
+#     "Ag": {
+#         "epsilon": 0.19608,
+#         "sigma": 2.6326057121047
+#     },
+#     "Al": {
+#         "epsilon": 0.17286,
+#         "sigma": 2.60587875056049
+#     },
+#     "Au": {
+#         "epsilon": 0.22747,
+#         "sigma": 2.62904211723214
+#     },
+#     "Cu": {
+#         "epsilon": 0.20296,
+#         "sigma": 2.33059104665513
+#     },
+#     "Ni": {
+#         "epsilon": 0.24295,
+#         "sigma": 2.27357352869415
+#     },
+#     "Pb": {
+#         "epsilon": 0.12599,
+#         "sigma": 3.17605393017031
+#     },
+#     "Pd": {
+#         "epsilon": 0.26445,
+#         "sigma": 2.51144348643762
+#     },
+#     "Pt": {
+#         "epsilon": 0.26445,
+#         "sigma": 2.53460685310927
+#     },
+#     "Li": {
+#         "epsilon": 0.00011884929615156104,
+#         "sigma": 2.2415011748410936
+#     },
+#     "Na": {
+#         "epsilon": 0.0011443043742500188,
+#         "sigma": 2.5907334723521065
+#     },
+#     "K": {
+#         "epsilon": 0.0055040382958084725,
+#         "sigma": 2.998765085260382
+#     },
+#     "Rb": {
+#         "epsilon": 0.008960668723948352,
+#         "sigma": 3.192981005814976
+#     },
+#     "Cs": {
+#         "epsilon": 0.015034737974310267,
+#         "sigma": 3.4798503930561653
+#     },
+#     "F": {
+#         "epsilon": 0.009920532966770708,
+#         "sigma": 3.2410895365945542
+#     },
+#     "Cl": {
+#         "epsilon": 0.027910343472532066,
+#         "sigma": 4.112388482935805
+#     },
+#     "Br": {
+#         "epsilon": 0.03227630190217819,
+#         "sigma": 4.401039667613277
+#     },
+#     "I": {
+#         "epsilon": 0.03767096013259918,
+#         "sigma": 4.9355788984974795
+#     }
+# }
