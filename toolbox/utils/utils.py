@@ -222,3 +222,31 @@ def check_water(atoms):
         return False
     else:
         return True
+    
+def calc_lj_params(ks):
+    """
+    ks
+        list of element symbols
+    """
+    from ..io.template import lj_params
+    
+    n_elements = len(ks)
+    _sigma = []
+    _epsilon = []
+    for i in range(n_elements):
+        try:
+            sigma_i = lj_params[ks[i]]["sigma"]
+            epsilon_i = lj_params[ks[i]]["epsilon"]
+            _sigma.append(sigma_i)
+        except:
+            raise KeyError("sigma for %s not found" % ks[i])
+        for j in range(i, n_elements):
+            try:
+                sigma_j = lj_params[ks[j]]["sigma"]
+                epsilon_j = lj_params[ks[j]]["epsilon"]
+            except:
+                raise KeyError("sigma for %s not found" % ks[j])
+            print(ks[i], ks[j],
+                (sigma_i + sigma_j) / 2, 
+                np.sqrt(epsilon_i * epsilon_j))
+        

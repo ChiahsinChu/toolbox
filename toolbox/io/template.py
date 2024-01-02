@@ -666,7 +666,7 @@ Other sources:
 - https://pubs.acs.org/doi/10.1021/ct600252r
 - https://ambermd.org/AmberModels_ions.php
 """
-lj_param = {
+lj_params = {
     "O": {
         "epsilon": 0.1553,
         "sigma": 3.166
