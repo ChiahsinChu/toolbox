@@ -187,13 +187,15 @@ class Cp2kInput():
         return update_d
 
     def set_wfn_restart(self, wfn_file):
-        update_d = {
-            "FORCE_EVAL": {
-                "DFT": {
-                    "WFN_RESTART_FILE_NAME": os.path.abspath(wfn_file)
+        update_d = {}
+        if wfn_file is not None:
+            update_d = {
+                "FORCE_EVAL": {
+                    "DFT": {
+                        "WFN_RESTART_FILE_NAME": os.path.abspath(wfn_file)
+                    }
                 }
-            }
-        }
+            } 
         return update_d
 
     def set_qm_charge(self, charge):
