@@ -55,7 +55,8 @@ class DPDispatcher:
             resources_setup["cpu_per_node"] = 28
         elif "c53" in queue:
             resources_setup["cpu_per_node"] = 32
-        elif queue in ["large_s", "medium_s", "small_s", "large_l", "medium_l", "small_l"]:
+        elif queue in ["large_s", "medium_s", "small_s", "large_l", "medium_l", "small_l", 
+                       "large_s_cg", "medium_s_cg", "small_s_cg", "large_l_cg", "medium_l_cg", "small_l_cg"]:
             # add queue in ikkem
             cpu_per_node = resources_setup.get("cpu_per_node", 64)
             resources_setup["cpu_per_node"] = cpu_per_node

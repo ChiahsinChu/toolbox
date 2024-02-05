@@ -4,6 +4,7 @@ import os
 import pickle
 import h5py
 import numpy as np
+import collections
 
 from .unit import *
 
@@ -66,7 +67,7 @@ def update_dict(old_d, update_d):
     import collections
     for k, v in update_d.items():
         if (k in old_d and isinstance(old_d[k], dict)
-                and isinstance(update_d[k], collections.Mapping)):
+                and isinstance(update_d[k], collections.abc.Mapping)):
             update_dict(old_d[k], update_d[k])
         # elif (k in old_d and isinstance(old_d[k], list)
         #       and isinstance(update_d[k], list)):
@@ -164,7 +165,12 @@ def get_efields(DeltaV, l: list, eps: list):
 def safe_makedirs(dname):
     if not os.path.exists(dname):
         os.makedirs(dname)
-
+        
+def safe_symlink(src, dst, **kwargs):
+    try:
+        os.symlink(src, dst, **kwargs)
+    except:
+        pass
 
 def calc_density(n, v, mol_mass: float):
     """
