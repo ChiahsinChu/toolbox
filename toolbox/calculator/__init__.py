@@ -1,6 +1,9 @@
 from .cp2k import Cp2kCalculator
 from .lammps import LammpsCalculator
-from .dp import DPDispatcher, CP2KDPDispatcher
+try:
+    from .dp import DPDispatcher, CP2KDPDispatcher
+except:
+    pass
 
 __all__ = ["Cp2kCalculator", "LammpsCalculator", "DPDispatcher", "CP2KDPDispatcher"]
 

@@ -10,7 +10,7 @@ from cp2kdata.block_parser.energies import parse_energies_list
 from cp2kdata.block_parser.coordinates import parse_init_atomic_coordinates
 from cp2kdata.block_parser.cells import parse_all_cells
 from cp2kdata import Cp2kPdos as _Cp2kPdos
-from cp2kdata.pdos.pdos import gaussian_filter1d
+# from cp2kdata.pdos.pdos import gaussian_filter1d
 
 from .. import CONFIGS
 from ..utils import *
