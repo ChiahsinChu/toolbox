@@ -27,15 +27,19 @@ class LammpsData:
         self.angles = None
         self.bonds = None
         self.dihedrals = None
+        self.velocities = None
 
     def write(self, out_file="system.data", **kwargs):
         specorder = kwargs.get("specorder", None)
         if specorder is not None:
             self.set_atype_from_specorder(specorder)
+            n_atype = len(specorder)
+        else:
+            n_atype = len(np.unique(self.atoms.numbers))
         atom_style = kwargs.get("atom_style", "full")
-
+        
         with open(out_file, "w", encoding='utf-8') as f:
-            header = self._make_header(out_file)
+            header = self._make_header(out_file, n_atype)
             f.write(header)
             body = self._make_atoms(atom_style)
             f.write(body)
@@ -48,13 +52,16 @@ class LammpsData:
             if self.dihedrals is not None:
                 f.write("\nDihedrals\n\n")
                 np.savetxt(f, self.dihedrals, fmt="%d")
+            if self.velocities is not None:
+                f.write("\nVelocities\n\n")
+                np.savetxt(f, self.velocities, fmt=["%d", "%.6f", "%.6f", "%.6f"])
 
-    def _make_header(self, out_file):
+    def _make_header(self, out_file, n_atype):
         cell = self.atoms.cell.cellpar()
         nat = len(self.atoms)
         s = "%s (written by toolbox by Jia-Xin Zhu)\n\n" % out_file
         s += "%d atoms\n" % nat
-        s += "%d atom types\n" % len(np.unique(self.atoms.numbers))
+        s += "%d atom types\n" % n_atype
         if self.bonds is not None:
             s += "%d bonds\n" % len(self.bonds)
             s += "%d bond types\n" % len(np.unique(self.bonds[:, 1]))
@@ -109,9 +116,15 @@ class LammpsData:
     def set_angles(self, angles):
         self.angles = np.reshape(angles, (-1, 5))
 
-    def set_dihedral(self, dihedrals):
+    def set_dihedrals(self, dihedrals):
         self.dihedrals = np.reshape(dihedrals, (-1, 6))
+        
+    def set_charges(self, charges):
+        self.charges = np.reshape(charges, (-1))
 
+    def set_velocities(self, velocities):
+        self.velocities = np.reshape(velocities, (-1, 4))
+    
     def _setup(self):
         self.positions = self.atoms.get_positions()
         if len(self.atoms.get_initial_charges()) > 0:
@@ -125,6 +138,98 @@ class LammpsData:
             self.res_id = np.zeros(len(self.atoms), dtype=np.int32)
 
 
+class DPLRLammpsData(LammpsData):
+    """
+    Example:
+    
+    atoms = io.read("coord.xyz")
+    sel_type = ["O"]
+    sys_charge_dict = {
+        "O": 6.0,
+        "H": 1.0,
+    }
+    lmp_data = DPLRLammpsData(atoms, sel_type=sel_type, sys_charge_dict=sys_charge_dict)
+    lmp_data.write("system.data", format="lammps-data", specorder=["O", "H"], atom_style="full")
+    """
+    def __init__(self, atoms, sel_type, sys_charge_dict) -> None:
+        atoms, center_ids = self._make_extended_atoms(atoms, sel_type, sys_charge_dict)
+        super().__init__(atoms)
+        # set bonds between real atoms and wannier atoms
+        nbonds = len(center_ids)
+        bonds = np.ones((nbonds, 4), dtype=int)
+        np.copyto(bonds[:, 0], np.arange(nbonds) + 1)
+        wannier_ids = np.arange(len(atoms) - nbonds, len(atoms)) + 1
+        np.copyto(bonds[:, 2], center_ids)
+        np.copyto(bonds[:, 3], wannier_ids)
+        self.set_bonds(bonds)
+
+    def _make_extended_atoms(self, atoms, sel_type, sys_charge_dict):
+        dummy_type_map = ["He", "Ne", "Ar", "Kr", "Xe", "Rn"]
+        # extend Wannier atoms
+        center_ids = []
+        for ii, _atype in enumerate(sel_type):
+            sel_ids = np.where(atoms.symbols == _atype)[0]
+            sel_atoms = atoms[sel_ids]
+            while dummy_type_map[ii] in atoms.get_chemical_symbols():
+                dummy_type_map.pop(ii)
+            sel_atoms.symbols[:] = dummy_type_map[ii]
+            atoms.extend(sel_atoms)
+            center_ids.append(sel_ids + 1)
+        center_ids = np.concatenate(center_ids)
+
+        charges = np.full(len(atoms), -8.0)
+        for k, v in sys_charge_dict.items():
+            charges[atoms.symbols == k] = v
+        atoms.set_initial_charges(charges)
+
+        self.dummy_type_map = dummy_type_map[: len(sel_type)]
+        return atoms, center_ids
+
+    def write(self, out_file="system.data", specorder=None, **kwargs):
+        if specorder is not None:
+            specorder.extend(self.dummy_type_map)
+        super().write(out_file, specorder=specorder, **kwargs)
+
+class DPLRRestartLammpsData(LammpsData):
+    """
+    Example:
+    
+    atoms = io.read("after_system.data",
+                format="lammps-data",
+                sort_by_id=True,
+                Z_of_type={1: 8, 2: 1, 3: 2}
+               )
+    sel_type = ["O"]
+    lmp_data = DPLRRestartLammpsData(atoms, sel_type=sel_type)
+    lmp_data.write("restart_system.data", format="lammps-data", specorder=["O", "H", "He"], atom_style="full")
+    """
+    def __init__(self, atoms, sel_type) -> None:
+        n_wannier = np.count_nonzero(np.isin(atoms.symbols, sel_type))
+        n_real = len(atoms) - n_wannier
+        center_ids = []
+        count = n_real
+        coords = atoms.get_positions()
+        for _atype in sel_type:
+            sel_ids = np.where(atoms.symbols == _atype)[0]
+            np.copyto(coords[count:count+len(sel_ids)], coords[sel_ids])
+            center_ids.append(sel_ids + 1)
+            count += len(sel_ids)
+        center_ids = np.concatenate(center_ids)
+        atoms.set_positions(coords)
+        super().__init__(atoms)
+        # set velocities
+        vs = atoms.get_velocities()
+        vs[n_real:] = 0.0
+        self.set_velocities(np.concatenate((np.arange(1, len(atoms)+1).reshape(-1, 1), vs), axis=1))
+        # set bonds
+        nbonds = len(center_ids)
+        bonds = np.ones((nbonds, 4), dtype=int)
+        np.copyto(bonds[:, 0], np.arange(nbonds) + 1)
+        wannier_ids = np.arange(len(atoms) - nbonds, len(atoms)) + 1
+        np.copyto(bonds[:, 2], center_ids)
+        np.copyto(bonds[:, 3], wannier_ids)
+        self.set_bonds(bonds)
+        
 class LammpsDump:
     def __init__(self, traj, type_map) -> None:
         self.traj = traj
