@@ -1,4 +1,5 @@
 from ..exts.ase.ase import io, Atoms
+from ase.units import fs
 import numpy as np
 
 
@@ -54,7 +55,7 @@ class LammpsData:
                 np.savetxt(f, self.dihedrals, fmt="%d")
             if self.velocities is not None:
                 f.write("\nVelocities\n\n")
-                np.savetxt(f, self.velocities, fmt=["%d", "%.6f", "%.6f", "%.6f"])
+                np.savetxt(f, self.velocities, fmt=["%d", "%.16f", "%.16f", "%.16f"])
 
     def _make_header(self, out_file, n_atype):
         cell = self.atoms.cell.cellpar()
@@ -89,7 +90,7 @@ class LammpsData:
         s = "Atoms\n\n"
         for atom in self.atoms:
             ii = atom.index
-            s += "%d %d %d %.6f %.6f %.6f %.6f\n" % (
+            s += "%d %d %d %.16f %.16f %.16f %.16f\n" % (
                 ii + 1, self.res_id[ii], self.atype[ii], self.charges[ii],
                 self.positions[ii][0], self.positions[ii][1],
                 self.positions[ii][2])
@@ -218,8 +219,10 @@ class DPLRRestartLammpsData(LammpsData):
         atoms.set_positions(coords)
         super().__init__(atoms)
         # set velocities
-        vs = atoms.get_velocities()
-        vs[n_real:] = 0.0
+        # from ase internal unit to lammps metal unit (A/ps)
+        # https://wiki.fysik.dtu.dk/ase/ase/units.html#units
+        vs = atoms.get_velocities() * fs * 1e3
+        # vs[n_real:] = 0.0
         self.set_velocities(np.concatenate((np.arange(1, len(atoms)+1).reshape(-1, 1), vs), axis=1))
         # set bonds
         nbonds = len(center_ids)
@@ -310,12 +313,12 @@ class LammpsDump:
         for atom in atoms:
             ii = atom.index
             if q_flag:
-                s += "%d %d %s %.6f %.6f %.6f %.6f\n" % (
+                s += "%d %d %s %.16f %.16f %.16f %.16f\n" % (
                     ii + 1, atype_dict[atom.symbol]["type"],
                     atype_dict[atom.symbol]["element"], ps[ii][0], ps[ii][1],
                     ps[ii][2], charges[ii])
             else:
-                s += "%d %d %s %.6f %.6f %.6f\n" % (
+                s += "%d %d %s %.16f %.16f %.16f\n" % (
                     ii + 1, atype_dict[atom.symbol]["type"],
                     atype_dict[atom.symbol]["element"], ps[ii][0], ps[ii][1],
                     ps[ii][2])
@@ -391,12 +394,12 @@ def make_dump_body(atoms, atype_dict):
     for atom in atoms:
         ii = atom.index
         if q_flag:
-            s += "%d %d %s %.6f %.6f %.6f %.6f\n" % (
+            s += "%d %d %s %.16f %.16f %.16f %.16f\n" % (
                 ii + 1, atype_dict[atom.symbol]["type"],
                 atype_dict[atom.symbol]["element"], ps[ii][0], ps[ii][1],
                 ps[ii][2], charges[ii])
         else:
-            s += "%d %d %s %.6f %.6f %.6f\n" % (
+            s += "%d %d %s %.16f %.16f %.16f\n" % (
                 ii + 1, atype_dict[atom.symbol]["type"],
                 atype_dict[atom.symbol]["element"], ps[ii][0], ps[ii][1],
                 ps[ii][2])
