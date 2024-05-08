@@ -1,6 +1,0 @@
-[submodule "toolbox/exts/cp2kdata"]
-	path = toolbox/exts/cp2kdata
-	url = https://gitee.com/chiahsinchu/cp2kdata.git
-[submodule "toolbox/exts/ase"]
-	path = toolbox/exts/ase
-	url = https://gitee.com/chiahsinchu/ase.git

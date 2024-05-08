@@ -1,5 +1,9 @@
+<<<<<<< HEAD
 from ..exts.ase.ase import io, Atoms
 from ase.units import fs
+=======
+from ase import io, Atoms
+>>>>>>> 3a87a800d2390aa9272f9203fde6904152e607e1
 import numpy as np
 
 
