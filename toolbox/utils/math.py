@@ -2,15 +2,15 @@ import math
 
 import numpy as np
 from scipy.special import erf
+from scipy import stats
 from sklearn import metrics
 
 
-def gaussian_func(x, mu, sigma):
+def gaussian_func(x, mu=0, sigma=1):
     """
     Gaussian function
     """
-    coeff = 1 / (sigma * np.sqrt(2 * np.pi))
-    return coeff * np.exp(-np.power(x - mu, 2.) / (2 * np.power(sigma, 2.)))
+    return stats.norm.pdf(x, loc=mu, scale=sigma)
 
 
 def gaussian_int(x, mu, sigma):
