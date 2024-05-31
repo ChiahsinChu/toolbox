@@ -1,4 +1,5 @@
 from ase import io, Atoms
+from ase.calculators.lammps import Prism, convert
 from ase.units import fs
 import numpy as np
 
@@ -58,7 +59,7 @@ class LammpsData:
                 np.savetxt(f, self.velocities, fmt=["%d", "%.16f", "%.16f", "%.16f"])
 
     def _make_header(self, out_file, n_atype):
-        cell = self.atoms.cell.cellpar()
+        # cell = self.atoms.cell.cellpar()
         nat = len(self.atoms)
         s = "%s (written by toolbox by Jia-Xin Zhu)\n\n" % out_file
         s += "%d atoms\n" % nat
@@ -72,8 +73,17 @@ class LammpsData:
         if self.dihedrals is not None:
             s += "%d dihedrals\n" % len(self.dihedrals)
             s += "%d dihedral types\n" % len(np.unique(self.dihedrals[:, 1]))
-        s += "%.4f %.4f xlo xhi\n%.4f %.4f ylo yhi\n%.4f %.4f zlo zhi\n\n\n" % (
-            0.0, cell[0], 0.0, cell[1], 0.0, cell[2])
+        # s += "%.4f %.4f xlo xhi\n%.4f %.4f ylo yhi\n%.4f %.4f zlo zhi\n\n\n" % (
+        #     0.0, cell[0], 0.0, cell[1], 0.0, cell[2])
+        prismobj = Prism(self.atoms.get_cell())
+        xhi, yhi, zhi, xy, xz, yz = convert(
+            prismobj.get_lammps_prism(), "distance", "ASE", "metal")
+        s += "0.0 %.6f xlo xhi\n" % xhi
+        s += "0.0 %.6f ylo yhi\n" % yhi
+        s += "0.0 %.6f zlo zhi\n" % zhi
+        if prismobj.is_skewed():
+            s += "%.6f %.6f %.6f xy xz yz\n" % (xy, xz, yz)
+        s += "\n"
         return s
 
     def _make_atoms(self, atom_style):
