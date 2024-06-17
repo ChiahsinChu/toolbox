@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
 from ..utils import *
 from .core import *
 
@@ -11,8 +12,10 @@ class Figure:
         if xlim is None:
             xlim = (np.min(x), np.max(x))
         if ylim is None:
-            ylim = (np.min(y) - (np.max(y) - np.min(y)) * 0.1, 
-                    np.max(y) + (np.max(y) - np.min(y)) * 0.1)
+            ylim = (
+                np.min(y) - (np.max(y) - np.min(y)) * 0.1,
+                np.max(y) + (np.max(y) - np.min(y)) * 0.1,
+            )
         self.xlim = xlim
         self.ylim = ylim
         self.ax.set_xlim(xlim)
@@ -24,7 +27,7 @@ class Figure:
             xlabel = labels[0]
             ylabel = labels[1]
         except:
-            assert (xlabel is not None) and (ylabel is not None)   
+            assert (xlabel is not None) and (ylabel is not None)
         ax_setlabel(self.ax, xlabel, ylabel, **kwargs)
 
 
@@ -39,8 +42,23 @@ class FullCellFigure(Figure):
         ax.axvline(x=z_surfs[0])
         ax.axvline(x=z_surfs[1])
         ax.axvline(x=(z_surfs[0] + z_surfs[1]) / 2, ls="--")
-        ax.fill_between(x, self.ylim[0], self.ylim[1], where=x <= z_surfs[0], facecolor='gray', alpha=.5)
-        ax.fill_between(x, self.ylim[0], self.ylim[1], where=x >= z_surfs[1], facecolor='gray', alpha=.5)
+        ax.fill_between(
+            x,
+            self.ylim[0],
+            self.ylim[1],
+            where=x <= z_surfs[0],
+            facecolor="gray",
+            alpha=0.5,
+        )
+        ax.fill_between(
+            x,
+            self.ylim[0],
+            self.ylim[1],
+            where=x >= z_surfs[1],
+            facecolor="gray",
+            alpha=0.5,
+        )
+
 
 class HalfCellFigure(Figure):
     def __init__(self, **kwargs) -> None:
@@ -48,11 +66,13 @@ class HalfCellFigure(Figure):
 
     def setup(self, x, y, xlim=None, ylim=None, z_surf=None, **kwargs):
         super().setup(x, y, xlim, ylim, **kwargs)
-        
+
         ax = self.ax
         ax.axvline(x=z_surf)
-        ax.fill_between(x, self.ylim[0], self.ylim[1], where=x < z_surf, facecolor='gray', alpha=.5)
-        
+        ax.fill_between(
+            x, self.ylim[0], self.ylim[1], where=x < z_surf, facecolor="gray", alpha=0.5
+        )
+
 
 label_dict = {
     "density": [r"z [Å]", r"$\rho [g/cm^3]$"],
@@ -63,5 +83,5 @@ label_dict = {
     "hartree": [r"z [Å]", r"$V_H$ [eV]"],
     "rho": [r"z [Å]", r"$\rho$"],
     "rho_pol": [r"z [Å]", r"$\rho_{pol}$"],
-    "polarization": [r"z [Å]", r"P [eA$^{-2}$]"]
+    "polarization": [r"z [Å]", r"P [eA$^{-2}$]"],
 }

@@ -1,6 +1,7 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
 import MDAnalysis as mda
 import mdapackmol
-from ase import build, Atoms
+from ase import Atoms, build
 
 from ..utils import *
 from ..utils.utils import calc_water_number
@@ -30,12 +31,15 @@ class WaterBox:
         io.write("water.pdb", atoms)
         water = mda.Universe("water.pdb")
 
-        system = mdapackmol.packmol([
-            mdapackmol.PackmolStructure(
-                water,
-                number=self.n_wat,
-                instructions=["inside box %s" % self.box_string])
-        ])
+        system = mdapackmol.packmol(
+            [
+                mdapackmol.PackmolStructure(
+                    water,
+                    number=self.n_wat,
+                    instructions=["inside box %s" % self.box_string],
+                )
+            ]
+        )
         system.atoms.write(fname, **kwargs)
         os.remove("water.pdb")
 
@@ -54,31 +58,32 @@ class Interface:
         new_cell = [a, b, c]
         shift_z = -z.min() - l_slab / 2
         coord[:, 2] += shift_z
-        slab = Atoms(self.slab.get_chemical_symbols(),
-                     positions=coord,
-                     cell=new_cell,
-                     pbc=True)
+        slab = Atoms(
+            self.slab.get_chemical_symbols(), positions=coord, cell=new_cell, pbc=True
+        )
         slab.wrap()
 
-        WaterBox(box=[[0, a], [0, b], [l_slab / 2, l_slab / 2 + l_water]],
-                 slit=[1., 1., 2.5]).run("waterbox.xyz")
+        WaterBox(
+            box=[[0, a], [0, b], [l_slab / 2, l_slab / 2 + l_water]],
+            slit=[1.0, 1.0, 2.5],
+        ).run("waterbox.xyz")
         waterbox = io.read("waterbox.xyz")
 
         self.atoms = waterbox + slab
         self.atoms.set_cell(new_cell)
         self.atoms.set_pbc(True)
         os.remove("waterbox.xyz")
-        
+
     def relax(self):
         # TODO: add relaxation step with lammps
-        
-        pass    
+
+        pass
 
 
 def add_ion(atoms, ion, region, cutoff=2.0):
     """
     Example
-    
+
         atoms = io.read("coord.xyz")
         ion = Atoms("K")
         atoms = add_ion(atoms, ion, [8.0, 13.0])
@@ -94,10 +99,11 @@ def add_ion(atoms, ion, region, cutoff=2.0):
         is_overlap = is_atom_overlap(new_atoms, -1, r=cutoff)
     return new_atoms
 
+
 def add_water(atoms, region, cutoff=2.0):
     """
     Example
-    
+
         atoms = io.read("coord.xyz")
         ion = Atoms("K")
         atoms = add_ion(atoms, ion, [8.0, 13.0])
@@ -108,7 +114,7 @@ def add_water(atoms, region, cutoff=2.0):
     coords -= coords[0].reshape(1, 3)
     rotation_matrix = random_rotation_matrix()
     coords = np.dot(coords, rotation_matrix)
-    
+
     is_overlap = 1
     while is_overlap != 0:
         random_positions = get_region_random_location(atoms, region)
@@ -116,9 +122,12 @@ def add_water(atoms, region, cutoff=2.0):
         water.set_positions(coords + random_positions.reshape(1, 3))
         new_atoms = atoms.copy()
         new_atoms.extend(water)
-        is_overlap = sum([is_atom_overlap(new_atoms, -i, 3, r=cutoff) for i in range(1, 3+1)])
+        is_overlap = sum(
+            [is_atom_overlap(new_atoms, -i, 3, r=cutoff) for i in range(1, 3 + 1)]
+        )
     return new_atoms
-    
+
+
 def get_region_random_location(atoms, region, extent=0.9):
     x_region = [atoms.get_cell()[0][0] * (1 - extent), atoms.get_cell()[0][0] * extent]
     y_region = [atoms.get_cell()[1][1] * (1 - extent), atoms.get_cell()[1][1] * extent]
@@ -128,6 +137,7 @@ def get_region_random_location(atoms, region, extent=0.9):
     location_z = np.random.uniform(region[0], region[1])
 
     return np.array([location_x, location_y, location_z])
+
 
 def is_atom_overlap(atoms, index, atom_num=1, r=1.5):
     """
@@ -150,6 +160,7 @@ def is_atom_overlap(atoms, index, atom_num=1, r=1.5):
         overlap = False
     return overlap
 
+
 def random_rotation_matrix():
     random_rotvec = np.random.randn(3)
     random_rotvec /= np.linalg.norm(random_rotvec)
@@ -163,13 +174,31 @@ def random_rotation_matrix():
     rot_matrix[1, 1] = cos_theta + random_rotvec[1] ** 2 * one_minus_cos_theta
     rot_matrix[2, 2] = cos_theta + random_rotvec[2] ** 2 * one_minus_cos_theta
 
-    rot_matrix[0, 1] = random_rotvec[0] * random_rotvec[1] * one_minus_cos_theta - random_rotvec[2] * sin_theta
-    rot_matrix[1, 0] = random_rotvec[0] * random_rotvec[1] * one_minus_cos_theta + random_rotvec[2] * sin_theta
+    rot_matrix[0, 1] = (
+        random_rotvec[0] * random_rotvec[1] * one_minus_cos_theta
+        - random_rotvec[2] * sin_theta
+    )
+    rot_matrix[1, 0] = (
+        random_rotvec[0] * random_rotvec[1] * one_minus_cos_theta
+        + random_rotvec[2] * sin_theta
+    )
 
-    rot_matrix[0, 2] = random_rotvec[0] * random_rotvec[2] * one_minus_cos_theta + random_rotvec[1] * sin_theta
-    rot_matrix[2, 0] = random_rotvec[0] * random_rotvec[2] * one_minus_cos_theta - random_rotvec[1] * sin_theta
+    rot_matrix[0, 2] = (
+        random_rotvec[0] * random_rotvec[2] * one_minus_cos_theta
+        + random_rotvec[1] * sin_theta
+    )
+    rot_matrix[2, 0] = (
+        random_rotvec[0] * random_rotvec[2] * one_minus_cos_theta
+        - random_rotvec[1] * sin_theta
+    )
 
-    rot_matrix[1, 2] = random_rotvec[1] * random_rotvec[2] * one_minus_cos_theta - random_rotvec[0] * sin_theta
-    rot_matrix[2, 1] = random_rotvec[1] * random_rotvec[2] * one_minus_cos_theta + random_rotvec[0] * sin_theta
+    rot_matrix[1, 2] = (
+        random_rotvec[1] * random_rotvec[2] * one_minus_cos_theta
+        - random_rotvec[0] * sin_theta
+    )
+    rot_matrix[2, 1] = (
+        random_rotvec[1] * random_rotvec[2] * one_minus_cos_theta
+        + random_rotvec[0] * sin_theta
+    )
 
     return rot_matrix

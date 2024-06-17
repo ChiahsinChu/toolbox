@@ -7,7 +7,7 @@ variable        THERMO_FREQ     equal 10
 variable        DUMP_FREQ       equal 10
 variable        RESTART_FREQ    equal 10000
 variable        TEMP            equal 330
-  
+
 # ---------------------- INITIALIZAITION ------------------
 units           metal
 boundary        p p p
@@ -21,12 +21,12 @@ change_box      all triclinic
 mass            1 15.999
 mass            2 1.0079
 mass            3 195.08
-group           slab type 3 
+group           slab type 3
 
 # --------------------- FORCE FIELDS ---------------------
 pair_style      deepmd graph.pb
 pair_coeff      * *
-          
+
 # --------------------- PRINT SECTION ----------------------
 variable        time equal step*dt
 variable        temp equal temp
@@ -49,7 +49,7 @@ neigh_modify    every 1
 # set ensemble
 timestep        0.0005
 fix             1 all nvt temp ${TEMP} ${TEMP} $(100.0*dt)
-fix             2 slab recenter INIT INIT INIT 
+fix             2 slab recenter INIT INIT INIT
 
 # print info to screen/log file
 thermo          ${THERMO_FREQ}
@@ -63,5 +63,3 @@ dump_modify     TRAJ element O H Pt sort id
 # --------------------- RUN ------------------------------
 restart         ${RESTART_FREQ} poly.restart
 run             ${NSTEPS}
-
-

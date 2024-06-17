@@ -1,13 +1,11 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
 from ase import build
 
-from toolbox.io.cp2k import Cp2kInput, Cp2kHartreeCube, Cp2kOutput
 from toolbox.calculator.cp2k import Cp2kCalculator
+from toolbox.io.cp2k import Cp2kHartreeCube, Cp2kInput, Cp2kOutput
 
 # prepare input files for CP2K calculation
-atoms = build.fcc111("Al", (2, 2, 6),
-                     vacuum=10.,
-                     orthogonal=True,
-                     periodic=True)
+atoms = build.fcc111("Al", (2, 2, 6), vacuum=10.0, orthogonal=True, periodic=True)
 cp2k_inp = Cp2kInput(atoms, cutoff=200, hartree=True)
 cp2k_inp.write(".")
 

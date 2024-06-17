@@ -9,7 +9,7 @@ variable        RESTART_FREQ    equal 1000
 variable        EXCHANGE_FREQ   equal 100
 variable        TEMP            world 300.0 310.0 320.0 330.0
 variable        REP             world 0 1 2 3
-  
+
 # ---------------------- INITIALIZAITION ------------------
 units           metal
 boundary        p p p
@@ -28,7 +28,7 @@ group           slab type 3
 # --------------------- FORCE FIELDS ---------------------
 pair_style      deepmd graph.pb
 pair_coeff      * *
-          
+
 # --------------------- PRINT SECTION ----------------------
 variable        time equal step*dt
 variable        temp equal temp
@@ -49,7 +49,7 @@ neighbor        2.0 bin
 neigh_modify    every 1
 
 # set ensemble
-timestep        0.0005  
+timestep        0.0005
 fix             1 all nvt temp ${TEMP} ${TEMP} $(100.0*dt)
 fix             2 slab recenter INIT INIT INIT
 
@@ -58,5 +58,3 @@ dump_modify     TRAJ element O H Pt sort id
 
 # --------------------- RUN T-REMD ----------------------
 temper          ${NSTEPS} ${EXCHANGE_FREQ} ${TEMP} 1 3847 58382
-
-

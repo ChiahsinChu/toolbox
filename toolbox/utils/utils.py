@@ -1,17 +1,19 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
+import collections
 import csv
 import json
 import os
 import pickle
+
 import h5py
 import numpy as np
-import collections
 
 from .unit import *
 
 
 def iterdict(input_dict, out_list, loop_idx):
-    """ 
-    recursively generate a list of strings for further 
+    """
+    recursively generate a list of strings for further
     print out CP2K input file
 
     Args:
@@ -26,7 +28,7 @@ def iterdict(input_dict, out_list, loop_idx):
     start_idx = len(out_list) - loop_idx - 2
     for k, v in input_dict.items():
         k = str(k)  # cast key into string
-        #if value is dictionary
+        # if value is dictionary
         if isinstance(v, dict):
             out_list.insert(-1 - loop_idx, "&" + k)
             out_list.insert(-1 - loop_idx, "&END " + k)
@@ -38,9 +40,9 @@ def iterdict(input_dict, out_list, loop_idx):
                     out_list.insert(-1 - loop_idx, "&" + k)
                     out_list.insert(-1 - loop_idx, "&END " + k)
                     iterdict(_v, out_list, loop_idx + 1)
-                #print(loop_idx)
-                #print(input_dict)
-                #print(out_list)
+                # print(loop_idx)
+                # print(input_dict)
+                # print(out_list)
             else:
                 for _v in v:
                     _v = str(_v)
@@ -52,7 +54,7 @@ def iterdict(input_dict, out_list, loop_idx):
                 out_list[start_idx] = out_list[start_idx] + " " + v
             else:
                 out_list.insert(-1 - loop_idx, k + " " + v)
-                #out_list.insert(-1-loop_idx, v)
+                # out_list.insert(-1-loop_idx, v)
     return out_list
 
 
@@ -64,10 +66,12 @@ def update_dict(old_d, update_d):
     :old_d: old dictionary
     :update_d: some update value written in dictionary form
     """
-    import collections
     for k, v in update_d.items():
-        if (k in old_d and isinstance(old_d[k], dict)
-                and isinstance(update_d[k], collections.abc.Mapping)):
+        if (
+            k in old_d
+            and isinstance(old_d[k], dict)
+            and isinstance(update_d[k], collections.abc.Mapping)
+        ):
             update_dict(old_d[k], update_d[k])
         # elif (k in old_d and isinstance(old_d[k], list)
         #       and isinstance(update_d[k], list)):
@@ -126,7 +130,6 @@ def load_dict(fname, format=None):
     if format is None:
         format = os.path.splitext(fname)[1][1:]
     try:
-
         return globals()["load_dict_%s" % format](fname)
     except:
         raise AttributeError("Unknown format %s" % format)
@@ -156,7 +159,7 @@ def load_dict_hdf5(fname):
 
 
 def get_efields(DeltaV, l: list, eps: list):
-    r_field = 1. / np.array(eps)
+    r_field = 1.0 / np.array(eps)
     _delta_v = np.sum(np.array(l) * r_field)
     v_coeff = DeltaV / _delta_v
     return r_field * v_coeff
@@ -165,28 +168,31 @@ def get_efields(DeltaV, l: list, eps: list):
 def safe_makedirs(dname):
     if not os.path.exists(dname):
         os.makedirs(dname)
-        
+
+
 def safe_symlink(src, dst, **kwargs):
     try:
         os.symlink(src, dst, **kwargs)
     except:
         pass
 
+
 def calc_density(n, v, mol_mass: float):
     """
     calculate density (g/cm^3) from the number of particles
-    
+
     Parameters
     ----------
-    n: int or array
+    n : int or array
         number of particles
-    v: float or array
+    v : float or array
         volume
-    mol_mass: float
+    mol_mass : float
         mole mass in g/mol
     """
-    rho = (n / constants.Avogadro *
-           mol_mass) / (v * (constants.angstrom / constants.centi)**3)
+    rho = (n / constants.Avogadro * mol_mass) / (
+        v * (constants.angstrom / constants.centi) ** 3
+    )
     return rho
 
 
@@ -195,8 +201,12 @@ def calc_water_density(n, v):
 
 
 def calc_number(rho, v, mol_mass: float):
-    n = rho * (v * (constants.angstrom / constants.centi)**
-               3) * constants.Avogadro / mol_mass
+    n = (
+        rho
+        * (v * (constants.angstrom / constants.centi) ** 3)
+        * constants.Avogadro
+        / mol_mass
+    )
     return int(n)
 
 
@@ -215,27 +225,30 @@ def calc_coord_number(atoms, c_ids, neigh_ids, cutoff):
     out = np.count_nonzero(results <= cutoff, axis=1)
     return out
 
+
 def calc_water_coord_number(atoms):
     atype = np.array(atoms.get_chemical_symbols())
     c_ids = np.where(atype == "O")[0]
     neigh_ids = np.where(atype == "H")[0]
     return calc_coord_number(atoms, c_ids, neigh_ids, 1.3)
 
+
 def check_water(atoms):
     cns = calc_water_coord_number(atoms)
-    flags = (cns == 2)
+    flags = cns == 2
     if False in flags:
         return False
     else:
         return True
-    
+
+
 def calc_lj_params(ks):
     """
     ks
         list of element symbols
     """
     from ..io.template import lj_params
-    
+
     n_elements = len(ks)
     _sigma = []
     _epsilon = []
@@ -252,7 +265,4 @@ def calc_lj_params(ks):
                 epsilon_j = lj_params[ks[j]]["epsilon"]
             except:
                 raise KeyError("sigma for %s not found" % ks[j])
-            print(ks[i], ks[j],
-                (sigma_i + sigma_j) / 2, 
-                np.sqrt(epsilon_i * epsilon_j))
-        
+            print(ks[i], ks[j], (sigma_i + sigma_j) / 2, np.sqrt(epsilon_i * epsilon_j))

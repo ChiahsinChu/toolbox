@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
 import logging
 import os
 import sys
@@ -10,21 +11,23 @@ class Cp2kCalculator(BashCalculator):
     def __init__(self, work_dir) -> None:
         super().__init__(work_dir)
 
-    def run(self,
-            command="cp2k.popt",
-            stdin="input.inp",
-            stdout="output.out",
-            stderr="cp2k.stderr",
-            mpi_command: str = "mpiexec.hydra", 
-            ignore_finished_tag=False, 
-            ignore_err=True):
+    def run(
+        self,
+        command="cp2k.popt",
+        stdin="input.inp",
+        stdout="output.out",
+        stderr="cp2k.stderr",
+        mpi_command: str = "mpiexec.hydra",
+        ignore_finished_tag=False,
+        ignore_err=True,
+    ):
         self.ignore_err = ignore_err
         super().run(command, stdin, stdout, stderr, mpi_command, ignore_finished_tag)
 
     def _make_finished_tag(self, stdout):
         try:
             cp2k_out = Cp2kOutput(stdout)
-            with open(os.path.join("finished_tag"), 'w') as f:
+            with open(os.path.join("finished_tag"), "w") as f:
                 pass
         except:
             warning_msg = "CP2K calculation does not finish!"

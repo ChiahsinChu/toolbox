@@ -1,7 +1,8 @@
-from ase import io, Atoms
+# SPDX-License-Identifier: LGPL-3.0-or-later
+import numpy as np
+from ase import Atoms, io
 from ase.calculators.lammps import Prism, convert
 from ase.units import fs
-import numpy as np
 
 
 def read_dump(dump_file="dump.lammpstrj"):
@@ -16,7 +17,7 @@ def read_dump(dump_file="dump.lammpstrj"):
     coords = np.reshape(coords, (len(traj), -1))
     forces = np.reshape(forces, (len(traj), -1))
     boxs = np.reshape(boxs, (len(traj), -1))
-    type_list = atoms.get_array('numbers')
+    type_list = atoms.get_array("numbers")
     type_list = np.array(type_list) - 1
     return coords, forces, boxs, type_list
 
@@ -39,8 +40,8 @@ class LammpsData:
         else:
             n_atype = len(np.unique(self.atoms.numbers))
         atom_style = kwargs.get("atom_style", "full")
-        
-        with open(out_file, "w", encoding='utf-8') as f:
+
+        with open(out_file, "w", encoding="utf-8") as f:
             header = self._make_header(out_file, n_atype)
             f.write(header)
             body = self._make_atoms(atom_style)
@@ -77,7 +78,8 @@ class LammpsData:
         #     0.0, cell[0], 0.0, cell[1], 0.0, cell[2])
         prismobj = Prism(self.atoms.get_cell())
         xhi, yhi, zhi, xy, xz, yz = convert(
-            prismobj.get_lammps_prism(), "distance", "ASE", "metal")
+            prismobj.get_lammps_prism(), "distance", "ASE", "metal"
+        )
         s += "0.0 %.6f xlo xhi\n" % xhi
         s += "0.0 %.6f ylo yhi\n" % yhi
         s += "0.0 %.6f zlo zhi\n" % zhi
@@ -101,9 +103,14 @@ class LammpsData:
         for atom in self.atoms:
             ii = atom.index
             s += "%d %d %d %.16f %.16f %.16f %.16f\n" % (
-                ii + 1, self.res_id[ii], self.atype[ii], self.charges[ii],
-                self.positions[ii][0], self.positions[ii][1],
-                self.positions[ii][2])
+                ii + 1,
+                self.res_id[ii],
+                self.atype[ii],
+                self.charges[ii],
+                self.positions[ii][0],
+                self.positions[ii][1],
+                self.positions[ii][2],
+            )
         return s
 
     def _make_atoms_atomic(self):
@@ -129,13 +136,13 @@ class LammpsData:
 
     def set_dihedrals(self, dihedrals):
         self.dihedrals = np.reshape(dihedrals, (-1, 6))
-        
+
     def set_charges(self, charges):
         self.charges = np.reshape(charges, (-1))
 
     def set_velocities(self, velocities):
         self.velocities = np.reshape(velocities, (-1, 4))
-    
+
     def _setup(self):
         self.positions = self.atoms.get_positions()
         if len(self.atoms.get_initial_charges()) > 0:
@@ -152,7 +159,7 @@ class LammpsData:
 class DPLRLammpsData(LammpsData):
     """
     Example:
-    
+
     atoms = io.read("coord.xyz")
     sel_type = ["O"]
     sys_charge_dict = {
@@ -162,6 +169,7 @@ class DPLRLammpsData(LammpsData):
     lmp_data = DPLRLammpsData(atoms, sel_type=sel_type, sys_charge_dict=sys_charge_dict)
     lmp_data.write("system.data", format="lammps-data", specorder=["O", "H"], atom_style="full")
     """
+
     def __init__(self, atoms, sel_type, sys_charge_dict) -> None:
         atoms, center_ids = self._make_extended_atoms(atoms, sel_type, sys_charge_dict)
         super().__init__(atoms)
@@ -201,10 +209,11 @@ class DPLRLammpsData(LammpsData):
             specorder.extend(self.dummy_type_map)
         super().write(out_file, specorder=specorder, **kwargs)
 
+
 class DPLRRestartLammpsData(LammpsData):
     """
     Example:
-    
+
     atoms = io.read("after_system.data",
                 format="lammps-data",
                 sort_by_id=True,
@@ -214,6 +223,7 @@ class DPLRRestartLammpsData(LammpsData):
     lmp_data = DPLRRestartLammpsData(atoms, sel_type=sel_type)
     lmp_data.write("restart_system.data", format="lammps-data", specorder=["O", "H", "He"], atom_style="full")
     """
+
     def __init__(self, atoms, sel_type) -> None:
         n_wannier = np.count_nonzero(np.isin(atoms.symbols, sel_type))
         n_real = len(atoms) - n_wannier
@@ -222,7 +232,7 @@ class DPLRRestartLammpsData(LammpsData):
         coords = atoms.get_positions()
         for _atype in sel_type:
             sel_ids = np.where(atoms.symbols == _atype)[0]
-            np.copyto(coords[count:count+len(sel_ids)], coords[sel_ids])
+            np.copyto(coords[count : count + len(sel_ids)], coords[sel_ids])
             center_ids.append(sel_ids + 1)
             count += len(sel_ids)
         center_ids = np.concatenate(center_ids)
@@ -233,7 +243,9 @@ class DPLRRestartLammpsData(LammpsData):
         # https://wiki.fysik.dtu.dk/ase/ase/units.html#units
         vs = atoms.get_velocities() * fs * 1e3
         # vs[n_real:] = 0.0
-        self.set_velocities(np.concatenate((np.arange(1, len(atoms)+1).reshape(-1, 1), vs), axis=1))
+        self.set_velocities(
+            np.concatenate((np.arange(1, len(atoms) + 1).reshape(-1, 1), vs), axis=1)
+        )
         # set bonds
         nbonds = len(center_ids)
         bonds = np.ones((nbonds, 4), dtype=int)
@@ -242,7 +254,8 @@ class DPLRRestartLammpsData(LammpsData):
         np.copyto(bonds[:, 2], center_ids)
         np.copyto(bonds[:, 3], wannier_ids)
         self.set_bonds(bonds)
-        
+
+
 class LammpsDump:
     def __init__(self, traj, type_map) -> None:
         self.traj = traj
@@ -278,13 +291,13 @@ class LammpsDump:
 
     def _write_dump(self, atoms, ts, out_file, append):
         if append:
-            with open(out_file, "a", encoding='utf-8') as f:
+            with open(out_file, "a", encoding="utf-8") as f:
                 header = self.make_header(atoms, ts)
                 f.write(header)
                 body = self.make_body(atoms, self.atype_dict)
                 f.write(body)
         else:
-            with open(out_file, "w", encoding='utf-8') as f:
+            with open(out_file, "w", encoding="utf-8") as f:
                 header = self.make_header(atoms, ts)
                 f.write(header)
                 body = self.make_body(atoms, self.atype_dict)
@@ -300,10 +313,19 @@ class LammpsDump:
         s = "ITEM: TIMESTEP\n%d\n" % ts
         s += "ITEM: NUMBER OF ATOMS\n"
         s += "%d\n" % nat
-        s += "ITEM: BOX BOUNDS %s %s %s\n" % (bc_dict[bc[0]], bc_dict[bc[1]],
-                                              bc_dict[bc[2]])
-        s += "%.4f %.4f\n%.4f %.4f\n%.4f %.4f\n" % (0.0, cell[0], 0.0, cell[1],
-                                                    0.0, cell[2])
+        s += "ITEM: BOX BOUNDS %s %s %s\n" % (
+            bc_dict[bc[0]],
+            bc_dict[bc[1]],
+            bc_dict[bc[2]],
+        )
+        s += "%.4f %.4f\n%.4f %.4f\n%.4f %.4f\n" % (
+            0.0,
+            cell[0],
+            0.0,
+            cell[1],
+            0.0,
+            cell[2],
+        )
         if len(atoms.get_initial_charges()) > 0:
             s += "ITEM: ATOMS id type element x y z q\n"
         else:
@@ -324,23 +346,27 @@ class LammpsDump:
             ii = atom.index
             if q_flag:
                 s += "%d %d %s %.16f %.16f %.16f %.16f\n" % (
-                    ii + 1, atype_dict[atom.symbol]["type"],
-                    atype_dict[atom.symbol]["element"], ps[ii][0], ps[ii][1],
-                    ps[ii][2], charges[ii])
+                    ii + 1,
+                    atype_dict[atom.symbol]["type"],
+                    atype_dict[atom.symbol]["element"],
+                    ps[ii][0],
+                    ps[ii][1],
+                    ps[ii][2],
+                    charges[ii],
+                )
             else:
                 s += "%d %d %s %.16f %.16f %.16f\n" % (
-                    ii + 1, atype_dict[atom.symbol]["type"],
-                    atype_dict[atom.symbol]["element"], ps[ii][0], ps[ii][1],
-                    ps[ii][2])
+                    ii + 1,
+                    atype_dict[atom.symbol]["type"],
+                    atype_dict[atom.symbol]["element"],
+                    ps[ii][0],
+                    ps[ii][1],
+                    ps[ii][2],
+                )
         return s
 
 
-def write_dump(traj,
-               type_map,
-               start=0,
-               step=1,
-               out_file="out.lammpstrj",
-               append=False):
+def write_dump(traj, type_map, start=0, step=1, out_file="out.lammpstrj", append=False):
     if isinstance(type_map, list):
         atype_dict = {}
         for ii, atype in enumerate(type_map, start=1):
@@ -363,13 +389,13 @@ def write_dump(traj,
 
 def _write_dump(atoms, atype_dict, ts, out_file, append):
     if append:
-        with open(out_file, "a", encoding='utf-8') as f:
+        with open(out_file, "a", encoding="utf-8") as f:
             header = make_dump_header(atoms, ts)
             f.write(header)
             body = make_dump_body(atoms, atype_dict)
             f.write(body)
     else:
-        with open(out_file, "w", encoding='utf-8') as f:
+        with open(out_file, "w", encoding="utf-8") as f:
             header = make_dump_header(atoms, ts)
             f.write(header)
             body = make_dump_body(atoms, atype_dict)
@@ -383,8 +409,14 @@ def make_dump_header(atoms, ts):
     s += "ITEM: NUMBER OF ATOMS\n"
     s += "%d\n" % nat
     s += "ITEM: BOX BOUNDS pp pp pp\n"
-    s += "%.4f %.4f\n%.4f %.4f\n%.4f %.4f\n" % (0.0, cell[0], 0.0, cell[1],
-                                                0.0, cell[2])
+    s += "%.4f %.4f\n%.4f %.4f\n%.4f %.4f\n" % (
+        0.0,
+        cell[0],
+        0.0,
+        cell[1],
+        0.0,
+        cell[2],
+    )
     if len(atoms.get_initial_charges()) > 0:
         s += "ITEM: ATOMS id type element x y z q\n"
     else:
@@ -405,12 +437,21 @@ def make_dump_body(atoms, atype_dict):
         ii = atom.index
         if q_flag:
             s += "%d %d %s %.16f %.16f %.16f %.16f\n" % (
-                ii + 1, atype_dict[atom.symbol]["type"],
-                atype_dict[atom.symbol]["element"], ps[ii][0], ps[ii][1],
-                ps[ii][2], charges[ii])
+                ii + 1,
+                atype_dict[atom.symbol]["type"],
+                atype_dict[atom.symbol]["element"],
+                ps[ii][0],
+                ps[ii][1],
+                ps[ii][2],
+                charges[ii],
+            )
         else:
             s += "%d %d %s %.16f %.16f %.16f\n" % (
-                ii + 1, atype_dict[atom.symbol]["type"],
-                atype_dict[atom.symbol]["element"], ps[ii][0], ps[ii][1],
-                ps[ii][2])
+                ii + 1,
+                atype_dict[atom.symbol]["type"],
+                atype_dict[atom.symbol]["element"],
+                ps[ii][0],
+                ps[ii][1],
+                ps[ii][2],
+            )
     return s

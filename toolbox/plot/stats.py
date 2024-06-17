@@ -1,21 +1,32 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
+from scipy import stats
+
 from ..utils import *
 from .core import *
 
-from scipy import stats
 
 class FDMTest:
     """
     finite difference method test for derivative
     """
+
     def __init__(self, **kwargs) -> None:
-        self.fig, self.axs = plt.subplots(nrows=2, figsize=[4, 6], sharex = "all", **kwargs)
+        self.fig, self.axs = plt.subplots(
+            nrows=2, figsize=[4, 6], sharex="all", **kwargs
+        )
 
     def setup(self, x, y, dydx):
         self.stats_dict = {}
         ax = self.axs[0]
         ax.scatter(x, dydx, color="blue", label="original data")
         fit_output = stats.linregress(x, dydx)
-        ax.plot(x, x * fit_output.slope + fit_output.intercept, "--", color="red", label="fitted line")
+        ax.plot(
+            x,
+            x * fit_output.slope + fit_output.intercept,
+            "--",
+            color="red",
+            label="fitted line",
+        )
         self.stats_dict["slope"] = fit_output.slope
         self.stats_dict["intercept"] = fit_output.intercept
         self.stats_dict["rvalue"] = fit_output.rvalue

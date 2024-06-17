@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
 """
 Find a cutoff value for converged total energy
 """
@@ -16,10 +17,7 @@ E_CONVERGENCE = 1e-2
 plot.use_style("pub")
 
 # prepare input files for CP2K calculation
-atoms = build.fcc111("Al", (2, 2, 6),
-                     vacuum=10.,
-                     orthogonal=True,
-                     periodic=True)
+atoms = build.fcc111("Al", (2, 2, 6), vacuum=10.0, orthogonal=True, periodic=True)
 
 energy = []
 _cutoff = []

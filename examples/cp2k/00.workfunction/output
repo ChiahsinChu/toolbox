@@ -21,7 +21,7 @@
 
  CP2K| version string:                                          CP2K version 7.1
  CP2K| source code revision number:                                  git:e635599
- CP2K| cp2kflags: libint fftw3 libxc elpa parallel mpi3 scalapack xsmm spglib   
+ CP2K| cp2kflags: libint fftw3 libxc elpa parallel mpi3 scalapack xsmm spglib
  CP2K| is freely available from                            https://www.cp2k.org/
  CP2K| Program compiled at                           Mon Mar 8 20:53:19 CST 2021
  CP2K| Program compiled on                                                 mgt01
@@ -102,7 +102,7 @@
  [a.u.] -> [Hz]                                             6.57968392072181E+15
  [a.u.] -> [1/cm] (wave numbers)                            2.19474631370540E+05
  [a.u./Bohr**2] -> [1/cm]                                   5.14048714338585E+03
- 
+
 
  CELL_TOP| Volume [angstrom^3]:                                          900.351
  CELL_TOP| Vector a [angstrom     5.728     0.000     0.000    |a| =       5.728
@@ -171,7 +171,7 @@
  FUNCTIONAL| ROUTINE=NEW
  FUNCTIONAL| PBE:
  FUNCTIONAL| J.P.Perdew, K.Burke, M.Ernzerhof, Phys. Rev. Letter, vol. 77, n 18,
- FUNCTIONAL|  pp. 3865-3868, (1996){spin unpolarized}                           
+ FUNCTIONAL|  pp. 3865-3868, (1996){spin unpolarized}
  vdW POTENTIAL|                                                   Pair Potential
  vdW POTENTIAL|          DFT-D3 (Version 3.1)
  vdW POTENTIAL|          Potential Form: S. Grimme et al, JCP 132: 154104 (2010)
@@ -192,7 +192,7 @@
  QS|                           4) grid level                                 3.7
  QS| Grid level progression factor:                                          3.0
  QS| Relative density cutoff [a.u.]:                                        20.0
- QS| Consistent realspace mapping and integration 
+ QS| Consistent realspace mapping and integration
  QS| Interaction thresholds: eps_pgf_orb:                                3.2E-07
  QS|                         eps_filter_matrix:                          0.0E+00
  QS|                         eps_core_charge:                            1.0E-15
@@ -826,87 +826,87 @@
  -                           R E F E R E N C E S                               -
  -                                                                             -
  -------------------------------------------------------------------------------
- 
+
  CP2K version 7.1, the CP2K developers group (2019).
  CP2K is freely available from https://www.cp2k.org/ .
 
- Schuett, Ole; Messmer, Peter; Hutter, Juerg; VandeVondele, Joost. 
+ Schuett, Ole; Messmer, Peter; Hutter, Juerg; VandeVondele, Joost.
  Electronic Structure Calculations on Graphics Processing Units, John
- Wiley & Sons, Ltd, 173-190 (2016). 
+ Wiley & Sons, Ltd, 173-190 (2016).
  GPU-Accelerated Sparse Matrix-Matrix Multiplication for
  Linear Scaling Density Functional Theory.
  https://dx.doi.org/10.1002/9781118670712.ch8
 
- Borstnik, U; VandeVondele, J; Weber, V; Hutter, J. 
- PARALLEL COMPUTING, 40 (5-6), 47-58 (2014). 
+ Borstnik, U; VandeVondele, J; Weber, V; Hutter, J.
+ PARALLEL COMPUTING, 40 (5-6), 47-58 (2014).
  Sparse matrix multiplication: The distributed block-compressed sparse
  row library.
  https://dx.doi.org/10.1016/j.parco.2014.03.012
 
- Hutter, J; Iannuzzi, M; Schiffmann, F; VandeVondele, J. 
- WIREs Comput Mol Sci., 4 (1), 15-25 (2014). 
+ Hutter, J; Iannuzzi, M; Schiffmann, F; VandeVondele, J.
+ WIREs Comput Mol Sci., 4 (1), 15-25 (2014).
  CP2K: atomistic simulations of condensed matter systems.
  https://dx.doi.org/10.1002/wcms.1159
 
  Marek, A; Blum, V; Johanni, R; Havu, V; Lang, B; Auckenthaler, T;
- Heinecke, A; Bungartz, H; Lederer, H. 
- Journal of Physics: Condensed Matter, 26 (21), (2014). 
+ Heinecke, A; Bungartz, H; Lederer, H.
+ Journal of Physics: Condensed Matter, 26 (21), (2014).
  The ELPA library: scalable parallel eigenvalue solutions for
  electronic structure
  theory and computational science.
  https://dx.doi.org/10.1088/0953-8984/26/21/213201
 
- Grimme, S; Ehrlich, S; Goerigk, L. 
- JOURNAL OF COMPUTATIONAL CHEMISTRY, 32, 1456 (2011). 
+ Grimme, S; Ehrlich, S; Goerigk, L.
+ JOURNAL OF COMPUTATIONAL CHEMISTRY, 32, 1456 (2011).
  Effect of the damping function in dispersion corrected density functional theory.
  https://dx.doi.org/10.1002/jcc.21759
 
- Grimme, S; Antony, J; Ehrlich, S; Krieg, H. 
- JOURNAL OF CHEMICAL PHYSICS, 132 (15), 154104 (2010). 
+ Grimme, S; Antony, J; Ehrlich, S; Krieg, H.
+ JOURNAL OF CHEMICAL PHYSICS, 132 (15), 154104 (2010).
  A consistent and accurate ab initio parametrization of density
  functional dispersion correction (DFT-D) for the 94 elements H-Pu.
  https://dx.doi.org/10.1063/1.3382344
 
- VandeVondele, J; Hutter, J. 
- JOURNAL OF CHEMICAL PHYSICS, 127 (11), 114105 (2007). 
+ VandeVondele, J; Hutter, J.
+ JOURNAL OF CHEMICAL PHYSICS, 127 (11), 114105 (2007).
  Gaussian basis sets for accurate calculations on molecular systems in
  gas and condensed phases.
  https://dx.doi.org/10.1063/1.2770708
 
- Krack, M. 
- THEORETICAL CHEMISTRY ACCOUNTS, 114 (1-3), 145-152 (2005). 
+ Krack, M.
+ THEORETICAL CHEMISTRY ACCOUNTS, 114 (1-3), 145-152 (2005).
  Pseudopotentials for H to Kr optimized for gradient-corrected
  exchange-correlation functionals.
  https://dx.doi.org/10.1007/s00214-005-0655-y
 
  VandeVondele, J; Krack, M; Mohamed, F; Parrinello, M; Chassaing, T;
- Hutter, J. COMPUTER PHYSICS COMMUNICATIONS, 167 (2), 103-128 (2005). 
+ Hutter, J. COMPUTER PHYSICS COMMUNICATIONS, 167 (2), 103-128 (2005).
  QUICKSTEP: Fast and accurate density functional calculations using a
  mixed Gaussian and plane waves approach.
  https://dx.doi.org/10.1016/j.cpc.2004.12.014
 
- Frigo, M; Johnson, SG. 
- PROCEEDINGS OF THE IEEE, 93 (2), 216-231 (2005). 
+ Frigo, M; Johnson, SG.
+ PROCEEDINGS OF THE IEEE, 93 (2), 216-231 (2005).
  The design and implementation of FFTW3.
  https://dx.doi.org/10.1109/JPROC.2004.840301
 
- Hartwigsen, C; Goedecker, S; Hutter, J. 
- PHYSICAL REVIEW B, 58 (7), 3641-3662 (1998). 
+ Hartwigsen, C; Goedecker, S; Hutter, J.
+ PHYSICAL REVIEW B, 58 (7), 3641-3662 (1998).
  Relativistic separable dual-space Gaussian pseudopotentials from H to Rn.
  https://dx.doi.org/10.1103/PhysRevB.58.3641
 
- Lippert, G; Hutter, J; Parrinello, M. 
- MOLECULAR PHYSICS, 92 (3), 477-487 (1997). 
+ Lippert, G; Hutter, J; Parrinello, M.
+ MOLECULAR PHYSICS, 92 (3), 477-487 (1997).
  A hybrid Gaussian and plane wave density functional scheme.
  https://dx.doi.org/10.1080/002689797170220
 
- Perdew, JP; Burke, K; Ernzerhof, M. 
- PHYSICAL REVIEW LETTERS, 77 (18), 3865-3868 (1996). 
+ Perdew, JP; Burke, K; Ernzerhof, M.
+ PHYSICAL REVIEW LETTERS, 77 (18), 3865-3868 (1996).
  Generalized gradient approximation made simple.
  https://dx.doi.org/10.1103/PhysRevLett.77.3865
 
- Goedecker, S; Teter, M; Hutter, J. 
- PHYSICAL REVIEW B, 54 (3), 1703-1710 (1996). 
+ Goedecker, S; Teter, M; Hutter, J.
+ PHYSICAL REVIEW B, 54 (3), 1703-1710 (1996).
  Separable dual-space Gaussian pseudopotentials.
  https://dx.doi.org/10.1103/PhysRevB.54.1703
 
@@ -963,7 +963,7 @@
  -------------------------------------------------------------------------------
 
  The number of warnings for this run is : 3
- 
+
  -------------------------------------------------------------------------------
   **** **** ******  **  PROGRAM ENDED AT                 2023-05-11 17:58:26.979
  ***** ** ***  *** **   PROGRAM RAN ON                                   c52-010

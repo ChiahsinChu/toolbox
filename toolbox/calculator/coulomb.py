@@ -1,9 +1,7 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
 import numpy as np
-from scipy import constants, special
-from ase.geometry.cell import cell_to_cellpar
-import re
 from MDAnalysis.lib.distances import distance_array, minimize_vectors
-
+from scipy import constants, special
 
 EPSILON = constants.epsilon_0 / constants.elementary_charge * constants.angstrom
 qqrd2e = 1 / (4 * np.pi * EPSILON)
@@ -40,7 +38,7 @@ def real_coul(qi, qj, xi, xj, gewald, force=False):
         t = 1.0 / (1.0 + EWALD_P * grij)
         erfc = t * (A1 + t * (A2 + t * (A3 + t * (A4 + t * A5)))) * expm2
         forcecoul = prefactor * (erfc + EWALD_F * grij * expm2)
-        fpair = forcecoul / rij ** 2
+        fpair = forcecoul / rij**2
         f = (xi - xj) * fpair
         e = prefactor * erfc
         return e, f
@@ -48,10 +46,11 @@ def real_coul(qi, qj, xi, xj, gewald, force=False):
         e = prefactor * special.erfc(rij * gewald)
         return e
 
+
 class CoulCutCalculator:
     def __init__(self, cutoff=5.0) -> None:
         self.cutoff = cutoff
-        
+
     def calculate(self, atoms):
         cellpar = atoms.cell.cellpar()
         coords = atoms.get_positions()
@@ -65,18 +64,20 @@ class CoulCutCalculator:
             sel_ids = np.where(force_mask)[0]
             forcecoul = qqrd2e * charges[ii] * charges[sel_ids] / dist_mat[ii][sel_ids]
             fpair = forcecoul / dist_mat[ii][sel_ids] ** 2
-            delta_x = minimize_vectors(coords[ii].reshape(1, 3) - coords[sel_ids], box=cellpar)
+            delta_x = minimize_vectors(
+                coords[ii].reshape(1, 3) - coords[sel_ids], box=cellpar
+            )
             forces[ii] += np.sum(delta_x * fpair.reshape(-1, 1), axis=0)
             forces[sel_ids] -= delta_x * fpair.reshape(-1, 1)
             energy += np.sum(forcecoul)
         return energy, forces
-    
-    
+
+
 class CoulLongCalculator:
     def __init__(self, gewald, cutoff=5.0) -> None:
         self.cutoff = cutoff
         self.gewald = gewald
-        
+
     def calculate(self, atoms):
         cellpar = atoms.cell.cellpar()
         coords = atoms.get_positions()
@@ -95,7 +96,9 @@ class CoulLongCalculator:
             erfc = t * (A1 + t * (A2 + t * (A3 + t * (A4 + t * A5)))) * expm2
             forcecoul = prefactor * (erfc + EWALD_F * grij * expm2)
             fpair = forcecoul / dist_mat[ii][sel_ids] ** 2
-            delta_x = minimize_vectors(coords[ii].reshape(1, 3) - coords[sel_ids], box=cellpar)
+            delta_x = minimize_vectors(
+                coords[ii].reshape(1, 3) - coords[sel_ids], box=cellpar
+            )
             forces[ii] += np.sum(delta_x * fpair.reshape(-1, 1), axis=0)
             forces[sel_ids] -= delta_x * fpair.reshape(-1, 1)
             energy += np.sum(prefactor * erfc)

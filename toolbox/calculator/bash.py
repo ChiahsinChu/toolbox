@@ -1,18 +1,24 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
 import logging
 import os
+
 
 class BashCalculator:
     def __init__(self, work_dir) -> None:
         self.work_dir = work_dir
 
-    def run(self,
-            command: str = None,
-            stdin: str = None,
-            stdout: str = "job.stdout",
-            stderr: str = "job.stderr",
-            mpi_command: str = "mpiexec.hydra", 
-            ignore_finished_tag=False):
-        if (ignore_finished_tag == True) or (os.path.exists(os.path.join(self.work_dir, "finished_tag")) == False):
+    def run(
+        self,
+        command: str = None,
+        stdin: str = None,
+        stdout: str = "job.stdout",
+        stderr: str = "job.stderr",
+        mpi_command: str = "mpiexec.hydra",
+        ignore_finished_tag=False,
+    ):
+        if (ignore_finished_tag == True) or (
+            os.path.exists(os.path.join(self.work_dir, "finished_tag")) == False
+        ):
             if mpi_command is not None:
                 command = "%s %s" % (mpi_command, command)
 
@@ -37,4 +43,3 @@ class BashCalculator:
     @staticmethod
     def _make_finished_tag(stdout):
         pass
-

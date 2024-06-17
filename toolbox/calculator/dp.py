@@ -1,29 +1,29 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
 from dpdispatcher import Machine, Resources, Submission, Task
+
 from toolbox.utils import *
 
 
 class DPDispatcher:
     def __init__(self, work_dir=".") -> None:
         self.work_dir = work_dir
-    
+
     def _setup(self, machine_setup={}, resources_setup={}):
         _machine_setup = {
             "batch_type": "Slurm",
             "context_type": "LocalContext",
             "local_root": "./",
-            "remote_root": "/data/jxzhu/nnp/dp_workdir"
+            "remote_root": "/data/jxzhu/nnp/dp_workdir",
         }
         _machine_setup.update(machine_setup)
         _resources_setup = {
             "number_node": 1,
             "cpu_per_node": 24,
             "gpu_per_node": 0,
-            "kwargs": {
-                "gpu_usage": False
-            },
+            "kwargs": {"gpu_usage": False},
             "queue_name": "c51-large",
             "group_size": 80,
-            "module_purge": True
+            "module_purge": True,
         }
         _resources_setup.update(resources_setup)
         self._check_node(_resources_setup)
@@ -39,15 +39,17 @@ class DPDispatcher:
             task = Task(task_work_path=dname, **task_setup)
             task_list.append(task)
 
-        submission = Submission(work_base=self.work_dir,
-                                machine=self.machine,
-                                resources=self.resources,
-                                task_list=task_list)
+        submission = Submission(
+            work_base=self.work_dir,
+            machine=self.machine,
+            resources=self.resources,
+            task_list=task_list,
+        )
         submission.run_submission()
 
     @staticmethod
     def _check_node(resources_setup):
-        queue = resources_setup["queue_name"] 
+        queue = resources_setup["queue_name"]
 
         if "c51" in queue:
             resources_setup["cpu_per_node"] = 24
@@ -55,8 +57,20 @@ class DPDispatcher:
             resources_setup["cpu_per_node"] = 28
         elif "c53" in queue:
             resources_setup["cpu_per_node"] = 32
-        elif queue in ["large_s", "medium_s", "small_s", "large_l", "medium_l", "small_l", 
-                       "large_s_cg", "medium_s_cg", "small_s_cg", "large_l_cg", "medium_l_cg", "small_l_cg"]:
+        elif queue in [
+            "large_s",
+            "medium_s",
+            "small_s",
+            "large_l",
+            "medium_l",
+            "small_l",
+            "large_s_cg",
+            "medium_s_cg",
+            "small_s_cg",
+            "large_l_cg",
+            "medium_l_cg",
+            "small_l_cg",
+        ]:
             # add queue in ikkem
             cpu_per_node = resources_setup.get("cpu_per_node", 64)
             resources_setup["cpu_per_node"] = cpu_per_node
@@ -83,55 +97,46 @@ class DPDispatcher:
 #         # type.raw
 #         atype = [type_map.index(_type_map[ii]) for ii in _atype]
 #         np.savetxt(os.path.join(out_dir, "type.raw"), atype, fmt="%d")
-        
+
 #         safe_makedirs(os.path.join(self.work_dir, "tmp_dpdata"))
 
 
 class CP2KDPDispatcher(DPDispatcher):
-    def __init__(self, work_dir=".", v9:bool=False) -> None:
+    def __init__(self, work_dir=".", v9: bool = False) -> None:
         super().__init__(work_dir)
         self.v9 = v9
 
     def _setup(self, machine_setup={}, resources_setup={}):
         if self.v9:
             _resources_setup = {
-                "custom_flags": [
-                    "#SBATCH -J cp2k"
-                ],
-                "module_list": [
-                    "mkl/latest",
-                    "mpi/latest",
-                    "gcc/9.3.0",
-                    "cp2k/9.1"
-                ]
+                "custom_flags": ["#SBATCH -J cp2k"],
+                "module_list": ["mkl/latest", "mpi/latest", "gcc/9.3.0", "cp2k/9.1"],
             }
         else:
             _resources_setup = {
-                "custom_flags": [
-                    "#SBATCH -J cp2k"
-                ],
+                "custom_flags": ["#SBATCH -J cp2k"],
                 "module_list": [
                     "mpi/intel/2017.5.239",
                     "intel/17.5.239",
                     "gcc/7.4.0",
-                    "cp2k/7.1"
-                ]
+                    "cp2k/7.1",
+                ],
             }
         _resources_setup.update(resources_setup)
         super()._setup(machine_setup, _resources_setup)
 
     def run(self, dnames, machine_setup={}, resources_setup={}, task_setup={}):
         _task_setup = {
-            "command": "mpiexec.hydra cp2k.popt input.inp", 
-            "forward_files": ["input.inp", "coord.xyz"], 
+            "command": "mpiexec.hydra cp2k.popt input.inp",
+            "forward_files": ["input.inp", "coord.xyz"],
             "backward_files": [
                 "output",
                 "cp2k-v_hartree-1_0.cube",
                 "cp2k-ELECTRON_DENSITY-1_0.cube",
-                "cp2k-TOTAL_DENSITY-1_0.cube", 
-                "cp2k-RESTART.wfn"
+                "cp2k-TOTAL_DENSITY-1_0.cube",
+                "cp2k-RESTART.wfn",
             ],
-            "outlog":"output"
+            "outlog": "output",
         }
         _task_setup.update(task_setup)
         super().run(dnames, machine_setup, resources_setup, _task_setup)

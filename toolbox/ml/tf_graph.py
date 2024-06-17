@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
 import os
 
 from deepmd.env import tf
@@ -10,6 +11,7 @@ class Graph:
     Graph("graph.pb").run()
     # then you can access the graph with localhost:6006
     """
+
     def __init__(self, dp_model="graph.pb") -> None:
         self.model = dp_model
 
@@ -21,9 +23,9 @@ class Graph:
         os.system("tensorboard --logdir=dp_logs --port=%d" % port)
 
     @staticmethod
-    def _load_graph(frozen_graph_filename,
-                    prefix: str = "load",
-                    default_tf_graph: bool = False):
+    def _load_graph(
+        frozen_graph_filename, prefix: str = "load", default_tf_graph: bool = False
+    ):
         """
         deepmd.infer.DeepEval._load_graph
         """
@@ -34,20 +36,24 @@ class Graph:
             graph_def.ParseFromString(f.read())
 
             if default_tf_graph:
-                tf.import_graph_def(graph_def,
-                                    input_map=None,
-                                    return_elements=None,
-                                    name=prefix,
-                                    producer_op_list=None)
+                tf.import_graph_def(
+                    graph_def,
+                    input_map=None,
+                    return_elements=None,
+                    name=prefix,
+                    producer_op_list=None,
+                )
                 graph = tf.get_default_graph()
             else:
                 # Then, we can use again a convenient built-in function to import
                 # a graph_def into the  current default Graph
                 with tf.Graph().as_default() as graph:
-                    tf.import_graph_def(graph_def,
-                                        input_map=None,
-                                        return_elements=None,
-                                        name=prefix,
-                                        producer_op_list=None)
+                    tf.import_graph_def(
+                        graph_def,
+                        input_map=None,
+                        return_elements=None,
+                        name=prefix,
+                        producer_op_list=None,
+                    )
 
             return graph

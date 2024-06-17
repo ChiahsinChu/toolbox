@@ -19,19 +19,13 @@ fp_params = {
             "SCF": {
                 "MAX_SCF": 3,
                 "EPS_DIIS": 1e-15,
-                "DIAGONALIZATION": {
-                    "_": ".FALSE."
-                },
-                "MIXING": {
-                    "ALPHA": 0.,
-                    "METHOD": "DIRECT_P_MIXING"
-                }
+                "DIAGONALIZATION": {"_": ".FALSE."},
+                "MIXING": {"ALPHA": 0.0, "METHOD": "DIRECT_P_MIXING"},
             }
         }
     }
 }
 cp2k_inp.write(output_dir="test", fp_params=fp_params)
-
 ```
 
 You can modify the internal template by setting the variables when initializing the `Cp2kInput` or via the dict `fp_params`.
@@ -53,7 +47,6 @@ from toolbox.io.cp2k import Cp2kOutput
 cp2k_out = Cp2kOutput("output.out")
 print(cp2k_out.fermi)
 print(cp2k_out.energy)
-
 ```
 
 ### `Cp2kCube` and `Cp2kHartreeCube`
@@ -66,11 +59,11 @@ from toolbox.utils import *
 from toolbox.io.cp2k import Cp2kCube, Cp2kHartreeCube
 
 e_cube = Cp2kCube("cp2k-TOTAL_DENSITY-1_0.cube")
-output = e_cube.get_ave_cube(axis=2, gaussian_sigma=0.)
+output = e_cube.get_ave_cube(axis=2, gaussian_sigma=0.0)
 plt.plot(output[0], output[1])
 
 v_cube = Cp2kHartreeCube("cp2k-v_hartree-1_0.cube")
-output = v_cube.get_ave_cube(axis=2, gaussian_sigma=0.)
+output = v_cube.get_ave_cube(axis=2, gaussian_sigma=0.0)
 plt.plot(output[0], output[1])
 
 plt.show()

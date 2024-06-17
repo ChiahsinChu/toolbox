@@ -1,9 +1,10 @@
-import os
+# SPDX-License-Identifier: LGPL-3.0-or-later
 import json
+import os
 
 fname = os.path.join(__path__[0], "../config.json")
 if os.path.exists(fname):
-    with open(fname, 'r') as f:
+    with open(fname, "r") as f:
         CONFIGS = json.loads(f.read())
 else:
     CONFIGS = {}

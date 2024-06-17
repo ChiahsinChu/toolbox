@@ -5,7 +5,7 @@ print "Validation"
 variable        THERMO_FREQ     equal 1
 variable        DUMP_FREQ       equal 1
 variable        TEMP            equal 330
-  
+
 # ---------------------- INITIALIZAITION ------------------
 units           metal
 boundary        p p p
@@ -20,7 +20,7 @@ mass            3 195.08
 # --------------------- FORCE FIELDS ---------------------
 pair_style      deepmd graph.pb
 pair_coeff      * *
-          
+
 # --------------------- PRINT SECTION ----------------------
 variable        time equal step*dt
 variable        temp equal temp
@@ -52,4 +52,3 @@ dump_modify     TRAJ element O H Pt sort id
 rerun           validate.xyz dump x y z box no format xyz
 #rerun           lammps.dump dump x y z
 write_restart   restart.lmp
-
