@@ -1,22 +1,35 @@
 lines.linewidth: 2.5
 lines.color: black
+
 font.family: sans-serif
 font.sans-serif: DejaVu Sans
 font.weight: normal
-font.size : 15.
+font.size : 15
+
 axes.labelsize: medium
 axes.formatter.limits: -1, 2
 axes.edgecolor:  black
 axes.linewidth: 1.0
+axes.facecolor: w
+axes.grid: false
+
+xtick.major.size: 5
+xtick.minor.size: 5
 xtick.labelsize: medium
+xtick.direction: "in"
+ytick.major.size: 5
+ytick.minor.size: 5
 ytick.labelsize: medium
+ytick.direction: "in"
+
 legend.fontsize: small
+
 figure.figsize: 6, 4
 figure.dpi: 200
+figure.facecolor: w
+
+patch.edgecolor: w
+
 savefig.dpi: 200
 savefig.bbox: tight
-
 savefig.facecolor: w
-figure.facecolor: w
-axes.facecolor: w
-patch.edgecolor: w
