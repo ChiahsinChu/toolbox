@@ -1,4 +1,6 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
+import re
+
 import numpy as np
 from ase import Atoms, io
 from ase.calculators.lammps import Prism, convert
@@ -395,6 +397,57 @@ class LammpsDump:
                     ps[ii][2],
                 )
         return s
+
+
+class LammpsLog:
+    def __init__(self, fname="log.lammps") -> None:
+        self.log_file = fname
+        with open(fname, "r") as f:
+            self.content = f.readlines()
+        # self.string = "".join(self.content)
+        self.setup()
+
+    def setup(self):
+        for line in self.content:
+            if re.search("MPI tasks", line):
+                self.cpu_util = float(line.split()[0][:-1])
+                self.n_mpi = int(line.split()[4])
+                self.n_thread = int(line.split()[-3])
+            if re.match("Loop time of", line):
+                self.n_atoms = int(line.split()[-2])
+                self.n_step = int(line.split()[-5])
+                self.n_proc = int(line.split()[5])
+                self.wall_time = float(line.split()[3])
+            if re.match("Performance", line):
+                out = line.split()
+                self.performance = {
+                    "ns_per_d": float(out[1]),
+                    "h_per_ns": float(out[3]),
+                    "ts_per_s": float(out[5]),
+                }
+
+    @property
+    def timing_breakdown(self):
+        start = False
+        timing_breakdown = []
+        for line in self.content:
+            if start:
+                timing_breakdown.append(line)
+            if re.match("MPI task timing breakdown", line):
+                start = True
+            if start and re.match("Nlocal:", line):
+                break
+
+        ldata = [line.split("|") for line in timing_breakdown[2:-2]]
+        # read data into a dict
+        data = {
+            d[0].strip().lower(): {
+                "time": float(d[2].strip()),
+                "percentage": float(d[-1].strip()),
+            }
+            for d in ldata
+        }
+        return data
 
 
 def write_dump(traj, type_map, start=0, step=1, out_file="out.lammpstrj", append=False):
