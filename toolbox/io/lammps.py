@@ -171,7 +171,9 @@ class DPLRLammpsData(LammpsData):
     """
 
     def __init__(self, atoms, sel_type, sys_charge_dict) -> None:
-        atoms, center_ids = self._make_extended_atoms(atoms, sel_type, sys_charge_dict)
+        atoms, center_ids = self._make_extended_atoms(
+            atoms.copy(), sel_type, sys_charge_dict
+        )
         super().__init__(atoms)
         # set bonds between real atoms and wannier atoms
         nbonds = len(center_ids)
@@ -254,6 +256,35 @@ class DPLRRestartLammpsData(LammpsData):
         np.copyto(bonds[:, 2], center_ids)
         np.copyto(bonds[:, 3], wannier_ids)
         self.set_bonds(bonds)
+
+
+class OHHWaterLammpsData(LammpsData):
+    def __init__(self, atoms) -> None:
+        super().__init__(atoms)
+
+        n_water = np.count_nonzero(atoms.symbols == "O")
+        oxygen_ids = np.where(atoms.symbols == "O")[0] + 1
+        hydrogen_ids = np.where(atoms.symbols == "H")[0] + 1
+
+        nbonds = n_water * 2
+        bonds = np.ones((nbonds, 4), dtype=int)
+        np.copyto(bonds[:, 0], np.arange(nbonds) + 1)
+        np.copyto(bonds[::2, 2], oxygen_ids)
+        np.copyto(bonds[1::2, 2], oxygen_ids)
+        np.copyto(bonds[:, 3], hydrogen_ids)
+
+        angles = np.ones((n_water, 5), dtype=int)
+        np.copyto(angles[:, 0], np.arange(n_water) + 1)
+        np.copyto(angles[:, 2], hydrogen_ids[::2])
+        np.copyto(angles[:, 3], oxygen_ids)
+        np.copyto(angles[:, 4], hydrogen_ids[1::2])
+
+        res_id = np.arange(n_water) + 1
+        res_id = np.tile(res_id.reshape(-1, 1), [1, 3]).reshape(-1)
+
+        self.set_bonds(bonds)
+        self.set_angles(angles)
+        self.set_res_id(res_id)
 
 
 class LammpsDump:

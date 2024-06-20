@@ -20,9 +20,9 @@ except ImportError:
 
     warnings.warn("torch not found, DMFFPMECalculator cannot be used.")
 try:
-    from dp_dmff.dmff.recip import Ck_1, generate_pme_recip
-    from dp_dmff.dmff.pme import energy_pme, setup_ewald_parameters
     from dp_dmff.dmff.constants import ENERGY_COEFF
+    from dp_dmff.dmff.pme import energy_pme, setup_ewald_parameters
+    from dp_dmff.dmff.recip import Ck_1, generate_pme_recip
     from dp_dmff.dmff.settings import DEVICE
 except ImportError:
     import warnings
