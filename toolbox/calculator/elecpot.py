@@ -63,10 +63,10 @@ class ElecPotentialCalculator:
         return self.int2
 
     def _calculate_dirichlet(self):
-        pass
+        raise NotImplementedError
 
     def _calculate_neumann(self):
-        pass
+        raise NotImplementedError
 
     def _calculate_dip_cor(self, cell):
         if np.shape(cell) == (3,):
