@@ -131,8 +131,8 @@ def load_dict(fname, format=None):
         format = os.path.splitext(fname)[1][1:]
     try:
         return globals()["load_dict_%s" % format](fname)
-    except:
-        raise AttributeError("Unknown format %s" % format)
+    except KeyError:
+        raise KeyError("Unknown format %s" % format)
 
 
 def load_dict_json(fname):
