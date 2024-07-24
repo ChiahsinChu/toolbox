@@ -2,14 +2,18 @@ from typing import Union, List
 import re
 import glob
 import sys
+from tqdm import tqdm
 
-from pybtex.database import parse_file, BibliographyData
+from pybtex.database import parse_string, parse_file, BibliographyData
+from doi2bib.crossref import get_bib_from_doi
 
 
 def extract_citation_keys(fnames: List[str]):
     """
     Grep all citation keys used in the tex file
 
+    Parameters
+    ----------
     fname: str
         Path to the tex file
     """
@@ -29,7 +33,22 @@ def export(
     bib_in_file: str,
     tex_files: Union[List[str], str] = None,
     bib_out_file: str = "export-ref.bib",
+    online: bool = True,
 ):
+    """
+    Export a subset of the bib file that is used in the tex file
+
+    Parameters
+    ----------
+    bib_in_file: str
+        Path to the original bib file
+    tex_files: Union[List[str], str]
+        Path to the tex file or list of tex files
+    bib_out_file: str
+        Path to the output bib file
+    online: bool
+        If True, it will try to get the bib entry from the DOI
+    """
     if tex_files is None:
         tex_files = glob.glob("./*.tex")
     if isinstance(tex_files, str):
@@ -39,9 +58,27 @@ def export(
     bib_data = parse_file(bib_in_file)
 
     new_bib_data = BibliographyData()
-    for key in citation_keys:
-        if key in bib_data.entries:
-            new_bib_data.entries[key] = bib_data.entries[key]
+    for kw in tqdm(citation_keys):
+        if kw in bib_data.entries:
+            if online:
+                try:
+                    out = get_bib_from_doi(
+                        bib_data.entries[kw].fields["doi"], abbrev_journal=True
+                    )
+                    obj = parse_string(out[1], bib_format="bibtex")
+                    for tmp_kw in obj.entries:
+                        print(tmp_kw)
+                    new_bib_data.entries[kw] = obj.entries[tmp_kw]
+                except:
+                    new_bib_data.entries[kw] = bib_data.entries[kw]
+                try:
+                    new_bib_data.entries[kw].fields["journal"] = bib_data.entries[
+                        kw
+                    ].fields["journal"]
+                except KeyError:
+                    pass
+            else:
+                new_bib_data.entries[kw] = bib_data.entries[kw]
 
     with open(bib_out_file, "w") as new_bib_file:
         new_bib_file.write(new_bib_data.to_string("bibtex"))
@@ -58,4 +95,5 @@ if __name__ == "__main__":
         args[args.index("-o") + 1] if "-o" in args else "export-" + bib_in_file
     )
     tex_files = args[args.index("-tex") + 1] if "-tex" in args else None
-    export(bib_in_file, tex_files, bib_out_file)
+    online = "--online" in args
+    export(bib_in_file, tex_files, bib_out_file, online)
