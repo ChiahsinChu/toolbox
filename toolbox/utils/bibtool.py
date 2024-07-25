@@ -71,6 +71,9 @@ def export(
                     new_bib_data.entries[kw] = obj.entries[tmp_kw]
                 except:
                     new_bib_data.entries[kw] = bib_data.entries[kw]
+                new_bib_data.entries[kw].fields["title"] = bib_data.entries[kw].fields[
+                    "title"
+                ]
                 try:
                     new_bib_data.entries[kw].fields["journal"] = bib_data.entries[
                         kw
