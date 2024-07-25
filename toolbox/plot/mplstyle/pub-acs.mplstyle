@@ -1,10 +1,12 @@
-lines.linewidth: 2.5
+lines.linewidth: 1.5
 lines.color: black
 
 font.family: sans-serif
 font.sans-serif: DejaVu Sans
 font.weight: normal
 font.size : 15
+
+pdf.fonttype: 42
 
 axes.labelsize: small
 axes.formatter.limits: -1, 2
