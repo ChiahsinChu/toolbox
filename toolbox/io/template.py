@@ -185,9 +185,13 @@ update_dict(cp2k_default_input["cell_opt"], update_d)
 # >>>>>>>>>>>>>>>>>>>> BOMD >>>>>>>>>>>>>>>>>>>>
 cp2k_default_input["bomd"] = copy.deepcopy(cp2k_default_input["energy"])
 
+# default thermostat is Nose-Hoover
 update_d = {
     "GLOBAL": {"RUN_TYPE": "MD"},
     "MOTION": {
+        "MD": {
+            "ENSEMBLE": "NVT",
+        },
         "PRINT": {
             "TRAJECTORY": {},
             "VELOCITIES": {},
@@ -374,8 +378,7 @@ default_dpmd = {
             "STEPS": 2000000,
             "TEMPERATURE": 330,
             "THERMOSTAT": {
-                "REGION": "MOLECULE",
-                "NOSE": {"LENGTH": 3, "YOSHIDA": 3, "TIMECON": 1000, "MTS": 2},
+                "NOSE": {},
             },
         },
         "PRINT": {
@@ -413,7 +416,7 @@ default_ffmd = {
             "TEMPERATURE": 330,
             "THERMOSTAT": {
                 "REGION": "MOLECULE",
-                "NOSE": {"LENGTH": 3, "YOSHIDA": 3, "TIMECON": 1000, "MTS": 2},
+                "NOSE": {},
             },
         },
         "PRINT": {
