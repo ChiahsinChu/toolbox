@@ -30,15 +30,15 @@ def iterdict(input_dict, out_list, loop_idx):
         k = str(k)  # cast key into string
         # if value is dictionary
         if isinstance(v, dict):
-            out_list.insert(-1 - loop_idx, "&" + k)
-            out_list.insert(-1 - loop_idx, "&END " + k)
+            out_list.insert(-1 - loop_idx, "  " * loop_idx + "&" + k)
+            out_list.insert(-1 - loop_idx, "  " * loop_idx + "&END " + k)
             iterdict(v, out_list, loop_idx + 1)
         # if value is list
         elif isinstance(v, list):
             if isinstance(v[0], dict):
                 for _v in v:
-                    out_list.insert(-1 - loop_idx, "&" + k)
-                    out_list.insert(-1 - loop_idx, "&END " + k)
+                    out_list.insert(-1 - loop_idx, "  " * loop_idx + "&" + k)
+                    out_list.insert(-1 - loop_idx, "  " * loop_idx + "&END " + k)
                     iterdict(_v, out_list, loop_idx + 1)
                 # print(loop_idx)
                 # print(input_dict)
@@ -46,14 +46,14 @@ def iterdict(input_dict, out_list, loop_idx):
             else:
                 for _v in v:
                     _v = str(_v)
-                    out_list.insert(-1 - loop_idx, k + " " + _v)
+                    out_list.insert(-1 - loop_idx, "  " * loop_idx + k + " " + _v)
         # if value is other type, e.g., int/float/str
         else:
             v = str(v)
             if k == "_":
                 out_list[start_idx] = out_list[start_idx] + " " + v
             else:
-                out_list.insert(-1 - loop_idx, k + " " + v)
+                out_list.insert(-1 - loop_idx, "  " * loop_idx + k + " " + v)
                 # out_list.insert(-1-loop_idx, v)
     return out_list
 

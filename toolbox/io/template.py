@@ -191,14 +191,20 @@ update_d = {
     "MOTION": {
         "MD": {
             "ENSEMBLE": "NVT",
+            "TIMESTEP": 0.5,
+            "STEPS": 2000000,
+            "TEMPERATURE": 330,
+            "THERMOSTAT": {
+                "NOSE": {},
+            },
         },
         "PRINT": {
-            "TRAJECTORY": {},
-            "VELOCITIES": {},
+            "TRAJECTORY": {"EACH": {"MD": 1}},
+            "VELOCITIES": {"EACH": {"MD": 1}},
             "FORCES": {"_": "ON"},
             "RESTART_HISTORY": {"EACH": {"MD": 1000}},
             "RESTART": {"BACKUP_COPIES": 3},
-        }
+        },
     },
 }
 
@@ -322,7 +328,7 @@ cp2k_default_input.update(
 
 # turn off smearing, etc in sgcpmd (incompatible with OT)
 cp2k_default_input["sgcpmd"] = copy.deepcopy(cp2k_default_input["bomd"])
-
+cp2k_default_input["sgcpmd"]["MOTION"]["MD"].pop("THERMOSTAT")
 update_d = {
     "FORCE_EVAL": {
         "DFT": {
