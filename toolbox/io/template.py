@@ -214,8 +214,10 @@ update_dict(cp2k_default_input["bomd"], update_d)
 
 cp2k_default_input["sgcpmd"] = copy.deepcopy(cp2k_default_input["bomd"])
 cp2k_default_input["sgcpmd"]["MOTION"]["MD"].pop("THERMOSTAT")
-# turn off smearing, etc in sgcpmd (incompatible with OT)
+# turn off smearing and diag in sgcpmd (incompatible with OT)
 cp2k_default_input["sgcpmd"]["FORCE_EVAL"]["DFT"]["SCF"].pop("SMEAR")
+cp2k_default_input["sgcpmd"]["FORCE_EVAL"]["DFT"]["SCF"].pop("DIAGONALIZATION")
+
 update_d = {
     "FORCE_EVAL": {
         "DFT": {
