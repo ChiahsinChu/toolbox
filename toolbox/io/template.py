@@ -232,6 +232,7 @@ update_d = {
                 "MAX_SCF": 50,
                 "MAX_SCF_HISTORY": 5,
                 "CHOLESKY": "INVERSE_DBCSR",
+                "ADDED_MOS": 0,
                 "OUTER_SCF": {"EPS_SCF": 1.0e-6, "MAX_SCF": 20},
                 "OT": {
                     "MINIMIZER": "DIIS",
