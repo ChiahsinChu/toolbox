@@ -217,6 +217,7 @@ cp2k_default_input["sgcpmd"]["MOTION"]["MD"].pop("THERMOSTAT")
 # turn off smearing and diag in sgcpmd (incompatible with OT)
 cp2k_default_input["sgcpmd"]["FORCE_EVAL"]["DFT"]["SCF"].pop("SMEAR")
 cp2k_default_input["sgcpmd"]["FORCE_EVAL"]["DFT"]["SCF"].pop("DIAGONALIZATION")
+cp2k_default_input["sgcpmd"]["FORCE_EVAL"]["DFT"]["SCF"].pop("MIXING")
 
 update_d = {
     "FORCE_EVAL": {
