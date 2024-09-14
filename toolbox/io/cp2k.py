@@ -435,6 +435,28 @@ class Cp2kInput:
         update_d = {"MOTION": {"MD": {"TIMESTEP": md_timestep}}}
         return update_d
 
+    def update_dp(self, dp_model: str):
+        from deepmd.infer import DeepPot
+
+        dp = DeepPot(dp_model)
+        type_map = dp.tmap
+        for ii, atype in enumerate(type_map):
+            self.input_dict["FORCE_EVAL"]["MM"]["FORCEFIELD"]["CHARGE"].append(
+                {
+                    "ATOM": atype,
+                    "CHARGE": 0.0,
+                }
+            )
+            self.input_dict["FORCE_EVAL"]["MM"]["FORCEFIELD"]["NONBONDED"][
+                "DEEPMD"
+            ].append(
+                {
+                    "ATOMS": "%s %s" % (atype, atype),
+                    "POT_FILE_NAME": dp_model,
+                    "ATOM_DEEPMD_TYPE": ii,
+                }
+            )
+
 
 class Cp2kOutput:
     def __init__(self, fname="output.out", ignore_warning=False) -> None:
@@ -1121,3 +1143,33 @@ def gaussian_convolve(xs, ys, sigma):
             np.sum(bin_width * ((tmp_out * ys)[1:] + (tmp_out * ys)[:-1]) / 2)
         )
     return np.array(output)
+
+
+def generate_ids_list(ids):
+    ids = np.sort(ids)
+    diff = np.diff(ids)
+    ids_std = ""
+    update_flag = True
+    for count, ii in enumerate(diff):
+        if update_flag:
+            start_id = ids[count]
+            update_flag = False
+        end_id = ids[count]
+        # print(start_id, end_id)
+        if ii == 1:
+            continue
+        else:
+            if start_id == end_id:
+                ids_std += "%d " % start_id
+            elif end_id > start_id:
+                ids_std += "%d..%d " % (start_id, end_id)
+            else:
+                raise ValueError("end_id is smaller than start_id")
+            update_flag = True
+
+    if update_flag:
+        ids_std += "%d " % ids[-1]
+    else:
+        ids_std += "%d..%d " % (start_id, ids[-1])
+
+    return ids_std.strip()

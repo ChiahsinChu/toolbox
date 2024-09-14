@@ -17,7 +17,6 @@ cp2k_default_input = {
     "energy": {
         "FORCE_EVAL": {
             "METHOD": "QS",
-            "STRESS_TENSOR": "ANALYTICAL",
             "DFT": {
                 "BASIS_SET_FILE_NAME": [
                     "BASIS_MOLOPT",
@@ -132,7 +131,7 @@ cp2k_default_input = {
                     },
                 ],
             },
-            "PRINT": {"FORCES": {"_": "ON"}, "STRESS_TENSOR": {"_": "ON"}},
+            "PRINT": {"FORCES": {"_": "ON"}},
         },
         "GLOBAL": {"PROJECT": "cp2k"},
     }
@@ -211,6 +210,78 @@ update_d = {
 update_dict(cp2k_default_input["bomd"], update_d)
 # <<<<<<<<<<<<<<<<<<<< BOMD <<<<<<<<<<<<<<<<<<<<
 
+# >>>>>>>>>>>>>>>>>>>> SG-CPMD >>>>>>>>>>>>>>>>>>>>
+
+cp2k_default_input["sgcpmd"] = copy.deepcopy(cp2k_default_input["bomd"])
+cp2k_default_input["sgcpmd"]["MOTION"]["MD"].pop("THERMOSTAT")
+# turn off smearing and diag in sgcpmd (incompatible with OT)
+cp2k_default_input["sgcpmd"]["FORCE_EVAL"]["DFT"]["SCF"].pop("SMEAR")
+cp2k_default_input["sgcpmd"]["FORCE_EVAL"]["DFT"]["SCF"].pop("DIAGONALIZATION")
+cp2k_default_input["sgcpmd"]["FORCE_EVAL"]["DFT"]["SCF"].pop("MIXING")
+
+update_d = {
+    "FORCE_EVAL": {
+        "DFT": {
+            "QS": {
+                "EPS_DEFAULT": 1.0e-13,
+                "EXTRAPOLATION": "ASPC",
+                "EXTRAPOLATION_ORDER": 0,
+            },
+            "SCF": {
+                "SCF_GUESS": "RESTART",
+                "EPS_SCF": 3.0e-7,
+                "MAX_SCF": 50,
+                "MAX_SCF_HISTORY": 5,
+                "CHOLESKY": "INVERSE_DBCSR",
+                "ADDED_MOS": 0,
+                "OUTER_SCF": {"EPS_SCF": 1.0e-6, "MAX_SCF": 20},
+                "OT": {
+                    "MINIMIZER": "DIIS",
+                    "PRECOND_SOLVER": "INVERSE_UPDATE",
+                    "PRECONDITIONER": "FULL_SINGLE_INVERSE",
+                    "STEPSIZE": 0.01,
+                },
+                "PRINT": {"RESTART": {"EACH": {"MD": 20}}},
+            },
+        }
+    },
+    "MOTION": {
+        "MD": {
+            "ENSEMBLE": "LANGEVIN",
+            "LANGEVIN": {
+                "GAMMA": 0.001,
+                "NOISY_GAMMA": 0,
+            },
+            "THERMAL_REGION": {
+                "DO_LANGEVIN_DEFAULT": ".TRUE.",
+                "FORCE_RESCALING": ".TRUE.",
+                "PRINT": {
+                    "TEMPERATURE": {},
+                    "LANGEVIN_REGIONS": {
+                        "FILENAME": "__STD_OUT__",
+                    },
+                },
+                "DEFINE_REGION": [
+                    {
+                        "TEMPERATURE": 330.0,
+                        "NOISY_GAMMA_REGION": 2.2e-4,
+                        "LIST": "",
+                    },
+                    {
+                        "TEMPERATURE": 330.0,
+                        "NOISY_GAMMA_REGION": 5.0e-5,
+                        "LIST": "",
+                    },
+                ],
+            },
+            "TEMP_KIND": ".TRUE.",
+        }
+    },
+}
+
+update_dict(cp2k_default_input["sgcpmd"], update_d)
+# <<<<<<<<<<<<<<<<<<<< SG-CPMD <<<<<<<<<<<<<<<<<<<<
+
 cp2k_restart_pbc = {
     "FORCE_EVAL": {
         "DFT": {
@@ -230,7 +301,6 @@ cp2k_default_input.update(
         "qmmm": {
             "FORCE_EVAL": {
                 "METHOD": "QMMM",
-                "STRESS_TENSOR": "ANALYTICAL",
                 "DFT": {
                     "BASIS_SET_FILE_NAME": [
                         "BASIS_MOLOPT",
@@ -316,7 +386,7 @@ cp2k_default_input.update(
                         },
                     ],
                 },
-                "PRINT": {"FORCES": {"_": "ON"}, "STRESS_TENSOR": {"_": "ON"}},
+                "PRINT": {"FORCES": {"_": "ON"}},
             },
             "GLOBAL": {"PROJECT": "cp2k"},
         }
@@ -324,41 +394,8 @@ cp2k_default_input.update(
 )
 # <<<<<<<<<<<<<<<<<<<< QMMM <<<<<<<<<<<<<<<<<<<<
 
-####################################### setup in the following has not been checked #######################################
-
-# turn off smearing, etc in sgcpmd (incompatible with OT)
-cp2k_default_input["sgcpmd"] = copy.deepcopy(cp2k_default_input["bomd"])
-cp2k_default_input["sgcpmd"]["MOTION"]["MD"].pop("THERMOSTAT")
-update_d = {
-    "FORCE_EVAL": {
-        "DFT": {
-            "QS": {
-                "EPS_DEFAULT": 1.0e-13,
-                "EXTRAPOLATION": "ASPC",
-                "EXTRAPOLATION_ORDER": 0,
-            },
-            "SCF": {
-                "SCF_GUESS": "RESTART",
-                "EPS_SCF": 3.0e-7,
-                "MAX_SCF": 50,
-                "MAX_SCF_HISTORY": 5,
-                "CHOLESKY": "INVERSE_DBCSR",
-                "OUTER_SCF": {"EPS_SCF": 1.0e-6, "MAX_SCF": 20},
-                "OT": {
-                    "MINIMIZER": "DIIS",
-                    "PRECOND_SOLVER": "INVERSE_UPDATE",
-                    "PRECONDITIONER": "FULL_SINGLE_INVERSE",
-                    "STEPSIZE": 0.01,
-                },
-                "PRINT": {"RESTART": {"EACH": {"MD": 20}}},
-            },
-        }
-    }
-}
-
-update_dict(cp2k_default_input["sgcpmd"], update_d)
-
-default_dpmd = {
+# >>>>>>>>>>>>>>>>>>>> DPMD >>>>>>>>>>>>>>>>>>>>
+cp2k_default_input["dpmd"] = {
     "FORCE_EVAL": {
         "METHOD": "FIST",
         "MM": {
@@ -369,11 +406,10 @@ default_dpmd = {
                     "DEEPMD": [],
                 },
             },
-            "POISSON": {"EWALD": {"EWALD_TYPE": "none"}},
+            "POISSON": {"EWALD": {"EWALD_TYPE": "NONE"}},
         },
         "SUBSYS": {
-            "CELL": {"A": "0. 0. 0.", "B": "0. 0. 0.", "C": "0. 0. 0."},
-            "TOPOLOGY": {"COORD_FILE_FORMAT": "XYZ", "COORD_FILE_NAME": "./coord.xyz"},
+            "TOPOLOGY": {"COORD_FILE_FORMAT": "XYZ", "COORD_FILE_NAME": "coord.xyz"},
         },
     },
     "GLOBAL": {"PROJECT": "cp2k", "RUN_TYPE": "MD"},
@@ -388,15 +424,18 @@ default_dpmd = {
             },
         },
         "PRINT": {
-            "TRAJECTORY": {},
-            "VELOCITIES": {},
+            "TRAJECTORY": {"EACH": {"MD": 100}},
+            "VELOCITIES": {"EACH": {"MD": 100}},
             "FORCES": {"_": "ON"},
             "RESTART_HISTORY": {"EACH": {"MD": 50000}},
             "RESTART": {"BACKUP_COPIES": 3},
         },
     },
 }
+# <<<<<<<<<<<<<<<<<<<< DPMD <<<<<<<<<<<<<<<<<<<<
 
+
+####################################### setup in the following has not been checked #######################################
 default_ffmd = {
     "FORCE_EVAL": {
         "METHOD": "FIST",
@@ -409,8 +448,7 @@ default_ffmd = {
             "POISSON": {"EWALD": {"EWALD_TYPE": "ewald", "ALPHA": 0.5, "GMAX": 21}},
         },
         "SUBSYS": {
-            "CELL": {"A": "0. 0. 0.", "B": "0. 0. 0.", "C": "0. 0. 0."},
-            "TOPOLOGY": {"COORD_FILE_FORMAT": "XYZ", "COORD_FILE_NAME": "./coord.xyz"},
+            "TOPOLOGY": {"COORD_FILE_FORMAT": "XYZ", "COORD_FILE_NAME": "coord.xyz"},
         },
     },
     "GLOBAL": {"PROJECT": "cp2k", "RUN_TYPE": "MD"},
@@ -426,8 +464,8 @@ default_ffmd = {
             },
         },
         "PRINT": {
-            "TRAJECTORY": {},
-            "VELOCITIES": {},
+            "TRAJECTORY": {"EACH": {"MD": 100}},
+            "VELOCITIES": {"EACH": {"MD": 100}},
             "FORCES": {"_": "ON"},
             "RESTART_HISTORY": {"EACH": {"MD": 50000}},
             "RESTART": {"BACKUP_COPIES": 3},
@@ -454,10 +492,9 @@ spce_wat = {
             "POISSON": {"EWALD": {"EWALD_TYPE": "ewald", "ALPHA": 0.5, "GMAX": 21}},
         },
         "SUBSYS": {
-            "CELL": {"A": "0. 0. 0.", "B": "0. 0. 0.", "C": "0. 0. 0."},
             "TOPOLOGY": {
                 "COORD_FILE_FORMAT": "XYZ",
-                "COORD_FILE_NAME": "./coord.xyz",
+                "COORD_FILE_NAME": "coord.xyz",
                 "DUMP_PSF": {},
                 "GENERATE": {"CREATE_MOLECULES": "T", "REORDER": "T"},
             },
@@ -472,12 +509,12 @@ spce_wat = {
             "TEMPERATURE": 330,
             "THERMOSTAT": {
                 "REGION": "MOLECULE",
-                "NOSE": {"LENGTH": 3, "YOSHIDA": 3, "TIMECON": 1000, "MTS": 2},
+                "NOSE": {},
             },
         },
         "PRINT": {
-            "TRAJECTORY": {},
-            "VELOCITIES": {},
+            "TRAJECTORY": {"EACH": {"MD": 100}},
+            "VELOCITIES": {"EACH": {"MD": 100}},
             "FORCES": {"_": "ON"},
             "RESTART_HISTORY": {"EACH": {"MD": 50000}},
             "RESTART": {"BACKUP_COPIES": 3},
