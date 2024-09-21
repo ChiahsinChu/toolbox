@@ -8,7 +8,9 @@ import pickle
 import h5py
 import numpy as np
 
-from .unit import *
+from ase import Atoms
+from ase.geometry import wrap_positions
+from scipy import constants
 
 
 def iterdict(input_dict, out_list, loop_idx):
@@ -240,6 +242,41 @@ def check_water(atoms):
         return False
     else:
         return True
+
+
+def wrap_water(atoms):
+    "make water atoms together, pure water only"
+    from MDAnalysis.lib.distances import distance_array, minimize_vectors
+
+    atoms = atoms.copy()
+    oxygen_mask = atoms.symbols == "O"
+    hydrogen_mask = atoms.symbols == "H"
+    other_mask = np.logical_not(np.logical_or(oxygen_mask, hydrogen_mask))
+
+    coords = wrap_positions(atoms.get_positions(), atoms.get_cell())
+    cellpar = atoms.cell.cellpar()
+    oxygen_coords = coords[oxygen_mask]
+    hydrogen_coords = coords[hydrogen_mask]
+    assert len(oxygen_coords) * 2 == len(hydrogen_coords)
+    dist_mat = distance_array(oxygen_coords, hydrogen_coords, box=cellpar)
+    new_atoms = Atoms(cell=atoms.cell, pbc=atoms.pbc)
+    for ii, ds in enumerate(dist_mat):
+        mask = ds < 1.3
+        cn = np.sum(mask)
+        assert cn == 2
+        # print(cn)
+        coords_rel = hydrogen_coords[mask] - oxygen_coords[ii]
+        coords_rel = minimize_vectors(coords_rel, box=cellpar)
+        _coords = np.concatenate(
+            (
+                oxygen_coords[ii].reshape(1, 3),
+                oxygen_coords[ii].reshape(1, 3) + coords_rel,
+            ),
+            axis=0,
+        )
+        new_atoms.extend(Atoms("OHH", positions=_coords))
+    new_atoms.extend(atoms[other_mask])
+    return new_atoms
 
 
 def calc_lj_params(ks):

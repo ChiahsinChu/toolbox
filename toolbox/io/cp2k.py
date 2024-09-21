@@ -214,10 +214,9 @@ class Cp2kInput:
                     "KPOINTS": {
                         "SCHEME MONKHORST-PACK": "%d %d %d"
                         % (kp_mp[0], kp_mp[1], kp_mp[2]),
-                        "SYMMETRY": "ON",
+                        "SYMMETRY": ".TRUE.",
                         "EPS_GEO": 1.0e-8,
-                        "FULL_GRID": "ON",
-                        "VERBOSE": "ON",
+                        "FULL_GRID": ".TRUE.",
                         "PARALLEL_GROUP_SIZE": 0,
                     }
                 }
