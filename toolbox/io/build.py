@@ -26,7 +26,7 @@ class WaterBox:
             raise AttributeError("")
         self.box_string = np.array2string(np.transpose(box).flatten())[1:-1]
 
-    def run(self, fname, **kwargs):
+    def run(self, fname, verbose=False, **kwargs):
         atoms = build.molecule("H2O")
         io.write("water.pdb", atoms)
         water = mda.Universe("water.pdb")
@@ -41,14 +41,16 @@ class WaterBox:
             ]
         )
         system.atoms.write(fname, **kwargs)
-        os.remove("water.pdb")
+        if not verbose:
+            os.remove("water.pdb")
+            os.remove("packmol.stdout")
 
 
 class Interface:
     def __init__(self, slab) -> None:
         self.slab = slab
 
-    def run(self, l_water: float = 30):
+    def run(self, l_water: float = 30, verbose=False) -> Atoms:
         coord = self.slab.get_positions()
         z = coord[:, 2]
         l_slab = z.max() - z.min()
@@ -72,12 +74,9 @@ class Interface:
         self.atoms = waterbox + slab
         self.atoms.set_cell(new_cell)
         self.atoms.set_pbc(True)
-        os.remove("waterbox.xyz")
-
-    def relax(self):
-        # TODO: add relaxation step with lammps
-
-        pass
+        if not verbose:
+            os.remove("waterbox.xyz")
+        return self.atoms
 
 
 def add_ion(atoms, ion, region, cutoff=2.0):
