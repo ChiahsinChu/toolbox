@@ -48,7 +48,7 @@ class Interface:
     def __init__(self, slab) -> None:
         self.slab = slab
 
-    def run(self, l_water=30):
+    def run(self, l_water: float = 30):
         coord = self.slab.get_positions()
         z = coord[:, 2]
         l_slab = z.max() - z.min()
