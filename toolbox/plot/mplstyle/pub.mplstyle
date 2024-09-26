@@ -1,5 +1,6 @@
 lines.linewidth: 1
 lines.color: black
+lines.markersize: 3
 
 font.family: sans-serif
 font.sans-serif: DejaVu Sans
@@ -26,7 +27,7 @@ ytick.direction: "in"
 
 legend.fontsize: 7
 
-figure.figsize: 6, 4
+figure.figsize: 3, 2
 figure.dpi: 200
 figure.facecolor: w
 
