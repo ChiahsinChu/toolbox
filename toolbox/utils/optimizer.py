@@ -2,7 +2,7 @@
 import statsmodels.api as sm
 from scipy import stats
 
-from . import *
+import numpy as np
 
 
 class Optimizer:

@@ -1147,7 +1147,8 @@ def gaussian_convolve(xs, ys, sigma):
 def generate_ids_list(ids):
     ids = np.sort(ids)
     diff = np.diff(ids)
-    ids_std = ""
+    # ids_std = ""
+    ids_list = []
     update_flag = True
     for count, ii in enumerate(diff):
         if update_flag:
@@ -1159,16 +1160,21 @@ def generate_ids_list(ids):
             continue
         else:
             if start_id == end_id:
-                ids_std += "%d " % start_id
+                # ids_std += "%d" % start_id
+                ids_list.append(start_id)
             elif end_id > start_id:
-                ids_std += "%d..%d " % (start_id, end_id)
+                # ids_std += "%d..%d " % (start_id, end_id)
+                ids_list.append("%d..%d" % (start_id, end_id))
             else:
                 raise ValueError("end_id is smaller than start_id")
             update_flag = True
 
     if update_flag:
-        ids_std += "%d " % ids[-1]
+        # ids_std += "%d " % ids[-1]
+        ids_list.append(ids[-1])
     else:
-        ids_std += "%d..%d " % (start_id, ids[-1])
+        # ids_std += "%d..%d " % (start_id, ids[-1])
+        ids_list.append("%d..%d" % (start_id, ids[-1]))
 
-    return ids_std.strip()
+    # return ids_std.strip()
+    return ids_list
