@@ -1,42 +1,94 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
+from typing import List, Union, Optional, Dict
+import os
 import MDAnalysis as mda
 import mdapackmol
-from ase import Atoms, build
+from ase import Atoms, build, io
+import numpy as np
 
-from ..utils import *
+
 from ..utils.utils import calc_water_number
 
 
-class WaterBox:
-    def __init__(self, box=None, rho=1.0, slit=1.0) -> None:
-        box = np.array(box)
-        assert len(box) == 3
-        _box = np.reshape(box, (3, -1))
-        if len(_box[0]) == 1:
-            box = np.concatenate([np.zeros((3, 1)), _box], axis=-1)
+class SolutionBox:
+    """
 
-        volume = np.prod(np.diff(box, axis=-1))
-        self.n_wat = calc_water_number(rho, volume)
+    Parameters
+    ----------
+    box : Union[List, np.ndarray]
+        [a, b, c] or [[a1, a2], [b1, b2], [c1, c2]]
+    slit : str
+        slit distance
+
+    """
+
+    def __init__(
+        self,
+        boundary: Union[List, np.ndarray],
+        slit: Union[float, List, np.ndarray] = 1.0,
+    ) -> None:
+        boundary = np.array(boundary)
+        assert len(boundary) == 3
+        _boundary = np.reshape(boundary, (3, -1))
+        # [[a1, a2], [b1, b2], [c1, c2]]
+        if len(_boundary[0]) == 1:
+            self.boundary = np.concatenate([np.zeros((3, 1)), _boundary], axis=-1)
+        elif len(_boundary[0]) == 2:
+            self.boundary = _boundary
+        else:
+            raise AttributeError(
+                "boundary must be [a, b, c] or [[a1, a2], [b1, b2], [c1, c2]]"
+            )
 
         slit = np.reshape(slit, (-1))
+        b = self.boundary.copy()
         if (len(slit) == 1) or (len(slit) == 3):
-            box[:, 0] += slit
-            box[:, 1] -= slit
+            b[:, 0] += slit
+            b[:, 1] -= slit
         else:
             raise AttributeError("")
-        self.box_string = np.array2string(np.transpose(box).flatten())[1:-1]
+        self.boundary_string = np.array2string(np.transpose(b).flatten())[1:-1]
 
-    def run(self, fname, verbose=False, **kwargs):
+
+class WaterBox(SolutionBox):
+    """
+    Water box
+
+    Parameters
+    ----------
+    boundary : Union[List, np.ndarray]
+        [a, b, c] or [[a1, a2], [b1, b2], [c1, c2]]
+    slit : str
+        slit distance
+    rho : str
+        water density in g/cm^3
+    """
+
+    def __init__(
+        self,
+        boundary: Union[List, np.ndarray],
+        slit: Union[float, List, np.ndarray] = 1.0,
+        rho: str = 1.0,
+    ) -> None:
+        super().__init__(boundary, slit)
+
+        volume = np.prod(np.diff(self.boundary, axis=-1))
+        self.n_wat = calc_water_number(rho, volume)
+
+    def write(self, fname, n_wat: Optional[int] = None, verbose=False, **kwargs):
         atoms = build.molecule("H2O")
         io.write("water.pdb", atoms)
         water = mda.Universe("water.pdb")
+
+        if n_wat is None:
+            n_wat = self.n_wat
 
         system = mdapackmol.packmol(
             [
                 mdapackmol.PackmolStructure(
                     water,
-                    number=self.n_wat,
-                    instructions=["inside box %s" % self.box_string],
+                    number=n_wat,
+                    instructions=["inside box %s" % self.boundary_string],
                 )
             ]
         )
@@ -46,33 +98,102 @@ class WaterBox:
             os.remove("packmol.stdout")
 
 
-class Interface:
-    def __init__(self, slab) -> None:
-        self.slab = slab
+class ElectrolyteBox(WaterBox):
+    """
+    Uniform electrolyte solution box
 
-    def run(self, l_water: float = 30, verbose=False) -> Atoms:
-        coord = self.slab.get_positions()
+    Parameters
+    ----------
+    boundary : Union[List, np.ndarray]
+        [a, b, c] or [[a1, a2], [b1, b2], [c1, c2]]
+    solutes : Dict[str, float]
+        {solute: concentration in mol/L}
+    """
+
+    def __init__(
+        self,
+        boundary: Union[List, np.ndarray],
+        solutes: Dict[str, float],
+        **kwargs,
+    ) -> None:
+        super().__init__(boundary, **kwargs)
+        self.solutes = solutes
+
+    def write(self, fname, n_wat: Optional[int] = None, verbose=False, **kwargs):
+        atoms = build.molecule("H2O")
+        io.write("tmp.pdb", atoms)
+        water = mda.Universe("tmp.pdb")
+
+        if n_wat is None:
+            n_wat = self.n_wat
+
+        structures = [
+            mdapackmol.PackmolStructure(
+                water,
+                number=n_wat,
+                instructions=["inside box %s" % self.boundary_string],
+            )
+        ]
+        for k, v in self.solutes.items():
+            atoms = Atoms(k, positions=[[0, 0, 0]])
+            io.write("tmp.pdb", atoms)
+            solute = mda.Universe("tmp.pdb")
+            structures.append(
+                mdapackmol.PackmolStructure(
+                    solute,
+                    number=int(n_wat / 55.6 * v),
+                    instructions=["inside box %s" % self.boundary_string],
+                )
+            )
+
+        system = mdapackmol.packmol(structures)
+        system.atoms.write(fname, **kwargs)
+        if not verbose:
+            os.remove("tmp.pdb")
+            os.remove("packmol.stdout")
+
+
+class Interface:
+    def __init__(
+        self,
+        slab: Atoms,
+        l_water: float = 30,
+    ) -> None:
+        # shift half cell and wrap
+        coord = slab.get_positions()
         z = coord[:, 2]
         l_slab = z.max() - z.min()
-        a = self.slab.get_cell()[0][0]
-        b = self.slab.get_cell()[1][1]
+        a = slab.get_cell()[0][0]
+        b = slab.get_cell()[1][1]
         c = l_slab + l_water
         new_cell = [a, b, c]
         shift_z = -z.min() - l_slab / 2
         coord[:, 2] += shift_z
         slab = Atoms(
-            self.slab.get_chemical_symbols(), positions=coord, cell=new_cell, pbc=True
+            slab.get_chemical_symbols(), positions=coord, cell=new_cell, pbc=True
         )
         slab.wrap()
 
-        WaterBox(
-            box=[[0, a], [0, b], [l_slab / 2, l_slab / 2 + l_water]],
-            slit=[1.0, 1.0, 2.5],
-        ).run("waterbox.xyz")
+        self.slab = slab
+        self.boundary = [[0, a], [0, b], [l_slab / 2, l_slab / 2 + l_water]]
+
+    def run(
+        self,
+        n_wat: Optional[int] = None,
+        sol: Optional[SolutionBox] = None,
+        verbose=False,
+    ) -> Atoms:
+
+        if sol is None:
+            sol = WaterBox(
+                boundary=self.boundary,
+                slit=[1.0, 1.0, 2.5],
+            )
+        sol.write("waterbox.xyz", n_wat=n_wat, verbose=verbose)
         waterbox = io.read("waterbox.xyz")
 
-        self.atoms = waterbox + slab
-        self.atoms.set_cell(new_cell)
+        self.atoms = waterbox + self.slab
+        self.atoms.set_cell(self.slab.get_cell())
         self.atoms.set_pbc(True)
         if not verbose:
             os.remove("waterbox.xyz")
