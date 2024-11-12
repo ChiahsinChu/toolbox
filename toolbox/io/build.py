@@ -75,7 +75,14 @@ class WaterBox(SolutionBox):
         volume = np.prod(np.diff(self.boundary, axis=-1))
         self.n_wat = calc_water_number(rho, volume)
 
-    def write(self, fname, n_wat: Optional[int] = None, verbose=False, **kwargs):
+    def write(
+        self,
+        fname,
+        n_wat: Optional[int] = None,
+        seed: Optional[int] = -1,
+        verbose: bool = False,
+        **kwargs,
+    ):
         atoms = build.molecule("H2O")
         io.write("water.pdb", atoms)
         water = mda.Universe("water.pdb")
@@ -88,7 +95,7 @@ class WaterBox(SolutionBox):
                 mdapackmol.PackmolStructure(
                     water,
                     number=n_wat,
-                    instructions=["inside box %s" % self.boundary_string],
+                    instructions=[f"inside box {self.boundary_string}", f"seed {seed}"],
                 )
             ]
         )
@@ -180,6 +187,7 @@ class Interface:
     def run(
         self,
         n_wat: Optional[int] = None,
+        seed: Optional[int] = -1,
         sol: Optional[SolutionBox] = None,
         verbose=False,
     ) -> Atoms:
@@ -189,7 +197,7 @@ class Interface:
                 boundary=self.boundary,
                 slit=[1.0, 1.0, 2.5],
             )
-        sol.write("waterbox.xyz", n_wat=n_wat, verbose=verbose)
+        sol.write("waterbox.xyz", n_wat=n_wat, verbose=verbose, seed=seed)
         waterbox = io.read("waterbox.xyz")
 
         self.atoms = waterbox + self.slab
