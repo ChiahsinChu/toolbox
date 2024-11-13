@@ -7,7 +7,6 @@ import pickle
 
 import h5py
 import numpy as np
-
 from ase import Atoms
 from ase.geometry import wrap_positions
 from scipy import constants

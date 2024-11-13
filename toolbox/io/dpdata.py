@@ -1,10 +1,9 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
+import glob
+import os
 from typing import List
 
 import numpy as np
-
-import os
-import glob
 from tqdm import tqdm
 
 
