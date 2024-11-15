@@ -1,11 +1,12 @@
-from typing import Union, List
-import re
+# SPDX-License-Identifier: LGPL-3.0-or-later
 import glob
+import re
 import sys
-from tqdm import tqdm
+from typing import List, Union
 
-from pybtex.database import parse_string, parse_file, BibliographyData
 from doi2bib.crossref import get_bib_from_doi
+from pybtex.database import BibliographyData, parse_file, parse_string
+from tqdm import tqdm
 
 
 def extract_citation_keys(fnames: List[str]):
@@ -14,7 +15,7 @@ def extract_citation_keys(fnames: List[str]):
 
     Parameters
     ----------
-    fname: str
+    fnames : str
         Path to the tex file
     """
     citation_keys = set()
@@ -40,13 +41,13 @@ def export(
 
     Parameters
     ----------
-    bib_in_file: str
+    bib_in_file : str
         Path to the original bib file
-    tex_files: Union[List[str], str]
+    tex_files : Union[List[str], str]
         Path to the tex file or list of tex files
-    bib_out_file: str
+    bib_out_file : str
         Path to the output bib file
-    online: bool
+    online : bool
         If True, it will try to get the bib entry from the DOI
     """
     if tex_files is None:

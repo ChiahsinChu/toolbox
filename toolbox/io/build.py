@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
-from typing import List, Union, Optional, Dict
 import os
+from typing import Dict, List, Optional, Union
+
 import MDAnalysis as mda
 import mdapackmol
-from ase import Atoms, build, io
 import numpy as np
-
+from ase import Atoms, build, io
 
 from ..utils.utils import calc_water_number
 
@@ -183,7 +183,6 @@ class Interface:
         sol: Optional[SolutionBox] = None,
         verbose=False,
     ) -> Atoms:
-
         if sol is None:
             sol = WaterBox(
                 boundary=self.boundary,

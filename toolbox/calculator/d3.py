@@ -1,8 +1,9 @@
-from typing import Optional, Dict
-import torch
-from ase import Atoms
+# SPDX-License-Identifier: LGPL-3.0-or-later
+from typing import Dict, Optional
 
 import tad_dftd3 as d3
+import torch
+from ase import Atoms
 
 torch.set_default_dtype(torch.float64)
 
