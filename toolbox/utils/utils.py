@@ -7,6 +7,7 @@ import pickle
 
 import h5py
 import numpy as np
+import yaml
 from ase import Atoms
 from ase.geometry import wrap_positions
 from scipy import constants
@@ -93,7 +94,7 @@ def symlink(src, _dst):
     os.symlink(src, dst)
 
 
-def save_dict(d, fname, fmt=None):
+def save_dict(d: dict, fname: str, fmt=None):
     if fmt is None:
         fmt = os.path.splitext(fname)[1][1:]
     try:
@@ -102,24 +103,24 @@ def save_dict(d, fname, fmt=None):
         raise AttributeError("Unknown format %s" % fmt)
 
 
-def save_dict_json(d, fname):
-    with open(fname, "w") as f:
+def save_dict_json(d: dict, fname: str):
+    with open(fname, "w", encoding="UTF-8") as f:
         json.dump(d, f, indent=4)
 
 
-def save_dict_csv(d, fname):
-    with open(fname, "w", newline="") as f:
+def save_dict_csv(d: dict, fname: str):
+    with open(fname, "w", newline="", encoding="UTF-8") as f:
         writer = csv.DictWriter(f, fieldnames=d.keys())
         writer.writeheader()
         writer.writerow(d)
 
 
-def save_dict_pkl(d, fname):
+def save_dict_pkl(d: dict, fname: str):
     with open(fname, "wb") as f:
         pickle.dump(d, f)
 
 
-def save_dict_hdf5(d, fname):
+def save_dict_hdf5(d: dict, fname: str):
     with h5py.File(fname, "a") as f:
         n = len(f)
         dts = f.create_group("%02d" % n)
@@ -127,7 +128,12 @@ def save_dict_hdf5(d, fname):
             dts.create_dataset(k, data=v)
 
 
-def load_dict(fname, fmt=None):
+def save_dict_yaml(d: dict, fname: str):
+    with open(fname, "w", encoding="UTF-8") as f:
+        yaml.safe_dump(d, f)
+
+
+def load_dict(fname: str, fmt: str = None):
     if fmt is None:
         fmt = os.path.splitext(fname)[1][1:]
     try:
@@ -136,26 +142,31 @@ def load_dict(fname, fmt=None):
         raise KeyError("Unknown format %s" % fmt)
 
 
-def load_dict_json(fname):
-    with open(fname, "r") as f:
+def load_dict_json(fname: str):
+    with open(fname, "r", encoding="UTF-8") as f:
         d = json.load(f)
     return d
 
 
-def load_dict_csv(fname):
-    with open(fname, "r") as f:
+def load_dict_csv(fname: str):
+    with open(fname, "r", encoding="UTF-8") as f:
         data = csv.reader(f)
         d = {rows[0]: rows[1] for rows in data}
     return d
 
 
-def load_dict_pkl(fname):
+def load_dict_pkl(fname: str):
     with open(fname, "rb") as f:
         d = pickle.load(f)
     return d
 
 
-def load_dict_hdf5(fname):
+def load_dict_yaml(fname: str):
+    with open(fname, "r", encoding="UTF-8") as f:
+        return yaml.safe_load(f)
+
+
+def load_dict_hdf5(fname: str):
     raise NotImplementedError
 
 
@@ -299,6 +310,6 @@ def calc_lj_params(ks):
             try:
                 sigma_j = lj_params[ks[j]]["sigma"]
                 epsilon_j = lj_params[ks[j]]["epsilon"]
-            except:
+            except KeyError:
                 raise KeyError("sigma for %s not found" % ks[j])
             print(ks[i], ks[j], (sigma_i + sigma_j) / 2, np.sqrt(epsilon_i * epsilon_j))

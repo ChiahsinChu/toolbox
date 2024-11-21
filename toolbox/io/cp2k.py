@@ -1188,7 +1188,7 @@ def read_wannier_spread(fname: str = "wannier_spread.out"):
     ----------
     fname : str
         wannier_spread.out file name
-        
+
     Returns
     -------
     wannier_spread : numpy array
