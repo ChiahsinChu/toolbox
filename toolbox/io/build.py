@@ -15,7 +15,7 @@ class SolutionBox:
 
     Parameters
     ----------
-    box : Union[List, np.ndarray]
+    boundary : Union[List, np.ndarray]
         [a, b, c] or [[a1, a2], [b1, b2], [c1, c2]]
     slit : str
         slit distance
