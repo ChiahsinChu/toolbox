@@ -68,7 +68,7 @@ class WaterBox(SolutionBox):
         self,
         boundary: Union[List, np.ndarray],
         slit: Union[float, List, np.ndarray] = 1.0,
-        rho: str = 1.0,
+        rho: float = 1.0,
     ) -> None:
         super().__init__(boundary, slit)
 
@@ -186,6 +186,7 @@ class Interface:
 
     def run(
         self,
+        rho: Optional[float] = 1.0,
         n_wat: Optional[int] = None,
         seed: Optional[int] = -1,
         sol: Optional[SolutionBox] = None,
@@ -194,6 +195,7 @@ class Interface:
 
         if sol is None:
             sol = WaterBox(
+                rho=rho,
                 boundary=self.boundary,
                 slit=[1.0, 1.0, 2.5],
             )
