@@ -381,12 +381,12 @@ class Cp2kInput:
                 "S": {
                     "ELEMENT": "O",
                     "BASIS_SET": "DZVP-MOLOPT-SR-GTH",
-                    "BASIS_SET": "GTH-PBE-q6"
+                    "POTENTIAL": "GTH-PBE-q6"
                 },
                 "Li": {
                     "ELEMENT": "H",
                     "BASIS_SET": "DZVP-MOLOPT-SR-GTH",
-                    "BASIS_SET": "GTH-PBE-q1"
+                    "POTENTIAL": "GTH-PBE-q1"
                 }
             }
         """

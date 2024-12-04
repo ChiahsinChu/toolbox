@@ -129,6 +129,11 @@ cp2k_default_input = {
                         "POTENTIAL": "GTH-PBE-q3",
                         "BASIS_SET": "DZVP-MOLOPT-SR-GTH",
                     },
+                    {
+                        "_": "Au",
+                        "BASIS_SET": "DZVP-MOLOPT-SR-GTH",
+                        "POTENTIAL": "GTH-PBE-q11",
+                    },
                 ],
             },
             "PRINT": {"FORCES": {"_": "ON"}},
