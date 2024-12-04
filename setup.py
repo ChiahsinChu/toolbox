@@ -18,7 +18,6 @@ setup(
         "scipy",
         "scikit-learn",
         "h5py",
-        "cp2kdata",
         "mdapackmol",
         "statsmodels",
         "dpdispatcher",

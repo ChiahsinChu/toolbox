@@ -1,106 +1,53 @@
-# SPDX-License-Identifier: LGPL-3.0-or-later
-from typing import List
-
-import dpdata
 import numpy as np
-from ase import io
-from ase.geometry.cell import cell_to_cellpar
-from dpdata.data_type import Axis, DataType
-from MDAnalysis.lib.distances import distance_array, minimize_vectors
 
-from .cp2k import Cp2kOutput
-
-# import re
+from ase import Atoms
+from ase.calculators.singlepoint import SinglePointCalculator
 
 
-# from dpdata.unit import econvs
-# from deepmd.infer.ewald_recp import EwaldRecp
+def set_energy_and_forces(atoms: Atoms, energy: float, forces: np.ndarray):
+    """
+    Set energy and forces to atoms object.
+    Make atoms.get_potential_energy() and atoms.get_forces() return the given energy and forces.
+
+    Parameters
+    ----------
+    atoms : ase.Atoms
+        The atoms object.
+    energy : float
+        The energy.
+    forces : np.ndarray
+        The forces.
+
+    """
+    calc = SinglePointCalculator(atoms)
+    atoms.set_calculator(calc)
+    atoms.calc.results["energy"] = energy
+    atoms.calc.results["forces"] = forces
 
 
-dpdata.LabeledSystem.register_data_type(
-    DataType("ext_efield", np.ndarray, (Axis.NFRAMES, 3), required=False),
-    DataType("efield", np.ndarray, (Axis.NFRAMES, Axis.NATOMS, 3), required=False),
-    DataType("aparam", np.ndarray, (Axis.NFRAMES, Axis.NATOMS, -1), required=False),
-    DataType("atomic_dipole", np.ndarray, (Axis.NFRAMES, -1), required=False),
-    DataType("charge", np.ndarray, (Axis.NFRAMES, Axis.NATOMS), required=False),
-)
+# if __name__ == "__main__":
+#     import glob
 
-"""
-todo:
-- [ ] add_efield
-- [ ] add_aparam
-"""
+#     from ase import io
 
+#     from dpdata import LabeledSystem, MultiSystems
+#     from toolbox.utils.unit import AU_TO_EV, AU_TO_EV_EVERY_ANG
+#     from toolbox.io.dpdata import set_energy_and_forces
 
-class CP2KDPDataSystem:
-    def __init__(
-        self,
-        fname: str,
-    ) -> None:
-        self.cp2k_out = Cp2kOutput(fname)
-        self.dp_sys = dpdata.LabeledSystem(fname, fmt="cp2k/output")
-        self.nframes = self.dp_sys.get_nframes()
-        self.natoms = self.dp_sys.get_natoms()
+#     fnames_pos = glob.glob("./**/*-pos-*.xyz", recursive=True)
+#     fnames_frc = glob.glob("./**/*-frc-*.xyz", recursive=True)
+#     assert len(fnames_pos) == len(fnames_frc)
+#     fnames_pos.sort()
+#     fnames_frc.sort()
 
-    def add(self, kw, **kwargs):
-        getattr(self, "add_%s" % kw)(**kwargs)
+#     ms = MultiSystems()
 
-    def add_atomic_dipole(self, type_map, sel_type, wannier_fname):
-        wannier_atoms = io.read(wannier_fname)
-        sel_ids = self.get_sel_ids(type_map, sel_type)
+#     for fname_pos, fname_frc in zip(fnames_pos, fnames_frc):
+#         traj = io.read(fname_pos, ":")
+#         frc_traj = io.read(fname_frc, ":")
+#         for atoms, atoms_frc in zip(traj, frc_traj):
+#             forces = atoms_frc.get_positions() * AU_TO_EV_EVERY_ANG
+#             set_energy_and_forces(atoms, atoms.info["E"] * AU_TO_EV, forces)
+#             ms.append(LabeledSystem(atoms, fmt="ase/structure"))
 
-        coords = self.dp_sys.data["coords"].reshape(-1, 3)
-        cellpar = cell_to_cellpar(self.dp_sys.data["cells"].reshape(3, 3))
-        extended_coords = coords.copy()
-
-        ref_coords = coords[sel_ids].reshape(-1, 3)
-        e_coords = wannier_atoms.get_positions()
-        dist_mat = distance_array(ref_coords, e_coords, box=cellpar)
-        atomic_dipole = []
-        for ii, dist_vec in enumerate(dist_mat):
-            mask = dist_vec < 1.0
-            cn = np.sum(mask)
-            assert cn == 4
-            # print(cn)
-            wc_coord_rel = e_coords[mask] - ref_coords[ii]
-            wc_coord_rel = minimize_vectors(wc_coord_rel, box=cellpar)
-            _atomic_dipole = wc_coord_rel.mean(axis=0)
-            atomic_dipole.append(_atomic_dipole)
-            wc_coord = _atomic_dipole + ref_coords[ii]
-            extended_coords = np.concatenate(
-                (extended_coords, wc_coord.reshape(1, 3)), axis=0
-            )
-        atomic_dipole = np.reshape(atomic_dipole, (-1, 3))
-        assert atomic_dipole.shape[0] == len(sel_ids)
-        self.dp_sys.data["atomic_dipole"] = atomic_dipole.reshape(self.nframes, -1)
-        self.extended_coords = extended_coords
-
-    def add_ext_efield(self, ext_efield):
-        self.dp_sys.data["ext_efield"] = ext_efield.reshape(self.nframes, 3)
-
-    def add_charge(self, type="mulliken"):
-        if type == "mulliken":
-            self.dp_sys.data["charge"] = self.cp2k_out.m_charge.reshape(
-                self.nframes, self.natoms
-            )
-        elif type == "hirshfeld":
-            self.dp_sys.data["charge"] = self.cp2k_out.h_charge.reshape(
-                self.nframes, self.natoms
-            )
-        else:
-            raise NotImplementedError
-
-    def get_sel_ids(
-        self,
-        type_map: List[str],
-        sel_type: List[int],
-    ):
-        symbols = np.array(self.dp_sys.data["atom_names"])[
-            self.dp_sys.data["atom_types"]
-        ]
-        sel_ids = []
-        for ii in sel_type:
-            atype = type_map[ii]
-            sel_ids.append(np.where(symbols == atype)[0])
-        sel_ids = np.concatenate(sel_ids)
-        return sel_ids
+#     ms.to_deepmd_npy("deepmd")
