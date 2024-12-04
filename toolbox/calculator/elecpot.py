@@ -6,13 +6,17 @@ Reference:
 - https://github.com/SINGROUP/Potential_solver
 """
 
+import os
 import time
+from typing import Dict, Optional
 
 import numpy as np
+from ase import Atoms, io
 from ase.geometry.cell import cellpar_to_cell
-from scipy import constants, integrate
+from scipy import integrate
 
-EPSILON = constants.epsilon_0 / constants.elementary_charge * constants.angstrom
+from toolbox.utils.math import gaussian_int
+from toolbox.utils.unit import EPSILON
 
 
 class ElecPotentialCalculator:
@@ -52,8 +56,10 @@ class ElecPotentialCalculator:
             raise AttributeError("Unsupported boundary condition %s" % bc)
 
     def _integrate(self):
-        self.int1 = integrate.cumtrapz(self.charge, self.grid, initial=0)
-        self.int2 = -integrate.cumtrapz(self.int1, self.grid, initial=0) / EPSILON
+        self.int1 = integrate.cumulative_trapezoid(self.charge, self.grid, initial=0)
+        self.int2 = (
+            -integrate.cumulative_trapezoid(self.int1, self.grid, initial=0) / EPSILON
+        )
 
     def _calculate_periodic(self, l_box):
         phi = self.solve_fft_poisson(l_box)
@@ -108,3 +114,113 @@ class ElecPotentialCalculator:
         end = time.process_time()
         print("| | Inverse FFT took {} s".format(end - start))
         return pot_grid
+
+
+class GaussianElecPotentialCalculator:
+    def __init__(
+        self,
+        grids: np.ndarray,
+        l_box: float,
+        cross_area: float,
+        spread_dict: Optional[Dict[str, float]] = None,
+        charge_dict: Optional[Dict[str, float]] = None,
+    ) -> None:
+        # setup grid
+        self.l_box = l_box
+        self.grids = grids
+        self.grid_edges = np.linspace(0.0, self.l_box, len(self.grids) + 1)
+        dx = np.diff(self.grid_edges)[0]
+        self.grid_volume = cross_area * dx
+
+        self.spread_dict = spread_dict
+        self.charge_dict = charge_dict
+
+    def calc_rho(
+        self,
+        mu: np.ndarray,
+        spread: np.ndarray,
+        charge: np.ndarray,
+    ):
+        grid_edges = np.reshape(self.grid_edges, (1, -1))
+        spread = np.reshape(spread, [-1, 1])
+        mu = np.reshape(mu, [-1, 1])
+        charge = np.reshape(charge, [-1, 1])
+
+        # nat * ngrid
+        out = gaussian_int(grid_edges[:, 1:], mu, spread) - gaussian_int(
+            grid_edges[:, :-1], mu, spread
+        )
+        out = np.sum(out * charge, axis=0)
+        # deal with periodic boundary
+        # left image
+        l_out = gaussian_int(grid_edges[:, 1:] - self.l_box, mu, spread) - gaussian_int(
+            grid_edges[:, :-1] - self.l_box, mu, spread
+        )
+        l_out = np.sum(l_out * charge, axis=0)
+        out += l_out
+        # right image
+        r_out = gaussian_int(grid_edges[:, 1:] + self.l_box, mu, spread) - gaussian_int(
+            grid_edges[:, :-1] + self.l_box, mu, spread
+        )
+        r_out = np.sum(r_out * charge, axis=0)
+        out += r_out
+
+        np.testing.assert_almost_equal(out.sum(), charge.sum())
+
+        rho = out / self.grid_volume
+        return rho
+
+    def run(
+        self,
+        mu: Optional[np.ndarray] = None,
+        spread: Optional[np.ndarray] = None,
+        charge: Optional[np.ndarray] = None,
+        atoms: Optional[Atoms] = None,
+    ):
+        if mu is None:
+            mu = atoms.get_positions()[:, 2]
+        if spread is None:
+            assert self.spread_dict is not None, "spread_dict is not set"
+            spread = np.array([self.spread_dict[s] for s in atoms.symbols])
+        if charge is None:
+            if self.charge_dict is not None:
+                charge = np.array([self.charge_dict[s] for s in atoms.symbols])
+            else:
+                charge = atoms.get_initial_charges()
+
+        rho = self.calc_rho(mu, spread, charge)
+        calculator = ElecPotentialCalculator(rho, self.grids)
+        phi = calculator.calculate(l_box=self.l_box)
+        return phi
+
+
+class WannierHartreePotentialCalculator(GaussianElecPotentialCalculator):
+    def __init__(
+        self,
+        grids: np.ndarray,
+        l_box: float,
+        cross_area: float,
+        spread_dict: Optional[Dict[str, float]] = None,
+        charge_dict: Optional[Dict[str, float]] = None,
+    ) -> None:
+        super().__init__(grids, l_box, cross_area, spread_dict, charge_dict)
+
+    def run(
+        self,
+        mu: Optional[np.ndarray] = None,
+        spread: Optional[np.ndarray] = None,
+        charge: Optional[np.ndarray] = None,
+        atoms: Optional[Atoms] = None,
+        dname: Optional[str] = None,
+        fname_coord: Optional[str] = "coord.xyz",
+        fname_wannier: Optional[str] = "wannier.xyz",
+    ):
+        if dname is not None:
+            _atoms = io.read(os.path.join(dname, fname_coord))
+            wannier_atoms = io.read(os.path.join(dname, fname_wannier))
+            atoms = _atoms + wannier_atoms
+            atoms.set_pbc(True)
+            atoms.wrap()
+
+        phi = super().run(mu, spread, charge, atoms)
+        return -phi

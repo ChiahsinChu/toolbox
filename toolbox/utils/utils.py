@@ -7,7 +7,6 @@ import pickle
 
 import h5py
 import numpy as np
-
 from ase import Atoms
 from ase.geometry import wrap_positions
 from scipy import constants
@@ -94,13 +93,13 @@ def symlink(src, _dst):
     os.symlink(src, dst)
 
 
-def save_dict(d, fname, format=None):
-    if format is None:
-        format = os.path.splitext(fname)[1][1:]
+def save_dict(d, fname, fmt=None):
+    if fmt is None:
+        fmt = os.path.splitext(fname)[1][1:]
     try:
-        globals()["save_dict_%s" % format](d, fname)
+        globals()["save_dict_%s" % fmt](d, fname)
     except:
-        raise AttributeError("Unknown format %s" % format)
+        raise AttributeError("Unknown format %s" % fmt)
 
 
 def save_dict_json(d, fname):
@@ -128,13 +127,13 @@ def save_dict_hdf5(d, fname):
             dts.create_dataset(k, data=v)
 
 
-def load_dict(fname, format=None):
-    if format is None:
-        format = os.path.splitext(fname)[1][1:]
+def load_dict(fname, fmt=None):
+    if fmt is None:
+        fmt = os.path.splitext(fname)[1][1:]
     try:
-        return globals()["load_dict_%s" % format](fname)
+        return globals()["load_dict_%s" % fmt](fname)
     except KeyError:
-        raise KeyError("Unknown format %s" % format)
+        raise KeyError("Unknown format %s" % fmt)
 
 
 def load_dict_json(fname):
@@ -157,7 +156,7 @@ def load_dict_pkl(fname):
 
 
 def load_dict_hdf5(fname):
-    return {}
+    raise NotImplementedError
 
 
 def get_efields(DeltaV, l: list, eps: list):
