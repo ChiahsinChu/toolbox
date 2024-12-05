@@ -68,14 +68,21 @@ class WaterBox(SolutionBox):
         self,
         boundary: Union[List, np.ndarray],
         slit: Union[float, List, np.ndarray] = 1.0,
-        rho: str = 1.0,
+        rho: float = 1.0,
     ) -> None:
         super().__init__(boundary, slit)
 
         volume = np.prod(np.diff(self.boundary, axis=-1))
         self.n_wat = calc_water_number(rho, volume)
 
-    def write(self, fname, n_wat: Optional[int] = None, verbose=False, **kwargs):
+    def write(
+        self,
+        fname,
+        n_wat: Optional[int] = None,
+        seed: Optional[int] = -1,
+        verbose: bool = False,
+        **kwargs,
+    ):
         atoms = build.molecule("H2O")
         io.write("water.pdb", atoms)
         water = mda.Universe("water.pdb")
@@ -88,7 +95,7 @@ class WaterBox(SolutionBox):
                 mdapackmol.PackmolStructure(
                     water,
                     number=n_wat,
-                    instructions=["inside box %s" % self.boundary_string],
+                    instructions=[f"inside box {self.boundary_string}", f"seed {seed}"],
                 )
             ]
         )
@@ -179,16 +186,19 @@ class Interface:
 
     def run(
         self,
+        rho: Optional[float] = 1.0,
         n_wat: Optional[int] = None,
+        seed: Optional[int] = -1,
         sol: Optional[SolutionBox] = None,
         verbose=False,
     ) -> Atoms:
         if sol is None:
             sol = WaterBox(
+                rho=rho,
                 boundary=self.boundary,
                 slit=[1.0, 1.0, 2.5],
             )
-        sol.write("waterbox.xyz", n_wat=n_wat, verbose=verbose)
+        sol.write("waterbox.xyz", n_wat=n_wat, verbose=verbose, seed=seed)
         waterbox = io.read("waterbox.xyz")
 
         self.atoms = waterbox + self.slab
