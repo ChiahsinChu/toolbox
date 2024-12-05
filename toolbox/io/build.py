@@ -60,7 +60,7 @@ class WaterBox(SolutionBox):
         [a, b, c] or [[a1, a2], [b1, b2], [c1, c2]]
     slit : str
         slit distance
-    rho : str
+    rho : float
         water density in g/cm^3
     """
 
@@ -79,10 +79,23 @@ class WaterBox(SolutionBox):
         self,
         fname,
         n_wat: Optional[int] = None,
-        seed: Optional[int] = -1,
+        seed: int = -1,
         verbose: bool = False,
         **kwargs,
     ):
+        """Write water box configuration to file.
+
+        Parameters
+        ----------
+        fname : str
+            Output filename
+        n_wat : Optional[int]
+            Number of water molecules. If None, uses calculated value from density
+        seed : int
+            Random seed for reproducible molecule placement. Use -1 for random behavior
+        verbose : bool
+            If True, keeps temporary files
+        """
         atoms = build.molecule("H2O")
         io.write("water.pdb", atoms)
         water = mda.Universe("water.pdb")
@@ -126,7 +139,27 @@ class ElectrolyteBox(WaterBox):
         super().__init__(boundary, **kwargs)
         self.solutes = solutes
 
-    def write(self, fname, n_wat: Optional[int] = None, verbose=False, **kwargs):
+    def write(
+        self,
+        fname,
+        n_wat: Optional[int] = None,
+        seed: int = -1,
+        verbose=False,
+        **kwargs,
+    ):
+        """Write electrolyte box configuration to file.
+
+        Parameters
+        ----------
+        fname : str
+            Output filename
+        n_wat : Optional[int]
+            Number of water molecules. If None, uses calculated value from density
+        seed : int
+            Random seed for reproducible molecule placement. Use -1 for random behavior
+        verbose : bool
+            If True, keeps temporary files
+        """
         atoms = build.molecule("H2O")
         io.write("tmp.pdb", atoms)
         water = mda.Universe("tmp.pdb")
@@ -138,7 +171,7 @@ class ElectrolyteBox(WaterBox):
             mdapackmol.PackmolStructure(
                 water,
                 number=n_wat,
-                instructions=["inside box %s" % self.boundary_string],
+                instructions=[f"inside box {self.boundary_string}", f"seed {seed}"],
             )
         ]
         for k, v in self.solutes.items():
@@ -149,7 +182,7 @@ class ElectrolyteBox(WaterBox):
                 mdapackmol.PackmolStructure(
                     solute,
                     number=int(n_wat / 55.6 * v),
-                    instructions=["inside box %s" % self.boundary_string],
+                    instructions=[f"inside box {self.boundary_string}", f"seed {seed}"],
                 )
             )
 
@@ -186,9 +219,9 @@ class Interface:
 
     def run(
         self,
-        rho: Optional[float] = 1.0,
+        rho: float = 1.0,
         n_wat: Optional[int] = None,
-        seed: Optional[int] = -1,
+        seed: int = -1,
         sol: Optional[SolutionBox] = None,
         verbose=False,
     ) -> Atoms:
