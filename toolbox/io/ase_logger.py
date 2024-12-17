@@ -1,4 +1,4 @@
-from typing import IO, Any, Union, Optional
+from typing import IO, Any, Union, Dict
 
 from ase.md import MDLogger as _MDLogger
 from ase import Atoms
@@ -11,13 +11,13 @@ class MDLogger(_MDLogger):
         atoms: Atoms,
         logfile: Union[IO, str],
         fname: str,
-        fmt: Optional[str] = None,
+        write_kwargs: Dict = {},
         **kwargs,
     ):
         super(MDLogger, self).__init__(dyn, atoms, logfile, **kwargs)
         self.fname = fname
-        self.fmt = fmt
+        self.write_kwargs = write_kwargs
 
     def __call__(self):
         super().__call__()
-        self.atoms.write(self.fname, format=self.fmt, append=True)
+        self.atoms.write(self.fname, append=True, **self.write_kwargs)
