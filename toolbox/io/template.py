@@ -75,13 +75,38 @@ cp2k_default_input = {
                         "BASIS_SET": "DZVP-MOLOPT-SR-GTH",
                     },
                     {
+                        "_": "C",
+                        "POTENTIAL": "GTH-PBE-q4",
+                        "BASIS_SET": "DZVP-MOLOPT-SR-GTH",
+                    },
+                    {
+                        "_": "N",
+                        "POTENTIAL": "GTH-PBE-q5",
+                        "BASIS_SET": "DZVP-MOLOPT-SR-GTH",
+                    },
+                    {
                         "_": "Pt",
                         "POTENTIAL": "GTH-PBE-q10",
                         "BASIS_SET": "DZVP-A5-Q10-323-MOL-T1-DERIVED_SET-1",
                     },
                     {
+                        "_": "Au",
+                        "BASIS_SET": "DZVP-MOLOPT-SR-GTH",
+                        "POTENTIAL": "GTH-PBE-q11",
+                    },
+                    {
                         "_": "Ag",
                         "POTENTIAL": "GTH-PBE-q11",
+                        "BASIS_SET": "DZVP-MOLOPT-SR-GTH",
+                    },
+                    {
+                        "_": "Cu",
+                        "POTENTIAL": "GTH-PBE-q11",
+                        "BASIS_SET": "DZVP-MOLOPT-SR-GTH",
+                    },
+                    {
+                        "_": "Li",
+                        "POTENTIAL": "GTH-PBE-q3",
                         "BASIS_SET": "DZVP-MOLOPT-SR-GTH",
                     },
                     {
@@ -95,18 +120,18 @@ cp2k_default_input = {
                         "BASIS_SET": "DZVP-MOLOPT-SR-GTH",
                     },
                     {
-                        "_": "Li",
-                        "POTENTIAL": "GTH-PBE-q3",
+                        "_": "Rb",
+                        "POTENTIAL": "GTH-PBE-q9",
                         "BASIS_SET": "DZVP-MOLOPT-SR-GTH",
                     },
                     {
-                        "_": "C",
-                        "POTENTIAL": "GTH-PBE-q4",
+                        "_": "Cs",
+                        "POTENTIAL": "GTH-PBE-q9",
                         "BASIS_SET": "DZVP-MOLOPT-SR-GTH",
                     },
                     {
-                        "_": "N",
-                        "POTENTIAL": "GTH-PBE-q5",
+                        "_": "F",
+                        "POTENTIAL": "GTH-PBE-q7",
                         "BASIS_SET": "DZVP-MOLOPT-SR-GTH",
                     },
                     {
@@ -115,7 +140,12 @@ cp2k_default_input = {
                         "BASIS_SET": "DZVP-MOLOPT-SR-GTH",
                     },
                     {
-                        "_": "F",
+                        "_": "Br",
+                        "POTENTIAL": "GTH-PBE-q7",
+                        "BASIS_SET": "DZVP-MOLOPT-SR-GTH",
+                    },
+                    {
+                        "_": "I",
                         "POTENTIAL": "GTH-PBE-q7",
                         "BASIS_SET": "DZVP-MOLOPT-SR-GTH",
                     },
@@ -129,11 +159,7 @@ cp2k_default_input = {
                         "POTENTIAL": "GTH-PBE-q3",
                         "BASIS_SET": "DZVP-MOLOPT-SR-GTH",
                     },
-                    {
-                        "_": "Au",
-                        "BASIS_SET": "DZVP-MOLOPT-SR-GTH",
-                        "POTENTIAL": "GTH-PBE-q11",
-                    },
+                    
                 ],
             },
             "PRINT": {"FORCES": {"_": "ON"}},
