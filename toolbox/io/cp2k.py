@@ -604,9 +604,24 @@ class Cp2kOutput:
 
     @property
     def fermi(self):
-        pattern = r"\s+Fermi\senergy:\s+.\d\.\d+"
-        out = re.findall(pattern, self.string)
-        return float(out[0].split(" ")[-1]) * AU_TO_EV
+        if self.uks:
+            fermi = []
+            for l in self.content:
+                if re.search("Fermi Energy ", l):
+                    fermi.append(float(l.split()[-1]))
+            assert (
+                len(fermi) == 2
+            ), "There should be two Fermi energy in UKS calculation"
+            return max(fermi)
+        else:
+            try:
+                pattern = r"\s+Fermi\senergy:\s+.\d\.\d+"
+                out = re.findall(pattern, self.string)
+                return float(out[0].split(" ")[-1]) * AU_TO_EV
+            except IndexError:
+                for l in self.content:
+                    if re.search("Fermi Energy ", l):
+                        return float(l.split()[-1])
 
     @property
     def m_charge(self):
@@ -680,6 +695,27 @@ class Cp2kOutput:
         energy_dict["total"] = tot_e
 
         return energy_dict
+
+    @property
+    def multiplicity(self):
+        for l in self.content:
+            if "Multiplicity" in l:
+                break
+        return int(l.split()[-1])
+
+    @property
+    def uks(self):
+        for l in self.content:
+            if re.search("Spin unrestricted", l):
+                return True
+        return False
+    
+    @property
+    def charge(self):
+        for l in self.content:
+            if "Charge" in l:
+                break
+        return int(l.split()[-1])
 
 
 class MultiFrameCp2kOutput(Cp2kOutput):

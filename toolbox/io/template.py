@@ -57,6 +57,11 @@ cp2k_default_input = {
                         },
                     },
                 },
+                "PRINT": {
+                    "MO_CUBES": {
+                        "WRITE_CUBE": ".FALSE.",
+                    },
+                },
             },
             "SUBSYS": {
                 "TOPOLOGY": {
