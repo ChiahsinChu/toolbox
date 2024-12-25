@@ -1,0 +1,21 @@
+#!/bin/bash
+
+#SBATCH -A ai4ecmig
+#SBATCH --qos normal
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=64
+#SBATCH --partition=cpu
+#SBATCH --job-name=cp2k
+#SBATCH --output=%j.stdout 
+#SBATCH --error=%j.stderr 
+#SBATCH --mem=251G
+
+##############################################
+#          Software Envrironment             #
+##############################################
+module purge
+
+module load cp2k/2024.3
+
+# export OMP_NUM_THREADS=1
+mpirun cp2k.psmp -i input.inp > output
