@@ -1,3 +1,8 @@
+from typing import List
+
+import glob
+import os
+
 import numpy as np
 
 from ase import Atoms
@@ -23,6 +28,21 @@ def set_energy_and_forces(atoms: Atoms, energy: float, forces: np.ndarray):
     atoms.set_calculator(calc)
     atoms.calc.results["energy"] = energy
     atoms.calc.results["forces"] = forces
+
+
+def update_atype(dname: str, type_map: List[str]):
+    fnames = glob.glob(os.path.join(dname, "**/type.raw"), recursive=True)
+    fnames.sort()
+    for fname in fnames:
+        dname = os.path.dirname(fname)
+        _type_map = np.loadtxt(os.path.join(dname, "type_map.raw"), dtype=str)
+        _atype = np.loadtxt(fname, dtype=int)
+        symbols = _type_map[_atype]
+        # generate new type.raw according to the input type_map
+        assert np.all(np.isin(symbols, type_map)), "Invalid type_map"
+        new_atype = np.array([type_map.index(s) for s in symbols], dtype=int)
+        np.savetxt(fname, new_atype, fmt="%d")
+        np.savetxt(os.path.join(dname, "type_map.raw"), type_map, fmt="%s")
 
 
 # if __name__ == "__main__":
