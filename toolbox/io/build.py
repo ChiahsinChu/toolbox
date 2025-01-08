@@ -259,17 +259,21 @@ def add_ion(atoms, ion, region, cutoff=2.0, max_trial=500):
     rotation_matrix = random_rotation_matrix()
     coords = np.dot(coords, rotation_matrix)
 
+    flag = False
     for _ in range(max_trial):
         random_positions = get_region_random_location(atoms, region)
         random_positions = coords + random_positions.reshape(1, 3)
         ds = distance_array(random_positions, atoms.get_positions())
         if ds.min() > cutoff:
+            flag = True
             break
-    ion.set_positions(random_positions)
-    new_atoms = atoms.copy()
-    new_atoms.extend(ion)
-    return new_atoms
-
+    if flag:
+        ion.set_positions(random_positions)
+        new_atoms = atoms.copy()
+        new_atoms.extend(ion)
+        return new_atoms
+    else:
+        return None
 
 def add_water(atoms, region, cutoff=2.0, max_trial=500):
     water = build.molecule("H2O")
