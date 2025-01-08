@@ -3,6 +3,7 @@ import os
 from typing import Dict, List, Optional, Union
 
 import MDAnalysis as mda
+from MDAnalysis.lib.distances import distance_array
 import mdapackmol
 import numpy as np
 from ase import Atoms, build, io
@@ -242,52 +243,37 @@ class Interface:
         return self.atoms
 
 
-def add_ion(atoms, ion, region, cutoff=2.0):
+def add_ion(atoms, ion, region, cutoff=2.0, max_trial=500):
     """
     Example
 
         atoms = io.read("coord.xyz")
         ion = Atoms("K")
         atoms = add_ion(atoms, ion, [8.0, 13.0])
-        print(atoms)
-    """
-    is_overlap = 1
-    while is_overlap != 0:
-        random_positions = get_region_random_location(atoms, region)
-        # print(random_positions)
-        ion.set_positions(random_positions.reshape(1, 3))
-        new_atoms = atoms.copy()
-        new_atoms.extend(ion)
-        is_overlap = is_atom_overlap(new_atoms, -1, r=cutoff)
-    return new_atoms
-
-
-def add_water(atoms, region, cutoff=2.0):
-    """
-    Example
-
-        atoms = io.read("coord.xyz")
-        ion = Atoms("K")
+        ion = io.read("ClO4.pdb")
         atoms = add_ion(atoms, ion, [8.0, 13.0])
         print(atoms)
     """
-    water = build.molecule("H2O")
-    coords = water.get_positions()
+    coords = ion.get_positions()
     coords -= coords[0].reshape(1, 3)
     rotation_matrix = random_rotation_matrix()
     coords = np.dot(coords, rotation_matrix)
 
-    is_overlap = 1
-    while is_overlap != 0:
+    for _ in range(max_trial):
         random_positions = get_region_random_location(atoms, region)
-        # print(random_positions)
-        water.set_positions(coords + random_positions.reshape(1, 3))
-        new_atoms = atoms.copy()
-        new_atoms.extend(water)
-        is_overlap = sum(
-            [is_atom_overlap(new_atoms, -i, 3, r=cutoff) for i in range(1, 3 + 1)]
-        )
+        random_positions = coords + random_positions.reshape(1, 3)
+        ds = distance_array(random_positions, atoms.get_positions())
+        if ds.min() > cutoff:
+            break
+    ion.set_positions(random_positions)
+    new_atoms = atoms.copy()
+    new_atoms.extend(ion)
     return new_atoms
+
+
+def add_water(atoms, region, cutoff=2.0, max_trial=500):
+    water = build.molecule("H2O")
+    return add_ion(atoms, water, region, cutoff=cutoff, max_trial=max_trial)
 
 
 def get_region_random_location(atoms, region, extent=0.9):
