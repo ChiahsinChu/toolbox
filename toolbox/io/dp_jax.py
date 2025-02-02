@@ -36,6 +36,32 @@ class TrajDump:
 
 
 class Simulation(_Simulation):
+    """
+    Example
+    -------
+    # setup simulation
+    sim = Simulation(
+        model_path="model.pkl",  # Has to be an 'energy' or 'dplr' model
+        box=box,  # Angstroms
+        type_idx=type_idx,  # here the index-element map (e.g. 0-Oxygen, 1-Hydrogen) must match the dataset used to train the model
+        mass=[15.9994, 1.0078, 195.08],  # Oxygen, Hydrogen
+        routine="NVT",  # 'NVE', 'NVT', 'NPT' (Nosé-Hoover)
+        dt=0.5,  # femtoseconds
+        initial_position=initial_position,  # Angstroms
+        temperature=330,  # Kelvin
+        report_interval=1,  # Report every 100 steps
+        seed=np.random.randint(1, 1e5),  # Random seed
+    )
+
+    sim.run(
+        n_steps,
+        [
+            TrajDump(atoms, "pos_traj.xyz", 10, append=True),
+            TrajDump(atoms, "vel_traj.xyz", 10, vel=True, append=True),
+        ],
+    )
+    
+    """
     def __init__(
         self,
         model_path,
