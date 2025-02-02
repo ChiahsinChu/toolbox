@@ -255,7 +255,8 @@ def add_ion(atoms, ion, region, cutoff=2.0, max_trial=500):
         print(atoms)
     """
     coords = ion.get_positions()
-    coords -= coords[0].reshape(1, 3)
+    cog = np.mean(coords, axis=0)
+    coords -= cog.reshape(1, 3)
     rotation_matrix = random_rotation_matrix()
     coords = np.dot(coords, rotation_matrix)
 
@@ -263,7 +264,7 @@ def add_ion(atoms, ion, region, cutoff=2.0, max_trial=500):
     for _ in range(max_trial):
         random_positions = get_region_random_location(atoms, region)
         random_positions = coords + random_positions.reshape(1, 3)
-        ds = distance_array(random_positions, atoms.get_positions())
+        ds = distance_array(random_positions, atoms.get_positions(), box=atoms.cell.cellpar())
         if ds.min() > cutoff:
             flag = True
             break
@@ -273,6 +274,7 @@ def add_ion(atoms, ion, region, cutoff=2.0, max_trial=500):
         new_atoms.extend(ion)
         return new_atoms
     else:
+        raise Warning("Failed to add ion")
         return None
 
 def add_water(atoms, region, cutoff=2.0, max_trial=500):
