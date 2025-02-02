@@ -25,3 +25,7 @@ for atoms in traj:
 """
 for atoms in u_xtc.trajectory:
     atoms.positions
+
+with mda.Writer("output.xyz") as W:
+    for ts in u.trajectory:
+        W.write(u)
