@@ -1,7 +1,8 @@
-from typing import IO, Any, Union, Dict
+# SPDX-License-Identifier: LGPL-3.0-or-later
+from typing import IO, Any, Dict, Union
 
-from ase.md import MDLogger as _MDLogger
 from ase import Atoms
+from ase.md import MDLogger as _MDLogger
 
 
 class MDLogger(_MDLogger):

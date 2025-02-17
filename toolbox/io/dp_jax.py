@@ -1,11 +1,10 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
+import sys
+import time
 from typing import List, Optional
 
-import time
-import sys
-
 import numpy as np
-from ase import io, Atoms
-
+from ase import Atoms, io
 from deepmd_jax.md import Simulation as _Simulation
 
 
@@ -60,8 +59,9 @@ class Simulation(_Simulation):
             TrajDump(atoms, "vel_traj.xyz", 10, vel=True, append=True),
         ],
     )
-    
+
     """
+
     def __init__(
         self,
         model_path,

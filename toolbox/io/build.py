@@ -3,10 +3,10 @@ import os
 from typing import Dict, List, Optional, Union
 
 import MDAnalysis as mda
-from MDAnalysis.lib.distances import distance_array
 import mdapackmol
 import numpy as np
 from ase import Atoms, build, io
+from MDAnalysis.lib.distances import distance_array
 
 from ..utils.utils import calc_water_number
 
@@ -264,7 +264,9 @@ def add_ion(atoms, ion, region, cutoff=2.0, max_trial=500):
     for _ in range(max_trial):
         random_positions = get_region_random_location(atoms, region)
         random_positions = coords + random_positions.reshape(1, 3)
-        ds = distance_array(random_positions, atoms.get_positions(), box=atoms.cell.cellpar())
+        ds = distance_array(
+            random_positions, atoms.get_positions(), box=atoms.cell.cellpar()
+        )
         if ds.min() > cutoff:
             flag = True
             break
@@ -276,6 +278,7 @@ def add_ion(atoms, ion, region, cutoff=2.0, max_trial=500):
     else:
         raise Warning("Failed to add ion")
         return None
+
 
 def add_water(atoms, region, cutoff=2.0, max_trial=500):
     water = build.molecule("H2O")

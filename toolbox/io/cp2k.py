@@ -709,7 +709,7 @@ class Cp2kOutput:
             if re.search("Spin unrestricted", l):
                 return True
         return False
-    
+
     @property
     def charge(self):
         for l in self.content:

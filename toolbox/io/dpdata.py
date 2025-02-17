@@ -1,10 +1,9 @@
-from typing import List
-
+# SPDX-License-Identifier: LGPL-3.0-or-later
 import glob
 import os
+from typing import List
 
 import numpy as np
-
 from ase import Atoms
 from ase.calculators.singlepoint import SinglePointCalculator
 
