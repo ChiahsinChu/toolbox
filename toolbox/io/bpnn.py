@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
 import numpy as np
 
 from toolbox.utils.unit import AU_TO_ANG, AU_TO_EV

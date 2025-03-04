@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
 import unittest
-
 from pathlib import Path
 
 from toolbox.io.cp2k import Cp2kOutput
@@ -40,7 +39,7 @@ class Cp2kOutputTest:
             self.cp2k_out.scf_loop,
             self.ref_data["scf_loop"],
         )
-        
+
     def test_charge(self):
         self.assertEqual(
             self.cp2k_out.charge,
@@ -84,6 +83,7 @@ class TestUKSCp2kOutput(Cp2kOutputTest, unittest.TestCase):
             "scf_loop": 1,
             "charge": 0,
         }
+
 
 class TestRKSSmearCp2kOutput(Cp2kOutputTest, unittest.TestCase):
     def setUp(self) -> None:
