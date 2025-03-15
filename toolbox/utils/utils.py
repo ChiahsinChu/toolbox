@@ -4,6 +4,7 @@ import csv
 import json
 import os
 import pickle
+from typing import Optional
 
 import h5py
 import numpy as np
@@ -226,7 +227,13 @@ def calc_water_number(rho, v):
     return calc_number(rho, v, 18.015)
 
 
-def calc_coord_number(atoms, c_ids, neigh_ids, cutoff):
+def calc_coord_number(
+    atoms,
+    c_ids,
+    neigh_ids,
+    cutoff: Optional[float] = None,
+    voronoi: bool = False,
+):
     from MDAnalysis.lib.distances import distance_array
 
     p = atoms.get_positions()
@@ -234,8 +241,15 @@ def calc_coord_number(atoms, c_ids, neigh_ids, cutoff):
     p_n = p[neigh_ids]
     results = np.empty((len(c_ids), len(neigh_ids)), dtype=np.float64)
     distance_array(p_c, p_n, box=atoms.cell.cellpar(), result=results)
-    out = np.count_nonzero(results <= cutoff, axis=1)
-    return out
+    if cutoff is None and voronoi:
+        # use voronoi method
+        out = np.unique(np.argmin(results, axis=0), return_counts=True)
+        cns = np.zeros(len(p_c), dtype=np.int32)
+        cns[out[0]] = out[1]
+    else:
+        # use cutoff method
+        cns = np.count_nonzero(results <= cutoff, axis=1)
+    return cns
 
 
 def calc_water_coord_number(atoms):
@@ -248,10 +262,7 @@ def calc_water_coord_number(atoms):
 def check_water(atoms):
     cns = calc_water_coord_number(atoms)
     flags = cns == 2
-    if False in flags:
-        return False
-    else:
-        return True
+    return False not in flags
 
 
 def wrap_water(atoms):
