@@ -421,10 +421,14 @@ class LammpsLog:
             if re.match("Performance", line):
                 out = line.split()
                 self.performance = {
-                    "ns_per_d": float(out[1]),
-                    "h_per_ns": float(out[3]),
-                    "ts_per_s": float(out[5]),
+                    "ns/day": float(out[1]),
+                    "h/ns": float(out[3]),
+                    "timesteps/s": float(out[5]),
                 }
+                try:
+                    self.performance["katom-step/s"] = float(out[7])
+                except IndexError:
+                    self.performance["katom-step/s"] = float(out[5]) * self.n_atoms / 1e3
 
     @property
     def timing_breakdown(self):
