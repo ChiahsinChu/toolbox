@@ -1065,7 +1065,7 @@ class Cp2kHartreeCube(Cp2kCube):
         self.cross_area = cross_area
 
 
-class Cp2kPdos:
+class Cp2kPDOS:
     def __init__(self, file_name: str) -> None:
         self.file_name = file_name
         with open(file_name, "r", encoding="UTF-8") as f:
@@ -1078,51 +1078,54 @@ class Cp2kPdos:
         self.energies = self._data[:, 1]
         self.occupation = self._data[:, 2]
 
-    def get_dos(self, broadening=0.01, energy_step=0.01, dos_type="total"):
+        self.dos_data = None
+
+    def get_dos(self, broadening: float = 0.01, energy_step: float = 0.01):
         """
         Ref: https://manual.cp2k.org/trunk/CP2K_INPUT/FORCE_EVAL/PROPERTIES/BANDSTRUCTURE/DOS.html
         """
-        # smooth the dos data
-        dos_data = self._get_raw_dos(dos_type)
-        # dos, ener = self.get_raw_dos(dos_type=dos_type, energy_step=energy_step)
-        smth_dos = gaussian_filter1d(dos, broadening)
-        self.smth_dos = smth_dos
-        return smth_dos, ener
-
-    def get_raw_dos(self, dos_type="total", steplen=0.01):
-        energies = self.energies
-        fermi = self.fermi
-
-        weights = self._get_raw_dos(dos_type)
-        bins = int((energies[-1] - energies[0]) / steplen)
-        dos, ener = np.histogram(
-            energies, bins, weights=weights, range=(energies[0], energies[-1])
+        bin_edges = np.arange(
+            self.energies[0], self.energies[-1] + energy_step, energy_step
         )
-        dos = dos / steplen
-        ener = ener[:-1] - fermi + 0.5 * steplen
-        self.dos = dos
-        self.ener = ener
-        return dos, ener
+        bins = bin_edges[:-1] + 0.5 * energy_step
+        dos = gaussian_filter(self.energies, bins, broadening)
 
-    def _get_raw_dos(self, dos_type):
+        self.dos_data = (bins, dos)
+        return self.dos_data
+
+    def get_pdos(self, broadening=0.01, energy_step=0.01, dos_type="total"):
+        """
+        Ref: https://manual.cp2k.org/trunk/CP2K_INPUT/FORCE_EVAL/PROPERTIES/BANDSTRUCTURE/DOS.html
+        """
+        bin_edges = np.arange(
+            self.energies[0], self.energies[-1] + energy_step, energy_step
+        )
+        bins = bin_edges[:-1] + 0.5 * energy_step
+        pdos = gaussian_filter(
+            self.energies, bins, broadening, weight=self.get_raw_pdos(dos_type)
+        )
+        self.pdos_data = (bins, pdos)
+        return self.pdos_data
+
+    def get_raw_pdos(self, dos_type):
         try:
-            return getattr(self, "_get_raw_dos_%s" % dos_type)()
-        except:
-            raise NameError("dos type does not exist!")
+            return getattr(self, "_get_raw_pdos_%s" % dos_type)()
+        except AttributeError as e:
+            raise NameError("PDOS type does not exist!") from e
 
-    def _get_raw_dos_total(self):
+    def _get_raw_pdos_total(self):
         return self._data[:, 3:].sum(axis=1)
 
-    def _get_raw_dos_s(self):
+    def _get_raw_pdos_s(self):
         return self._data[:, 3]
 
-    def _get_raw_dos_p(self):
+    def _get_raw_pdos_p(self):
         return self._data[:, 4:7].sum(axis=1)
 
-    def _get_raw_dos_d(self):
+    def _get_raw_pdos_d(self):
         return self._data[:, 7:12].sum(axis=1)
 
-    def _get_raw_dos_f(self):
+    def _get_raw_pdos_f(self):
         return self._data[:, 12:19].sum(axis=1)
 
     @property
@@ -1136,7 +1139,7 @@ class Cp2kPdos:
 
     @property
     def vbm(self):
-        raw_dos = self._get_raw_dos_total()
+        raw_dos = self.get_raw_pdos("total")
         mask = (self.occupation > 1e-5) & (raw_dos > 1e-3)
         try:
             return self.energies[mask].max() - self.fermi
@@ -1146,7 +1149,7 @@ class Cp2kPdos:
 
     @property
     def cbm(self):
-        raw_dos = self._get_raw_dos_total()
+        raw_dos = self.get_raw_pdos("total")
         mask = (self.occupation < 1e-5) & (raw_dos > 1e-3)
         try:
             return self.energies[mask].min() - self.fermi
