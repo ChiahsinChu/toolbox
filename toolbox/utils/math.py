@@ -117,5 +117,7 @@ def gaussian_filter(data, bins, sigma: float, weight=None):
     bins = np.reshape(bins, (1, -1))
     if weight is None:
         weight = np.ones_like(data)
+    else:
+        weight = np.reshape(weight, (-1, 1))
     output = np.exp(-(((bins - data) / sigma) ** 2)) / (np.sqrt(2 * np.pi) * sigma) * weight
     return output.sum(axis=0)
