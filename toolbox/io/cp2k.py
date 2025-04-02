@@ -1,24 +1,24 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
 import copy
 import datetime
+import os
 import re
 
-from ase import Atoms
+import numpy as np
+from ase import Atoms, io
 from ase.io.cube import read_cube_data
-from cp2kdata import Cp2kPdos as _Cp2kPdos
 from cp2kdata.block_parser.cells import parse_all_cells
 from cp2kdata.block_parser.coordinates import parse_init_atomic_coordinates
 from cp2kdata.block_parser.energies import parse_energies_list
 from cp2kdata.block_parser.forces import parse_atomic_forces_list
 from scipy import constants
 
-from .. import CONFIGS
-from ..utils import *
-from ..utils.unit import *
-from ..utils.utils import iterdict, save_dict_json, update_dict
-from .template import cp2k_default_input
+from toolbox import CONFIGS
+from toolbox.utils.unit import AU_TO_ANG, AU_TO_EV, AU_TO_EV_EVERY_ANG
+from toolbox.utils.utils import iterdict, save_dict_json, update_dict
+from toolbox.utils.math import gaussian_filter
 
-# from cp2kdata.pdos.pdos import gaussian_filter1d
+from .template import cp2k_default_input
 
 
 _EPSILON = constants.epsilon_0 / constants.elementary_charge * constants.angstrom
@@ -1065,9 +1065,29 @@ class Cp2kHartreeCube(Cp2kCube):
         self.cross_area = cross_area
 
 
-class Cp2kPdos(_Cp2kPdos):
-    def __init__(self, file_name, parse_file_name=True) -> None:
-        super().__init__(file_name, parse_file_name)
+class Cp2kPdos:
+    def __init__(self, file_name: str) -> None:
+        self.file_name = file_name
+        with open(file_name, "r", encoding="UTF-8") as f:
+            line = f.readline()
+        # grep the word after "kind"
+        self.element = line.split()[line.split().index("kind") + 1]
+        self.fermi = float(line.split()[-2]) * AU_TO_EV
+
+        self._data = np.loadtxt(file_name)
+        self.energies = self._data[:, 1]
+        self.occupation = self._data[:, 2]
+
+    def get_dos(self, broadening=0.01, energy_step=0.01, dos_type="total"):
+        """
+        Ref: https://manual.cp2k.org/trunk/CP2K_INPUT/FORCE_EVAL/PROPERTIES/BANDSTRUCTURE/DOS.html
+        """
+        # smooth the dos data
+        dos_data = self._get_raw_dos(dos_type)
+        # dos, ener = self.get_raw_dos(dos_type=dos_type, energy_step=energy_step)
+        smth_dos = gaussian_filter1d(dos, broadening)
+        self.smth_dos = smth_dos
+        return smth_dos, ener
 
     def get_raw_dos(self, dos_type="total", steplen=0.01):
         energies = self.energies
@@ -1091,30 +1111,19 @@ class Cp2kPdos(_Cp2kPdos):
             raise NameError("dos type does not exist!")
 
     def _get_raw_dos_total(self):
-        return np.loadtxt(self.file)[:, 3:].sum(axis=1)
-
-    def _get_raw_dos_system(self):
-        tmp_len = len(np.loadtxt(self.file, usecols=2))
-        return np.ones(tmp_len)
+        return self._data[:, 3:].sum(axis=1)
 
     def _get_raw_dos_s(self):
-        return np.loadtxt(self.file, usecols=3)
+        return self._data[:, 3]
 
     def _get_raw_dos_p(self):
-        return np.loadtxt(self.file, usecols=np.arange(4, 7)).sum(axis=1)
+        return self._data[:, 4:7].sum(axis=1)
 
     def _get_raw_dos_d(self):
-        return np.loadtxt(self.file, usecols=np.arange(7, 12)).sum(axis=1)
+        return self._data[:, 7:12].sum(axis=1)
 
     def _get_raw_dos_f(self):
-        return np.loadtxt(self.file, usecols=np.arange(12, 19)).sum(axis=1)
-
-    def get_dos(self, sigma=0.2, dos_type="total", steplen=0.01):
-        # smooth the dos data
-        dos, ener = self.get_raw_dos(dos_type=dos_type, steplen=steplen)
-        smth_dos = gaussian_filter1d(dos, sigma)
-        self.smth_dos = smth_dos
-        return smth_dos, ener
+        return self._data[:, 12:19].sum(axis=1)
 
     @property
     def homo(self):

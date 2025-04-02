@@ -428,7 +428,9 @@ class LammpsLog:
                 try:
                     self.performance["katom-step/s"] = float(out[7])
                 except IndexError:
-                    self.performance["katom-step/s"] = float(out[5]) * self.n_atoms / 1e3
+                    self.performance["katom-step/s"] = (
+                        float(out[5]) * self.n_atoms / 1e3
+                    )
 
     @property
     def timing_breakdown(self):

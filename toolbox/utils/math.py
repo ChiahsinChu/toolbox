@@ -110,3 +110,11 @@ def error_test(y_true, y_pred):
 
 def vec_project(vec, unit_vec):
     return np.dot(vec, unit_vec) * unit_vec
+
+
+def gaussian_filter(data, bins, sigma: float):
+    data = np.reshape(data, (-1, 1))
+    bins = np.reshape(bins, (1, -1))
+
+    output = np.exp(-(((bins - data) / sigma) ** 2)) / (np.sqrt(2 * np.pi) * sigma)
+    return output.sum(axis=0)
