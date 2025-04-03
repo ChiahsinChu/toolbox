@@ -14,12 +14,11 @@ from cp2kdata.block_parser.forces import parse_atomic_forces_list
 from scipy import constants
 
 from toolbox import CONFIGS
+from toolbox.utils.math import gaussian_filter
 from toolbox.utils.unit import AU_TO_ANG, AU_TO_EV, AU_TO_EV_EVERY_ANG
 from toolbox.utils.utils import iterdict, save_dict_json, update_dict
-from toolbox.utils.math import gaussian_filter
 
 from .template import cp2k_default_input
-
 
 _EPSILON = constants.epsilon_0 / constants.elementary_charge * constants.angstrom
 
@@ -1079,6 +1078,7 @@ class Cp2kPDOS:
         self.occupation = self._data[:, 2]
 
         self.dos_data = None
+        self.pdos_data = None
 
     def get_dos(self, broadening: float = 0.01, energy_step: float = 0.01):
         """
@@ -1087,9 +1087,7 @@ class Cp2kPDOS:
         bin_edges = np.arange(
             self.energies[0], self.energies[-1] + energy_step, energy_step
         )
-        bins = bin_edges[:-1] + 0.5 * energy_step
-        dos = gaussian_filter(self.energies, bins, broadening)
-
+        bins, dos = gaussian_filter(self.energies, bin_edges, broadening)
         self.dos_data = (bins, dos)
         return self.dos_data
 
@@ -1100,9 +1098,8 @@ class Cp2kPDOS:
         bin_edges = np.arange(
             self.energies[0], self.energies[-1] + energy_step, energy_step
         )
-        bins = bin_edges[:-1] + 0.5 * energy_step
-        pdos = gaussian_filter(
-            self.energies, bins, broadening, weight=self.get_raw_pdos(dos_type)
+        bins, pdos = gaussian_filter(
+            self.energies, bin_edges, broadening, weight=self.get_raw_pdos(dos_type)
         )
         self.pdos_data = (bins, pdos)
         return self.pdos_data

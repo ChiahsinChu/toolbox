@@ -324,3 +324,12 @@ def calc_lj_params(ks):
             except KeyError:
                 raise KeyError("sigma for %s not found" % ks[j])
             print(ks[i], ks[j], (sigma_i + sigma_j) / 2, np.sqrt(epsilon_i * epsilon_j))
+
+
+def get_bins_from_bin_edge(bin_edges):
+    """
+    get bin centers from bin edges
+    """
+    bin_edges = np.reshape(bin_edges, (-1,))
+    bins = bin_edges[:-1] + np.diff(bin_edges) / 2
+    return bins

@@ -6,6 +6,8 @@ from scipy import stats
 from scipy.special import erf
 from sklearn import metrics
 
+from .utils import get_bins_from_bin_edge
+
 
 def gaussian_func(x, mu=0, sigma=1):
     """
@@ -112,12 +114,15 @@ def vec_project(vec, unit_vec):
     return np.dot(vec, unit_vec) * unit_vec
 
 
-def gaussian_filter(data, bins, sigma: float, weight=None):
+def gaussian_filter(data, bin_edge, sigma: float, weight=None):
     data = np.reshape(data, (-1, 1))
+    bins = get_bins_from_bin_edge(bin_edge)
     bins = np.reshape(bins, (1, -1))
     if weight is None:
         weight = np.ones_like(data)
     else:
         weight = np.reshape(weight, (-1, 1))
-    output = np.exp(-(((bins - data) / sigma) ** 2)) / (np.sqrt(2 * np.pi) * sigma) * weight
-    return output.sum(axis=0)
+    output = (
+        np.exp(-(((bins - data) / sigma) ** 2)) / (np.sqrt(2 * np.pi) * sigma) * weight
+    )
+    return bins, output.sum(axis=0)
