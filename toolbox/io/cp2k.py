@@ -11,16 +11,13 @@ from cp2kdata.block_parser.cells import parse_all_cells
 from cp2kdata.block_parser.coordinates import parse_init_atomic_coordinates
 from cp2kdata.block_parser.energies import parse_energies_list
 from cp2kdata.block_parser.forces import parse_atomic_forces_list
-from scipy import constants
 
 from toolbox import CONFIGS
 from toolbox.utils.math import gaussian_filter
-from toolbox.utils.unit import AU_TO_ANG, AU_TO_EV, AU_TO_EV_EVERY_ANG
+from toolbox.utils.unit import AU_TO_ANG, AU_TO_EV, AU_TO_EV_EVERY_ANG, EPSILON
 from toolbox.utils.utils import iterdict, save_dict_json, update_dict
 
 from .template import cp2k_default_input
-
-_EPSILON = constants.epsilon_0 / constants.elementary_charge * constants.angstrom
 
 
 class Cp2kInput:
@@ -459,7 +456,7 @@ class Cp2kInput:
 class Cp2kOutput:
     def __init__(self, fname="output.out", ignore_warning=False) -> None:
         self.output_file = fname
-        with open(fname, "r") as f:
+        with open(fname, "r", encoding="UTF-8") as f:
             self.content = f.readlines()
         self.string = "".join(self.content)
 
@@ -491,6 +488,7 @@ class Cp2kOutput:
 
         flag = False
         scf_flag = not self.check_scf
+        line = None
         for line in self.content:
             line = line.strip("\n")
             if scf_pattern.search(line) is not None:
@@ -518,7 +516,7 @@ class Cp2kOutput:
             line = line.strip("\n")
             if scf_pattern.search(line) is not None:
                 scf_flag = True
-            if scf_flag == False:
+            if not scf_flag:
                 continue
             if start_pattern.match(line):
                 flag = True
@@ -541,7 +539,7 @@ class Cp2kOutput:
             line = line.strip("\n")
             if scf_pattern.search(line) is not None:
                 scf_flag = True
-            if scf_flag == False:
+            if not scf_flag:
                 continue
             if start_pattern.search(line) is not None:
                 data_lines.append(self.content[ii : ii + nlines])
@@ -635,7 +633,7 @@ class Cp2kOutput:
     @property
     def h_charge(self):
         start_pattern = "Hirshfeld Charges"
-        nframe, data_lines = self.grep_texts_by_nlines(start_pattern, self.natoms + 3)
+        _nf, data_lines = self.grep_texts_by_nlines(start_pattern, self.natoms + 3)
         data_list = []
         for line in data_lines[-1, 3:]:
             line_list = line.split()
@@ -645,7 +643,7 @@ class Cp2kOutput:
     @property
     def dipole_moment(self):
         pattern = "Dipole moment"
-        nframe, data_lines = self.grep_texts_by_nlines(pattern, 2)
+        _nf, data_lines = self.grep_texts_by_nlines(pattern, 2)
 
         data_list = []
         for line in data_lines[-1, 1:]:
@@ -660,7 +658,7 @@ class Cp2kOutput:
         the slab [electrons-Angstroem]:              -1.5878220042
         """
         pattern = "Total dipole moment perpendicular to"
-        nframe, data_lines = self.grep_texts_by_nlines(pattern, 2)
+        _nf, data_lines = self.grep_texts_by_nlines(pattern, 2)
 
         line = data_lines[-1, 1]
         line_list = line.split()
@@ -669,7 +667,7 @@ class Cp2kOutput:
     @property
     def potdrop(self):
         cross_area = np.linalg.norm(np.cross(self.atoms.cell[0], self.atoms.cell[1]))
-        DeltaV = self.surf_dipole_moment / cross_area / _EPSILON
+        DeltaV = self.surf_dipole_moment / cross_area / EPSILON
         return DeltaV
 
     @property
@@ -678,7 +676,7 @@ class Cp2kOutput:
 
         start_pattern = r"  Total charge density g-space grids:"
         end_pattern = r"  Total energy:"
-        nframe, data_lines = self.grep_texts(start_pattern, end_pattern)
+        _nf, data_lines = self.grep_texts(start_pattern, end_pattern)
 
         for kw in data_lines[-1, 2:-1]:
             kw = kw.split(":")
@@ -838,7 +836,7 @@ class MultiFrameCp2kOutput(Cp2kOutput):
     @property
     def potdrop(self):
         cross_area = np.linalg.norm(np.cross(self.atoms.cell[0], self.atoms.cell[1]))
-        DeltaV = self.surf_dipole_moment / cross_area / _EPSILON
+        DeltaV = self.surf_dipole_moment / cross_area / EPSILON
         return DeltaV
 
     @property
@@ -1057,7 +1055,7 @@ class Cp2kHartreeCube(Cp2kCube):
         """
         Dipole moment of cell [e A]
         """
-        d = -self.potdrop * self.cross_area * _EPSILON
+        d = -self.potdrop * self.cross_area * EPSILON
         return d
 
     def set_cross_area(self, cross_area):
