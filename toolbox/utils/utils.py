@@ -278,24 +278,28 @@ def wrap_water(atoms):
     cellpar = atoms.cell.cellpar()
     oxygen_coords = coords[oxygen_mask]
     hydrogen_coords = coords[hydrogen_mask]
-    assert len(oxygen_coords) * 2 == len(hydrogen_coords)
-    dist_mat = distance_array(oxygen_coords, hydrogen_coords, box=cellpar)
+    # assert len(oxygen_coords) * 2 == len(hydrogen_coords)
     new_atoms = Atoms(cell=atoms.cell, pbc=atoms.pbc)
-    for ii, ds in enumerate(dist_mat):
-        mask = ds < 1.3
+    for oxygen_coord in oxygen_coords:
+        oxygen_coord = np.reshape(oxygen_coord, (1, 3))
+        ds = distance_array(oxygen_coord, hydrogen_coords, box=cellpar)
+        mask = ds.reshape(-1) < 1.3
         cn = np.sum(mask)
-        assert cn == 2
+        # assert cn == 2
         # print(cn)
-        coords_rel = hydrogen_coords[mask] - oxygen_coords[ii]
+        coords_rel = hydrogen_coords[mask].reshape(-1, 3) - oxygen_coord
         coords_rel = minimize_vectors(coords_rel, box=cellpar)
         _coords = np.concatenate(
             (
-                oxygen_coords[ii].reshape(1, 3),
-                oxygen_coords[ii].reshape(1, 3) + coords_rel,
+                oxygen_coord,
+                oxygen_coord + coords_rel,
             ),
             axis=0,
         )
-        new_atoms.extend(Atoms("OHH", positions=_coords))
+        new_atoms.extend(Atoms(f"OH{cn}", positions=_coords))
+        # remove selected hydrogen atoms
+        hydrogen_coords = hydrogen_coords[~mask]
+    assert len(hydrogen_coords) == 0
     new_atoms.extend(atoms[other_mask])
     return new_atoms
 
