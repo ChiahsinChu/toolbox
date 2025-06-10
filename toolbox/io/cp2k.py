@@ -468,19 +468,20 @@ class Cp2kOutput:
 
     @property
     def worktime(self):
-        pattern = r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}"
-        out = re.findall(pattern, self.string)
-        t = re.split(r"\.|:|-|\s", out[0])
-        start_time = datetime.datetime(
-            int(t[0]), int(t[1]), int(t[2]), int(t[3]), int(t[4]), int(t[5]), int(t[6])
-        )
-        t = re.split(r"\.|:|-|\s", out[-1])
-        end_time = datetime.datetime(
-            int(t[0]), int(t[1]), int(t[2]), int(t[3]), int(t[4]), int(t[5]), int(t[6])
-        )
-        delta_t = end_time - start_time
-        run_time = delta_t.total_seconds()
-        return run_time
+        # pattern = r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}"
+        # out = re.findall(pattern, self.string)
+        # t = re.split(r"\.|:|-|\s", out[0])
+        # start_time = datetime.datetime(
+        #     int(t[0]), int(t[1]), int(t[2]), int(t[3]), int(t[4]), int(t[5]), int(t[6])
+        # )
+        # t = re.split(r"\.|:|-|\s", out[-1])
+        # end_time = datetime.datetime(
+        #     int(t[0]), int(t[1]), int(t[2]), int(t[3]), int(t[4]), int(t[5]), int(t[6])
+        # )
+        # delta_t = end_time - start_time
+        # run_time = delta_t.total_seconds()
+        # return run_time
+        return self.timing_dict["CP2K"]
 
     def grep_text_search(self, pattern):
         search_pattern = re.compile(pattern)
@@ -713,6 +714,24 @@ class Cp2kOutput:
             if "Charge" in l:
                 break
         return int(l.split()[-1])
+    
+    @property
+    def timing_dict(self):
+        t_dict = {}
+        flag = False
+        for l in self.content:
+            if "SUBROUTINE" in l:
+                flag = True
+                continue
+            if flag:
+                if "---" in l:
+                    flag = False
+                    break
+                data = l.split()
+                if len(data) == 7:
+                    # print(data)
+                    t_dict[data[0]] = float(data[-2])
+        return t_dict
 
 
 class MultiFrameCp2kOutput(Cp2kOutput):
