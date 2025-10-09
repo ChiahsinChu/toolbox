@@ -33,14 +33,17 @@ class LammpsData:
         self.bonds = None
         self.dihedrals = None
         self.velocities = None
+        
+        self.atype = None
 
     def write(self, out_file="system.data", **kwargs):
-        specorder = kwargs.get("specorder", None)
-        if specorder is not None:
-            self.set_atype_from_specorder(specorder)
-            n_atype = len(specorder)
-        else:
-            n_atype = len(np.unique(self.atoms.numbers))
+        if self.atype is None:
+            # if atype is not set by hand, set by specorder
+            specorder = kwargs.get("specorder", None)
+            if specorder is not None:
+                self.set_atype_from_specorder(specorder)
+         
+        n_atype = len(np.unique(self.atype))
         atom_style = kwargs.get("atom_style", "full")
 
         with open(out_file, "w", encoding="utf-8") as f:
@@ -264,23 +267,15 @@ class OHHWaterLammpsData(LammpsData):
     def __init__(self, atoms) -> None:
         super().__init__(atoms)
 
-        n_water = np.count_nonzero(atoms.symbols == "O")
         oxygen_ids = np.where(atoms.symbols == "O")[0] + 1
         hydrogen_ids = np.where(atoms.symbols == "H")[0] + 1
 
-        nbonds = n_water * 2
-        bonds = np.ones((nbonds, 4), dtype=int)
-        np.copyto(bonds[:, 0], np.arange(nbonds) + 1)
-        np.copyto(bonds[::2, 2], oxygen_ids)
-        np.copyto(bonds[1::2, 2], oxygen_ids)
-        np.copyto(bonds[:, 3], hydrogen_ids)
+        bonds, angles = generate_water_bonds_and_angles(
+            oxygen_ids,
+            hydrogen_ids,
+        )
 
-        angles = np.ones((n_water, 5), dtype=int)
-        np.copyto(angles[:, 0], np.arange(n_water) + 1)
-        np.copyto(angles[:, 2], hydrogen_ids[::2])
-        np.copyto(angles[:, 3], oxygen_ids)
-        np.copyto(angles[:, 4], hydrogen_ids[1::2])
-
+        n_water = len(oxygen_ids)
         res_id = np.arange(n_water) + 1
         res_id = np.tile(res_id.reshape(-1, 1), [1, 3]).reshape(-1)
 
@@ -447,7 +442,9 @@ class LammpsLog:
         ldata = [line.split("|") for line in timing_breakdown[2:-2]]
         # read data into a dict
         data = {
-            d[0].strip().lower(): {
+            d[0]
+            .strip()
+            .lower(): {
                 "time": float(d[2].strip()),
                 "percentage": float(d[-1].strip()),
             }
@@ -545,3 +542,27 @@ def make_dump_body(atoms, atype_dict):
                 ps[ii][2],
             )
     return s
+
+
+def generate_water_bonds_and_angles(oxygen_ids, hydrogen_ids):
+    """
+    find water residual based on OHH
+    return bonds and angles array for setup
+    """
+    oxygen_ids = np.array(oxygen_ids)
+    hydrogen_ids = np.array(hydrogen_ids)
+    n_water = len(oxygen_ids)
+
+    nbonds = n_water * 2
+    bonds = np.ones((nbonds, 4), dtype=int)
+    np.copyto(bonds[:, 0], np.arange(nbonds) + 1)
+    np.copyto(bonds[::2, 2], oxygen_ids)
+    np.copyto(bonds[1::2, 2], oxygen_ids)
+    np.copyto(bonds[:, 3], hydrogen_ids)
+
+    angles = np.ones((n_water, 5), dtype=int)
+    np.copyto(angles[:, 0], np.arange(n_water) + 1)
+    np.copyto(angles[:, 2], hydrogen_ids[::2])
+    np.copyto(angles[:, 3], oxygen_ids)
+    np.copyto(angles[:, 4], hydrogen_ids[1::2])
+    return bonds, angles

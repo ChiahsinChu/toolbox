@@ -234,9 +234,12 @@ class Interface:
             )
         sol.write("waterbox.xyz", n_wat=n_wat, verbose=verbose, seed=seed)
         waterbox = io.read("waterbox.xyz")
+        waterbox.set_cell(self.slab.get_cell())
+        waterbox.set_pbc(True)
+        waterbox.center(axis=2)
 
         self.atoms = waterbox + self.slab
-        self.atoms.set_cell(self.slab.get_cell())
+        # self.atoms.set_cell(self.slab.get_cell())
         self.atoms.set_pbc(True)
         if not verbose:
             os.remove("waterbox.xyz")
