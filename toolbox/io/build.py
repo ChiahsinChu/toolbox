@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
 import os
+import glob
 from typing import Dict, List, Optional, Union
 
 import MDAnalysis as mda
@@ -176,7 +177,11 @@ class ElectrolyteBox(WaterBox):
             )
         ]
         for k, v in self.solutes.items():
-            atoms = Atoms(k, positions=[[0, 0, 0]])
+            fnames = glob.glob(os.path.join(os.path.dirname(__file__), "ion_structure_lib/*/%s.*" % k))
+            if len(fnames) > 0:
+                atoms = io.read(fnames[0])
+            else:
+                atoms = Atoms(k, positions=[[0, 0, 0]])
             io.write("tmp.pdb", atoms)
             solute = mda.Universe("tmp.pdb")
             structures.append(
