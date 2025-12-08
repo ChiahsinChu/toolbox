@@ -1,4 +1,11 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
+"""Statistical plotting module.
+
+This module provides classes for creating statistical plots
+and performing statistical tests, including finite difference
+method testing.
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats

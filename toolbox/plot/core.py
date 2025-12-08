@@ -1,4 +1,11 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
+"""Core plotting utilities module.
+
+This module provides core plotting functions and utilities for creating
+various types of plots including learning curves, RMSE plots,
+binned statistics, and colored line plots.
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats
@@ -46,6 +53,30 @@ def ax_rmse(ax, x, y):
 
 
 def plot_lcurve(fname, col, xlabel=None, ylabel=None, **kwargs):
+    """Plot learning curve from data file.
+    
+    This function reads a data file and plots a learning curve
+    from the specified column.
+    
+    Parameters
+    ----------
+    fname : str
+        Path to data file
+    col : int
+        Column index to plot (0-based)
+    xlabel : str, optional
+        X-axis label, by default None
+    ylabel : str, optional
+        Y-axis label, by default None
+    **kwargs
+        Additional keyword arguments passed to ax.plot()
+        
+    Returns
+    -------
+    tuple
+        Tuple of (fig, ax, data) containing matplotlib figure,
+        axes object, and loaded data
+    """
     fig, ax = plt.subplots()
     data = np.loadtxt(fname)
     x = data[:, 0]

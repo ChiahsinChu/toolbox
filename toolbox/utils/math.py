@@ -1,4 +1,11 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
+"""Mathematical utilities module.
+
+This module provides various mathematical functions for data analysis,
+including statistical functions, interpolation, integration,
+filtering, and error metrics.
+"""
+
 import math
 
 import numpy as np

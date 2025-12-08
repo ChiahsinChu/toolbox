@@ -1,4 +1,10 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
+"""Figure classes module.
+
+This module provides base and specialized figure classes for creating
+matplotlib plots with consistent styling and layout.
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -93,6 +99,23 @@ class FullCellFigure(Figure):
         super().__init__(**kwargs)
 
     def setup(self, x, y, xlim=None, ylim=None, z_surfs=None, **kwargs):
+        """Set up full cell visualization plot.
+        
+        Parameters
+        ----------
+        x : array_like
+            X data values
+        y : array_like
+            Y data values
+        xlim : tuple, optional
+            X-axis limits as (min, max), by default None
+        ylim : tuple, optional
+            Y-axis limits as (min, max), by default None
+        z_surfs : list
+            List of z-surface positions for visualization
+        **kwargs
+            Additional keyword arguments passed to parent setup method
+        """
         super().setup(x, y, xlim, ylim, **kwargs)
 
         ax = self.ax
@@ -136,6 +159,23 @@ class HalfCellFigure(Figure):
         super().__init__(**kwargs)
 
     def setup(self, x, y, xlim=None, ylim=None, z_surf=None, **kwargs):
+        """Set up half cell visualization plot.
+        
+        Parameters
+        ----------
+        x : array_like
+            X data values
+        y : array_like
+            Y data values
+        xlim : tuple, optional
+            X-axis limits as (min, max), by default None
+        ylim : tuple, optional
+            Y-axis limits as (min, max), by default None
+        z_surf : float
+            Z-surface position for visualization
+        **kwargs
+            Additional keyword arguments passed to parent setup method
+        """
         super().setup(x, y, xlim, ylim, **kwargs)
 
         ax = self.ax

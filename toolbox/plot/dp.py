@@ -1,4 +1,9 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
+"""Deep Potential plotting module.
+
+This module provides specialized plotting classes for visualizing
+Deep Potential (DP) training data and results.
+"""
 
 from .figure import Figure
 

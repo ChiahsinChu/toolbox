@@ -576,6 +576,18 @@ class Cp2kInput:
             return {}
 
     def set_smear(self, flag):
+        """Set smearing method for SCF calculation.
+
+        Parameters
+        ----------
+        flag : bool
+            Whether to enable smearing
+
+        Returns
+        -------
+        dict
+            Update dictionary for smearing settings
+        """
         if not flag:
             update_d = {
                 "FORCE_EVAL": {
@@ -592,6 +604,18 @@ class Cp2kInput:
             return update_d
 
     def set_mlwf(self, flag):
+        """Set maximally localized Wannier functions.
+
+        Parameters
+        ----------
+        flag : bool
+            Whether to enable MLWF calculation
+
+        Returns
+        -------
+        dict
+            Update dictionary for MLWF settings
+        """
         if flag:
             update_d = {
                 "FORCE_EVAL": {
@@ -649,6 +673,18 @@ class Cp2kInput:
         return {}
 
     def set_restart(self, flag):
+        """Set restart file for CP2K calculation.
+
+        Parameters
+        ----------
+        flag : bool
+            Whether to use restart file
+
+        Returns
+        -------
+        dict
+            Update dictionary for restart settings
+        """
         if flag:
             update_d = {
                 "EXT_RESTART": {
@@ -662,18 +698,61 @@ class Cp2kInput:
             return {}
 
     def set_md_step(self, md_step):
+        """Set number of MD steps.
+
+        Parameters
+        ----------
+        md_step : int
+            Number of MD steps
+
+        Returns
+        -------
+        dict
+            Update dictionary for MD steps
+        """
         update_d = {"MOTION": {"MD": {"STEPS": md_step}}}
         return update_d
 
     def set_md_temp(self, md_temp):
+        """Set MD temperature.
+
+        Parameters
+        ----------
+        md_temp : float
+            Temperature for MD simulation
+
+        Returns
+        -------
+        dict
+            Update dictionary for MD temperature
+        """
         update_d = {"MOTION": {"MD": {"TEMPERATURE": md_temp}}}
         return update_d
 
     def set_md_timestep(self, md_timestep):
+        """Set MD timestep.
+
+        Parameters
+        ----------
+        md_timestep : float
+            Timestep for MD simulation
+
+        Returns
+        -------
+        dict
+            Update dictionary for MD timestep
+        """
         update_d = {"MOTION": {"MD": {"TIMESTEP": md_timestep}}}
         return update_d
 
     def update_dp(self, dp_model: str):
+        """Update CP2K input with Deep Potential model.
+
+        Parameters
+        ----------
+        dp_model : str
+            Path to Deep Potential model file
+        """
         from deepmd.infer import DeepPot
 
         dp = DeepPot(dp_model)
@@ -697,6 +776,20 @@ class Cp2kInput:
 
 
 class Cp2kOutput:
+    """
+    Class for parsing CP2K output files.
+    
+    This class provides methods to extract various properties from CP2K output files,
+    including energies, forces, charges, and other calculation results.
+    
+    Parameters
+    ----------
+    fname : str, optional
+        Path to CP2K output file, by default "output.out"
+    ignore_warning : bool, optional
+        Whether to ignore SCF convergence warnings, by default False
+    """
+    
     def __init__(self, fname="output.out", ignore_warning=False) -> None:
         self.output_file = fname
         with open(fname, encoding="UTF-8") as f:
@@ -711,6 +804,13 @@ class Cp2kOutput:
 
     @property
     def worktime(self):
+        """Get CP2K calculation time.
+        
+        Returns
+        -------
+        float
+            Total calculation time in seconds
+        """
         # pattern = r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}"
         # out = re.findall(pattern, self.string)
         # t = re.split(r"\.|:|-|\s", out[0])
@@ -727,6 +827,18 @@ class Cp2kOutput:
         return self.timing_dict["CP2K"]
 
     def grep_text_search(self, pattern):
+        """Search for a pattern in CP2K output file.
+        
+        Parameters
+        ----------
+        pattern : str
+            Regular expression pattern to search for
+            
+        Returns
+        -------
+        str
+            Line containing the pattern, or empty string if not found
+        """
         search_pattern = re.compile(pattern)
         scf_pattern = re.compile(r"SCF run converged in")
 
@@ -748,6 +860,21 @@ class Cp2kOutput:
             return ""
 
     def grep_texts(self, start_pattern, end_pattern):
+        """Extract text between start and end patterns.
+        
+        Parameters
+        ----------
+        start_pattern : str
+            Regular expression pattern for start of text block
+        end_pattern : str
+            Regular expression pattern for end of text block
+            
+        Returns
+        -------
+        tuple
+            Tuple containing (nframe, data_lines) where nframe is the number of
+            matching blocks and data_lines is a 2D array of the extracted text
+        """
         start_pattern = re.compile(start_pattern)
         end_pattern = re.compile(end_pattern)
         scf_pattern = re.compile(r"SCF run converged in")
@@ -773,6 +900,21 @@ class Cp2kOutput:
         return nframe, np.reshape(data_lines, (nframe, -1))
 
     def grep_texts_by_nlines(self, start_pattern, nlines):
+        """Extract a fixed number of lines after a pattern.
+        
+        Parameters
+        ----------
+        start_pattern : str
+            Regular expression pattern to search for
+        nlines : int
+            Number of lines to extract after the pattern
+            
+        Returns
+        -------
+        tuple
+            Tuple containing (nframe, data_lines) where nframe is the number of
+            matching blocks and data_lines is a 2D array of the extracted text
+        """
         start_pattern = re.compile(start_pattern)
         scf_pattern = re.compile(r"SCF run converged in")
 
@@ -807,6 +949,13 @@ class Cp2kOutput:
 
     @property
     def atoms(self):
+        """Get ASE Atoms object from CP2K output.
+        
+        Returns
+        -------
+        ase.Atoms
+            ASE Atoms object with positions, cell, and periodic boundary conditions
+        """
         positions = self.coord
         atoms = Atoms(symbols=self.chemical_symbols, positions=positions)
         check_scf = self.check_scf
@@ -831,11 +980,25 @@ class Cp2kOutput:
 
     @property
     def energy(self):
+        """Get total energy from CP2K output.
+        
+        Returns
+        -------
+        float
+            Total energy in eV
+        """
         out = parse_energies_list(self.string)
         return out[0] * AU_TO_EV
 
     @property
     def scf_loop(self):
+        """Get number of SCF iterations.
+        
+        Returns
+        -------
+        int
+            Number of SCF iterations, or -1 if SCF did not converge
+        """
         pattern = r"\s+SCF\srun\sconverged\sin\s+\d+"
         out = re.findall(pattern, self.string)
         if len(out) == 0:
@@ -845,6 +1008,13 @@ class Cp2kOutput:
 
     @property
     def fermi(self):
+        """Get Fermi energy from CP2K output.
+        
+        Returns
+        -------
+        float
+            Fermi energy in eV
+        """
         if self.uks:
             fermi = []
             for line in self.content:
@@ -866,6 +1036,13 @@ class Cp2kOutput:
 
     @property
     def m_charge(self):
+        """Get Mulliken charges from CP2K output.
+        
+        Returns
+        -------
+        numpy.ndarray
+            Array of Mulliken charges for each atom
+        """
         start_pattern = "Mulliken Population Analysis"
         nframe, data_lines = self.grep_texts_by_nlines(start_pattern, self.natoms + 3)
         data_list = []
@@ -876,6 +1053,13 @@ class Cp2kOutput:
 
     @property
     def h_charge(self):
+        """Get Hirshfeld charges from CP2K output.
+        
+        Returns
+        -------
+        numpy.ndarray
+            Array of Hirshfeld charges for each atom
+        """
         start_pattern = "Hirshfeld Charges"
         _nf, data_lines = self.grep_texts_by_nlines(start_pattern, self.natoms + 3)
         data_list = []
@@ -886,6 +1070,13 @@ class Cp2kOutput:
 
     @property
     def dipole_moment(self):
+        """Get dipole moment from CP2K output.
+        
+        Returns
+        -------
+        numpy.ndarray
+            Dipole moment vector [x, y, z] in Debye
+        """
         pattern = "Dipole moment"
         _nf, data_lines = self.grep_texts_by_nlines(pattern, 2)
 
@@ -911,12 +1102,26 @@ class Cp2kOutput:
 
     @property
     def potdrop(self):
+        """Calculate potential drop across the surface.
+        
+        Returns
+        -------
+        float
+            Potential drop in V
+        """
         cross_area = np.linalg.norm(np.cross(self.atoms.cell[0], self.atoms.cell[1]))
         DeltaV = self.surf_dipole_moment / cross_area / EPSILON
         return DeltaV
 
     @property
     def energy_dict(self):
+        """Get detailed energy breakdown from CP2K output.
+        
+        Returns
+        -------
+        dict
+            Dictionary containing various energy components in eV
+        """
         energy_dict = {}
 
         start_pattern = r"  Total charge density g-space grids:"
@@ -940,6 +1145,13 @@ class Cp2kOutput:
 
     @property
     def multiplicity(self):
+        """Get spin multiplicity from CP2K output.
+        
+        Returns
+        -------
+        int
+            Spin multiplicity of the system
+        """
         for line in self.content:
             if "Multiplicity" in line:
                 break
@@ -947,10 +1159,24 @@ class Cp2kOutput:
 
     @property
     def uks(self):
+        """Check if calculation is spin-unrestricted.
+        
+        Returns
+        -------
+        bool
+            True if calculation is spin-unrestricted (UKS), False otherwise
+        """
         return any(re.search("Spin unrestricted", line) for line in self.content)
 
     @property
     def charge(self):
+        """Get system charge from CP2K output.
+        
+        Returns
+        -------
+        int
+            Total charge of the system
+        """
         for line in self.content:
             if "Charge" in line:
                 break
@@ -958,6 +1184,13 @@ class Cp2kOutput:
 
     @property
     def timing_dict(self):
+        """Get timing information from CP2K output.
+        
+        Returns
+        -------
+        dict
+            Dictionary containing timing information for different CP2K modules
+        """
         t_dict = {}
         flag = False
         for line in self.content:
@@ -976,11 +1209,32 @@ class Cp2kOutput:
 
 
 class MultiFrameCp2kOutput(Cp2kOutput):
+    """
+    Class for parsing CP2K output files with multiple frames.
+    
+    This class extends Cp2kOutput to handle multi-frame calculations such as
+    molecular dynamics or geometry optimizations.
+    
+    Parameters
+    ----------
+    fname : str, optional
+        Path to CP2K output file, by default "output.out"
+    ignore_warning : bool, optional
+        Whether to ignore SCF convergence warnings, by default False
+    """
+    
     def __init__(self, fname="output.out", ignore_warning=False) -> None:
         super().__init__(fname, ignore_warning)
 
     @property
     def atoms(self):
+        """Get ASE Atoms object from multi-frame CP2K output.
+        
+        Returns
+        -------
+        ase.Atoms
+            ASE Atoms object with positions, cell, and periodic boundary conditions
+        """
         positions = self.coord
         atoms = Atoms(symbols=self.chemical_symbols, positions=positions)
         a = float(self.grep_text_search(r"Vector a").split()[-1])
@@ -1020,6 +1274,13 @@ class MultiFrameCp2kOutput(Cp2kOutput):
 
     @property
     def energy(self):
+        """Get total energy from multi-frame CP2K output.
+        
+        Returns
+        -------
+        float
+            Total energy in eV
+        """
         data = self.grep_text_search("Total energy: ")
         # data = self.grep_text_search("Total FORCE_EVAL")
         data = data.replace("\n", " ")
@@ -1028,6 +1289,13 @@ class MultiFrameCp2kOutput(Cp2kOutput):
 
     @property
     def scf_loop(self):
+        """Get number of SCF iterations from multi-frame CP2K output.
+        
+        Returns
+        -------
+        int
+            Number of SCF iterations, or -1 if SCF did not converge
+        """
         pattern = r"\s+SCF\srun\sconverged\sin\s+\d+"
         out = re.findall(pattern, self.string)
         if len(out) == 0:
@@ -1037,12 +1305,26 @@ class MultiFrameCp2kOutput(Cp2kOutput):
 
     @property
     def fermi(self):
+        """Get Fermi energy from multi-frame CP2K output.
+        
+        Returns
+        -------
+        float
+            Fermi energy in eV
+        """
         pattern = r"\s+Fermi\sEnergy\s\[eV\]\s:\s+.\d\.\d+"
         out = re.findall(pattern, self.string)
         return float(out[0].split(" ")[-1]) * AU_TO_EV
 
     @property
     def m_charge(self):
+        """Get Mulliken charges from multi-frame CP2K output.
+        
+        Returns
+        -------
+        numpy.ndarray
+            Array of Mulliken charges for each atom for each frame
+        """
         start_pattern = "Mulliken Population Analysis"
         nframe, data_lines = self.grep_texts_by_nlines(start_pattern, self.natoms + 3)
         data_lines = np.reshape(data_lines, (nframe, -1))
@@ -1055,6 +1337,13 @@ class MultiFrameCp2kOutput(Cp2kOutput):
 
     @property
     def h_charge(self):
+        """Get Hirshfeld charges from multi-frame CP2K output.
+        
+        Returns
+        -------
+        numpy.ndarray
+            Array of Hirshfeld charges for each atom for each frame
+        """
         start_pattern = "Hirshfeld Charges"
         nframe, data_lines = self.grep_texts_by_nlines(start_pattern, self.natoms + 3)
         data_lines = np.reshape(data_lines, (nframe, -1))
@@ -1067,6 +1356,13 @@ class MultiFrameCp2kOutput(Cp2kOutput):
 
     @property
     def dipole_moment(self):
+        """Get dipole moment from multi-frame CP2K output.
+        
+        Returns
+        -------
+        numpy.ndarray
+            Array of dipole moment vectors [x, y, z] in Debye for each frame
+        """
         pattern = "Dipole moment"
         nframe, data_lines = self.grep_texts_by_nlines(pattern, 2)
         data_lines = np.reshape(data_lines, (nframe, -1))
@@ -1096,12 +1392,26 @@ class MultiFrameCp2kOutput(Cp2kOutput):
 
     @property
     def potdrop(self):
+        """Calculate potential drop across the surface from multi-frame CP2K output.
+        
+        Returns
+        -------
+        numpy.ndarray
+            Array of potential drops in V for each frame
+        """
         cross_area = np.linalg.norm(np.cross(self.atoms.cell[0], self.atoms.cell[1]))
         DeltaV = self.surf_dipole_moment / cross_area / EPSILON
         return DeltaV
 
     @property
     def energy_dict(self):
+        """Get detailed energy breakdown from multi-frame CP2K output.
+        
+        Returns
+        -------
+        dict
+            Dictionary containing various energy components in eV for each frame
+        """
         energy_dict = {}
 
         start_pattern = r"  Total charge density g-space grids:"
@@ -1183,6 +1493,18 @@ class MultiFrameCp2kOutput(Cp2kOutput):
 
 
 class Cp2kCube:
+    """
+    Class for handling CP2K cube files.
+    
+    This class provides methods to read and analyze cube files generated by CP2K,
+    including electron density, potential, and other volumetric data.
+    
+    Parameters
+    ----------
+    fname : str
+        Path to cube file
+    """
+    
     def __init__(self, fname) -> None:
         self.cube_data, self.atoms = read_cube_data(fname)
         self.n_grid = np.array(self.cube_data.shape)
@@ -1239,6 +1561,20 @@ class Cp2kCube:
         return -dipole
 
     def get_ave_cube(self, axis=2, gaussian_sigma=0.0):
+        """Get averaged cube data along specified axis.
+        
+        Parameters
+        ----------
+        axis : int, optional
+            Axis along which to average (0=x, 1=y, 2=z), by default 2
+        gaussian_sigma : float, optional
+            Standard deviation for Gaussian smoothing, by default 0.0
+            
+        Returns
+        -------
+        tuple
+            Tuple containing (grid, averaged_data, smoothed_data)
+        """
         if (
             hasattr(self, "axis")
             and self.axis == axis
@@ -1264,6 +1600,20 @@ class Cp2kCube:
 
 
 class Cp2kHartreeCube(Cp2kCube):
+    """
+    Class for handling CP2K Hartree potential cube files.
+    
+    This class extends Cp2kCube to specifically handle Hartree potential data,
+    including methods to calculate potential drops and related properties.
+    
+    Parameters
+    ----------
+    fname : str
+        Path to Hartree potential cube file
+    vac_region : list, optional
+        Vacuum region boundaries [start, end], by default None
+    """
+    
     def __init__(
         self,
         fname,
@@ -1274,10 +1624,31 @@ class Cp2kHartreeCube(Cp2kCube):
             self.set_vac_region(vac_region)
 
     def set_vac_region(self, vac_region):
+        """Set vacuum region for potential drop calculation.
+        
+        Parameters
+        ----------
+        vac_region : list
+            Vacuum region boundaries [start, end]
+        """
         assert len(vac_region) == 2
         self.vac_region = vac_region
 
     def get_ave_cube(self, axis=2, gaussian_sigma=0):
+        """Get averaged Hartree potential cube data along specified axis.
+        
+        Parameters
+        ----------
+        axis : int, optional
+            Axis along which to average (0=x, 1=y, 2=z), by default 2
+        gaussian_sigma : float, optional
+            Standard deviation for Gaussian smoothing, by default 0
+            
+        Returns
+        -------
+        tuple
+            Tuple containing (grid, averaged_data, smoothed_data) in eV
+        """
         if (
             hasattr(self, "axis")
             and self.axis == axis
@@ -1293,6 +1664,13 @@ class Cp2kHartreeCube(Cp2kCube):
 
     @property
     def potdrop(self):
+        """Calculate potential drop across the vacuum region.
+        
+        Returns
+        -------
+        float
+            Potential drop in V
+        """
         start_id = np.argmin(np.abs(self.ave_grid - self.vac_region[0]))
         end_id = np.argmin(np.abs(self.ave_grid - self.vac_region[1]))
         if start_id > end_id:
@@ -1309,15 +1687,40 @@ class Cp2kHartreeCube(Cp2kCube):
 
     @property
     def dipole(self):
-        """Dipole moment of cell [e A]."""
+        """Calculate dipole moment from potential drop.
+        
+        Returns
+        -------
+        float
+            Dipole moment in e·Å
+        """
         d = -self.potdrop * self.cross_area * EPSILON
         return d
 
     def set_cross_area(self, cross_area):
+        """Set cross-sectional area for dipole calculation.
+        
+        Parameters
+        ----------
+        cross_area : float
+            Cross-sectional area in Å²
+        """
         self.cross_area = cross_area
 
 
 class Cp2kPDOS:
+    """
+    Class for handling CP2K projected density of states (PDOS) files.
+    
+    This class provides methods to read and analyze PDOS data from CP2K,
+    including calculation of various electronic properties.
+    
+    Parameters
+    ----------
+    file_name : str
+        Path to PDOS file
+    """
+    
     def __init__(self, file_name: str) -> None:
         self.file_name = file_name
         with open(file_name, encoding="UTF-8") as f:
@@ -1354,6 +1757,23 @@ class Cp2kPDOS:
         return self.pdos_data
 
     def get_raw_pdos(self, dos_type):
+        """Get raw PDOS data of specified type.
+        
+        Parameters
+        ----------
+        dos_type : str
+            Type of PDOS to retrieve (e.g., 'total', 's', 'p', 'd', 'f')
+            
+        Returns
+        -------
+        numpy.ndarray
+            Raw PDOS data
+            
+        Raises
+        ------
+        NameError
+            If the specified PDOS type does not exist
+        """
         try:
             return getattr(self, f"_get_raw_pdos_{dos_type}")()
         except AttributeError as e:
@@ -1376,15 +1796,36 @@ class Cp2kPDOS:
 
     @property
     def homo(self):
+        """Get highest occupied molecular orbital (HOMO) energy.
+        
+        Returns
+        -------
+        float
+            HOMO energy relative to Fermi level in eV
+        """
         homo_idx = np.where(self.occupation == 0)[0][0] - 1
         return self.energies[homo_idx] - self.fermi
 
     @property
     def lumo(self):
+        """Get lowest unoccupied molecular orbital (LUMO) energy.
+        
+        Returns
+        -------
+        float
+            LUMO energy relative to Fermi level in eV
+        """
         return self.energies[self.occupation == 0][0] - self.fermi
 
     @property
     def vbm(self):
+        """Get valence band maximum (VBM) energy.
+        
+        Returns
+        -------
+        float
+            VBM energy relative to Fermi level in eV
+        """
         raw_dos = self.get_raw_pdos("total")
         mask = (self.occupation > 1e-5) & (raw_dos > 1e-3)
         try:
@@ -1395,6 +1836,13 @@ class Cp2kPDOS:
 
     @property
     def cbm(self):
+        """Get conduction band minimum (CBM) energy.
+        
+        Returns
+        -------
+        float
+            CBM energy relative to Fermi level in eV
+        """
         raw_dos = self.get_raw_pdos("total")
         mask = (self.occupation < 1e-5) & (raw_dos > 1e-3)
         try:

@@ -1,4 +1,9 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
+"""Toy model module.
+
+This module provides simple physics models for educational purposes,
+including a parallel plate capacitor model.
+"""
 
 from scipy import constants
 
@@ -78,4 +83,11 @@ class ParallelPlateCapacitor:
         return self._d / constants.angstrom
 
     def __repr__(self):
+        """Return string representation of the capacitor.
+        
+        Returns
+        -------
+        str
+            String representation showing key parameters
+        """
         return f"ParallelPlateCapacitor(epsilon_r={self.epsilon_r}, d={self.d_angstrom} angstrom, capacitance={self.capacitance} muF/cm^2)"

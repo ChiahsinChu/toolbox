@@ -1,4 +1,10 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
+"""Data system management module.
+
+This module provides base classes for managing data system
+configurations with read and write functionality.
+"""
+
 class DataSystem:
     """Base class for data system management.
     

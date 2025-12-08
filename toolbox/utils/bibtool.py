@@ -1,4 +1,11 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
+"""Bibliography tool module.
+
+This module provides utilities for managing bibliography files,
+including extracting citations from LaTeX files and exporting
+selected bibliography entries.
+"""
+
 import contextlib
 import glob
 import re

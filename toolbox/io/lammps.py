@@ -527,6 +527,20 @@ class LammpsDump:
 
     @staticmethod
     def make_header(atoms, ts):
+        """Generate LAMMPS dump file header.
+        
+        Parameters
+        ----------
+        atoms : ase.Atoms
+            Atoms object containing atomic data
+        ts : int
+            Current timestep
+            
+        Returns
+        -------
+        str
+            Header string for LAMMPS dump file
+        """
         bc_dict = {True: "pp", False: "ff"}
 
         cell = atoms.cell.cellpar()
@@ -545,6 +559,20 @@ class LammpsDump:
 
     @staticmethod
     def make_body(atoms, atype_dict):
+        """Generate LAMMPS dump file body.
+        
+        Parameters
+        ----------
+        atoms : ase.Atoms
+            Atoms object containing atomic data
+        atype_dict : dict
+            Dictionary mapping atom types to type numbers and elements
+            
+        Returns
+        -------
+        str
+            Body string for LAMMPS dump file
+        """
         if len(atoms.get_initial_charges()) > 0:
             q_flag = True
             charges = atoms.get_initial_charges()
@@ -611,6 +639,14 @@ class LammpsLog:
 
     @property
     def timing_breakdown(self):
+        """Get timing breakdown from LAMMPS log file.
+        
+        Returns
+        -------
+        dict
+            Dictionary containing timing information for different LAMMPS operations
+            with time spent and percentage of total time
+        """
         start = False
         timing_breakdown = []
         for line in self.content:
