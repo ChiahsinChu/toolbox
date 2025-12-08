@@ -1,10 +1,34 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
+"""BPNN data reader module.
+
+This module provides functionality to read BPNN (Behler-Parrinello
+Neural Network) data files for machine learning potentials.
+"""
+
 import numpy as np
 
 from toolbox.utils.unit import AU_TO_ANG, AU_TO_EV
 
 
 def read_data(fname="input.data"):
+    """Read BPNN data file.
+    
+    Parameters
+    ----------
+    fname : str, optional
+        Path to BPNN data file, by default "input.data"
+        
+    Returns
+    -------
+    tuple
+        Tuple of (box, coord, charge, symbol, energy, force) where:
+        - box: array of box parameters with shape (n_frames, 9)
+        - coord: array of coordinates with shape (n_frames, n_atoms*3)
+        - charge: array of charges with shape (n_frames, n_atoms)
+        - symbol: list of element symbols for each frame
+        - energy: array of energies with shape (n_frames,)
+        - force: array of forces with shape (n_frames, n_atoms*3)
+    """
     box = []
     coord = []
     charge = []
@@ -15,7 +39,7 @@ def read_data(fname="input.data"):
     flag = False
     count = 0
     _symbol = []
-    with open(fname, "r", encoding="UTF-8") as f:
+    with open(fname, encoding="UTF-8") as f:
         lines = f.readlines()
         for line in lines:
             line = line.strip()

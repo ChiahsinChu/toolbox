@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
-"""
-CP2K input files:
+"""Templates for CP2K input files.
+
 - energy (metal with smearing)
 - geo_opt
 - cell_opt

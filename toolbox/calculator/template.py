@@ -1,4 +1,10 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
+"""Template configuration for dpdispatcher.
+
+This module contains default machine and resource configurations
+for running calculations on HPC systems.
+"""
+
 machine = {
     "batch_type": "Slurm",
     "context_type": "LocalContext",

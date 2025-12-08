@@ -1,7 +1,12 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
+"""DeepMD JAX molecular dynamics module.
+
+This module provides classes for running molecular dynamics simulations
+using DeepMD JAX implementation with trajectory dumping functionality.
+"""
+
 import sys
 import time
-from typing import List, Optional
 
 import numpy as np
 from ase import Atoms, io
@@ -9,6 +14,12 @@ from deepmd_jax.md import Simulation as _Simulation
 
 
 class TrajDump:
+    """Class for dumping trajectory data during simulation.
+    
+    This class handles writing trajectory data at specified intervals
+    during molecular dynamics simulations.
+    """
+    
     def __init__(
         self,
         atoms: Atoms,
@@ -17,6 +28,21 @@ class TrajDump:
         vel: bool = False,
         **kwargs,
     ) -> None:
+        """Initialize TrajDump.
+        
+        Parameters
+        ----------
+        atoms : ase.Atoms
+            Atoms object for the system
+        fname : str
+            Output filename
+        interval : int
+            Dump interval in timesteps
+        vel : bool, optional
+            Whether to dump velocities, by default False
+        **kwargs
+            Additional keyword arguments for writing
+        """
         self.fname = fname
         self.interval = interval
         self.vel = vel
@@ -25,6 +51,15 @@ class TrajDump:
         self.write_settings = kwargs
 
     def write(self, positions, cell):
+        """Write current frame to file.
+        
+        Parameters
+        ----------
+        positions : array_like
+            Atomic positions
+        cell : array_like
+            Unit cell vectors
+        """
         self.atoms.set_positions(positions)
         self.atoms.set_cell(cell)
         io.write(
@@ -35,7 +70,11 @@ class TrajDump:
 
 
 class Simulation(_Simulation):
-    """
+    """DeepMD JAX molecular dynamics simulation class.
+    
+    This class extends the base DeepMD JAX Simulation class to provide
+    trajectory dumping and logging functionality.
+    
     Example
     -------
     # setup simulation
@@ -71,9 +110,32 @@ class Simulation(_Simulation):
         routine,
         dt,
         initial_position,
-        log_file: Optional[str] = "deepmd_jax.stdout",
+        log_file: str | None = "deepmd_jax.stdout",
         **kwargs,
     ):
+        """Initialize Simulation.
+        
+        Parameters
+        ----------
+        model_path : str
+            Path to trained model file
+        box : array_like
+            Simulation box dimensions in Angstroms
+        type_idx : array_like
+            Index-element mapping for atom types
+        mass : array_like
+            Atomic masses
+        routine : str
+            Ensemble type ('NVE', 'NVT', 'NPT')
+        dt : float
+            Timestep in femtoseconds
+        initial_position : array_like
+            Initial atomic positions in Angstroms
+        log_file : Optional[str], optional
+            Log file path, by default "deepmd_jax.stdout"
+        **kwargs
+            Additional keyword arguments
+        """
         super().__init__(
             model_path,
             box,
@@ -88,18 +150,26 @@ class Simulation(_Simulation):
         if log_file is not None:
             # export all stdout to log_file
             self._stdout = sys.stdout
-            sys.stdout = open(log_file, "w", encoding="utf-8")
+            with open(log_file, "w", encoding="utf-8") as f:
+                sys.stdout = f
 
     def __del__(self):
+        """Restore stdout when object is deleted."""
         if self.log_file is not None:
             sys.stdout.close()
             sys.stdout = self._stdout
 
     def _initialize_run(self, steps):
-        """
-        Reset trajectory for each new run;
-        if the simulation has not been run before, include the initial state.
-        Initialize run variables.
+        """Initialize simulation run.
+        
+        This function resets trajectory for each new run and
+        initializes run variables. If the simulation has not
+        been run before, it includes the initial state.
+        
+        Parameters
+        ----------
+        steps : int
+            Total number of steps to run
         """
         print(f"# Running {steps} steps...")
         self._offset = self.step - int(self._is_initial_state)
@@ -109,10 +179,8 @@ class Simulation(_Simulation):
         self._print_report()
         self._is_initial_state = False
 
-    def run(self, steps, dump_list: List[TrajDump]):
-        """
-        Run the simulation for a number of steps.
-        """
+    def run(self, steps, dump_list: list[TrajDump]):
+        """Run the simulation for a number of steps."""
         self._initialize_run(steps)
         remaining_steps = steps
         while remaining_steps > 0:

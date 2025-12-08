@@ -1,14 +1,44 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
-from dpdispatcher import Machine, Resources, Submission, Task
+"""Deep Potential dispatcher module.
 
-from toolbox.utils import *
+This module provides classes for dispatching Deep Potential calculations
+to HPC systems using dpdispatcher.
+"""
+
+from dpdispatcher import Machine, Resources, Submission, Task
 
 
 class DPDispatcher:
+    """Dispatcher for running Deep Potential calculations.
+    
+    This class provides functionality to dispatch Deep Potential
+    calculations to HPC systems using dpdispatcher.
+    """
+    
     def __init__(self, work_dir=".") -> None:
+        """Initialize DPDispatcher.
+        
+        Parameters
+        ----------
+        work_dir : str, optional
+            Working directory for calculations, by default "."
+        """
         self.work_dir = work_dir
 
-    def _setup(self, machine_setup={}, resources_setup={}):
+    def _setup(self, machine_setup=None, resources_setup=None):
+        """Set up machine and resources configuration.
+        
+        Parameters
+        ----------
+        machine_setup : dict, optional
+            Machine configuration overrides, by default {}
+        resources_setup : dict, optional
+            Resources configuration overrides, by default {}
+        """
+        if resources_setup is None:
+            resources_setup = {}
+        if machine_setup is None:
+            machine_setup = {}
         _machine_setup = {
             "batch_type": "Slurm",
             "context_type": "LocalContext",
@@ -31,7 +61,26 @@ class DPDispatcher:
         self.machine = Machine(**_machine_setup)
         self.resources = Resources(**_resources_setup)
 
-    def run(self, dnames, machine_setup={}, resources_setup={}, task_setup={}):
+    def run(self, dnames, machine_setup=None, resources_setup=None, task_setup=None):
+        """Run calculations on specified directories.
+        
+        Parameters
+        ----------
+        dnames : list
+            List of directory names to run calculations in
+        machine_setup : dict, optional
+            Machine configuration overrides, by default {}
+        resources_setup : dict, optional
+            Resources configuration overrides, by default {}
+        task_setup : dict, optional
+            Task configuration overrides, by default {}
+        """
+        if task_setup is None:
+            task_setup = {}
+        if resources_setup is None:
+            resources_setup = {}
+        if machine_setup is None:
+            machine_setup = {}
         self._setup(machine_setup, resources_setup)
 
         task_list = []
@@ -49,6 +98,18 @@ class DPDispatcher:
 
     @staticmethod
     def _check_node(resources_setup):
+        """Check and adjust resources based on queue name.
+        
+        Parameters
+        ----------
+        resources_setup : dict
+            Resources configuration to check and modify
+            
+        Raises
+        ------
+        AttributeError
+            If queue name is unknown
+        """
         queue = resources_setup["queue_name"]
 
         if "c51" in queue:
@@ -62,7 +123,7 @@ class DPDispatcher:
             cpu_per_node = resources_setup.get("cpu_per_node", 64)
             resources_setup["cpu_per_node"] = cpu_per_node
         else:
-            raise AttributeError("Unknown queue: %s" % queue)
+            raise AttributeError(f"Unknown queue: {queue}")
 
 
 #     def collect(self, type_map, out_dir="deepmd"):
@@ -89,11 +150,39 @@ class DPDispatcher:
 
 
 class CP2KDPDispatcher(DPDispatcher):
+    """Dispatcher for running CP2K calculations with Deep Potential.
+    
+    This class extends DPDispatcher to provide specific functionality
+    for CP2K calculations with version-specific configurations.
+    """
+    
     def __init__(self, work_dir=".", v9: bool = False) -> None:
+        """Initialize CP2KDPDispatcher.
+        
+        Parameters
+        ----------
+        work_dir : str, optional
+            Working directory for calculations, by default "."
+        v9 : bool, optional
+            Whether to use CP2K v9 configuration, by default False
+        """
         super().__init__(work_dir)
         self.v9 = v9
 
-    def _setup(self, machine_setup={}, resources_setup={}):
+    def _setup(self, machine_setup=None, resources_setup=None):
+        """Set up CP2K-specific machine and resources configuration.
+        
+        Parameters
+        ----------
+        machine_setup : dict, optional
+            Machine configuration overrides, by default {}
+        resources_setup : dict, optional
+            Resources configuration overrides, by default {}
+        """
+        if resources_setup is None:
+            resources_setup = {}
+        if machine_setup is None:
+            machine_setup = {}
         if self.v9:
             _resources_setup = {
                 "custom_flags": ["#SBATCH -J cp2k"],
@@ -112,7 +201,26 @@ class CP2KDPDispatcher(DPDispatcher):
         _resources_setup.update(resources_setup)
         super()._setup(machine_setup, _resources_setup)
 
-    def run(self, dnames, machine_setup={}, resources_setup={}, task_setup={}):
+    def run(self, dnames, machine_setup=None, resources_setup=None, task_setup=None):
+        """Run CP2K calculations on specified directories.
+        
+        Parameters
+        ----------
+        dnames : list
+            List of directory names to run calculations in
+        machine_setup : dict, optional
+            Machine configuration overrides, by default {}
+        resources_setup : dict, optional
+            Resources configuration overrides, by default {}
+        task_setup : dict, optional
+            Task configuration overrides, by default {}
+        """
+        if task_setup is None:
+            task_setup = {}
+        if resources_setup is None:
+            resources_setup = {}
+        if machine_setup is None:
+            machine_setup = {}
         _task_setup = {
             "command": "mpiexec.hydra cp2k.popt input.inp",
             "forward_files": ["input.inp", "coord.xyz"],

@@ -1,6 +1,11 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
+"""CP2K input/output module.
+
+This module provides classes for generating CP2K input files and parsing
+CP2K output files, including energies, forces, and various properties.
+"""
+
 import copy
-import datetime
 import os
 import re
 
@@ -22,7 +27,7 @@ from .template import cp2k_default_input
 
 class Cp2kInput:
     """
-    Class for CP2K input file generation (on the basis of templates)
+    Class for CP2K input file generation (on the basis of templates).
 
     Attributes
     ----------
@@ -64,19 +69,26 @@ class Cp2kInput:
         # read user setup in config file
         try:
             update_d = CONFIGS["io"]["cp2k"]["input"]
-        except:
+        except KeyError:
             update_d = {}
         update_dict(kwargs, update_d)
         self.set_params(kwargs)
 
     def set_params(self, kwargs):
+        """Set parameters for CP2K input.
+
+        Parameters
+        ----------
+        kwargs : dict
+            Dictionary of parameters to set
+        """
         for kw, value in kwargs.items():
-            update_d = getattr(self, "set_%s" % kw)(value)
+            update_d = getattr(self, f"set_{kw}")(value)
             update_dict(self.input_dict, update_d)
 
-    def write(self, output_dir=".", fp_params={}, save_dict=False):
+    def write(self, output_dir=".", fp_params=None, save_dict=False):
         """
-        generate coord.xyz and input.inp for CP2K calculation at output_dir
+        Generate coord.xyz and input.inp for CP2K calculation at output_dir.
 
         Parameters
         ----------
@@ -85,20 +97,22 @@ class Cp2kInput:
         fp_params : dict
             dict for updated parameters
         """
+        if fp_params is None:
+            fp_params = {}
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
         cell = self.atoms.get_cell()
         cell_a = np.array2string(
-            cell[0], formatter={"float_kind": lambda x: "%.4f" % x}
+            cell[0], formatter={"float_kind": lambda x: f"{x:.4f}"}
         )
         cell_a = cell_a[1:-1]
         cell_b = np.array2string(
-            cell[1], formatter={"float_kind": lambda x: "%.4f" % x}
+            cell[1], formatter={"float_kind": lambda x: f"{x:.4f}"}
         )
         cell_b = cell_b[1:-1]
         cell_c = np.array2string(
-            cell[2], formatter={"float_kind": lambda x: "%.4f" % x}
+            cell[2], formatter={"float_kind": lambda x: f"{x:.4f}"}
         )
         cell_c = cell_c[1:-1]
 
@@ -143,10 +157,34 @@ class Cp2kInput:
             save_dict_json(self.input_dict, os.path.join(output_dir, "input.json"))
 
     def set_project(self, project_name: str):
+        """Set project name for CP2K calculation.
+
+        Parameters
+        ----------
+        project_name : str
+            Project name for CP2K calculation
+
+        Returns
+        -------
+        dict
+            Update dictionary for project name
+        """
         update_d = {"GLOBAL": {"PROJECT": project_name}}
         return update_d
 
     def set_pp_dir(self, pp_dir):
+        """Set pseudopotential directory.
+
+        Parameters
+        ----------
+        pp_dir : str
+            Directory containing basis sets and pseudopotentials
+
+        Returns
+        -------
+        dict
+            Update dictionary for pseudopotential directory
+        """
         pp_dir = os.path.abspath(pp_dir)
         update_d = {
             "FORCE_EVAL": {
@@ -171,6 +209,18 @@ class Cp2kInput:
         return update_d
 
     def set_wfn_restart(self, wfn_file):
+        """Set wavefunction restart file.
+
+        Parameters
+        ----------
+        wfn_file : str or None
+            Path to wavefunction restart file
+
+        Returns
+        -------
+        dict
+            Update dictionary for wavefunction restart file
+        """
         update_d = {}
         if wfn_file is not None:
             update_d = {
@@ -181,14 +231,50 @@ class Cp2kInput:
         return update_d
 
     def set_qm_charge(self, charge):
+        """Set quantum mechanical charge.
+
+        Parameters
+        ----------
+        charge : float
+            Total charge of the system
+
+        Returns
+        -------
+        dict
+            Update dictionary for charge
+        """
         update_d = {"FORCE_EVAL": {"DFT": {"CHARGE": charge}}}
         return update_d
 
     def set_multiplicity(self, multiplicity):
+        """Set spin multiplicity.
+
+        Parameters
+        ----------
+        multiplicity : int
+            Spin multiplicity of the system
+
+        Returns
+        -------
+        dict
+            Update dictionary for multiplicity
+        """
         update_d = {"FORCE_EVAL": {"DFT": {"MULTIPLICITY": multiplicity}}}
         return update_d
 
     def set_uks(self, flag):
+        """Set unrestricted Kohn-Sham calculation.
+
+        Parameters
+        ----------
+        flag : bool
+            Whether to use UKS calculation
+
+        Returns
+        -------
+        dict
+            Update dictionary for UKS
+        """
         if flag:
             update_d = {"FORCE_EVAL": {"DFT": {"UKS": ".TRUE."}}}
             return update_d
@@ -196,20 +282,55 @@ class Cp2kInput:
             return {}
 
     def set_cutoff(self, cutoff):
+        """Set plane wave cutoff.
+
+        Parameters
+        ----------
+        cutoff : float
+            Plane wave cutoff in Ry
+
+        Returns
+        -------
+        dict
+            Update dictionary for cutoff
+        """
         update_d = {"FORCE_EVAL": {"DFT": {"MGRID": {"CUTOFF": cutoff}}}}
         return update_d
 
     def set_rel_cutoff(self, rel_cutoff):
+        """Set relative cutoff.
+
+        Parameters
+        ----------
+        rel_cutoff : float
+            Relative cutoff for multi-grid
+
+        Returns
+        -------
+        dict
+            Update dictionary for relative cutoff
+        """
         update_d = {"FORCE_EVAL": {"DFT": {"MGRID": {"REL_CUTOFF": rel_cutoff}}}}
         return update_d
 
     def set_kp(self, kp_mp):
+        """Set k-points mesh.
+
+        Parameters
+        ----------
+        kp_mp : tuple
+            K-point mesh as (kx, ky, kz)
+
+        Returns
+        -------
+        dict
+            Update dictionary for k-points
+        """
         update_d = {
             "FORCE_EVAL": {
                 "DFT": {
                     "KPOINTS": {
-                        "SCHEME MONKHORST-PACK": "%d %d %d"
-                        % (kp_mp[0], kp_mp[1], kp_mp[2]),
+                        "SCHEME MONKHORST-PACK": f"{kp_mp[0]:d} {kp_mp[1]:d} {kp_mp[2]:d}",
                         "SYMMETRY": ".TRUE.",
                         "EPS_GEO": 1.0e-8,
                         "FULL_GRID": ".TRUE.",
@@ -221,14 +342,50 @@ class Cp2kInput:
         return update_d
 
     def set_max_scf(self, max_scf: int):
+        """Set maximum SCF iterations.
+
+        Parameters
+        ----------
+        max_scf : int
+            Maximum number of SCF iterations
+
+        Returns
+        -------
+        dict
+            Update dictionary for maximum SCF iterations
+        """
         update_d = {"FORCE_EVAL": {"DFT": {"SCF": {"MAX_SCF": max_scf}}}}
         return update_d
 
     def set_eps_scf(self, eps_scf: float):
+        """Set SCF convergence threshold.
+
+        Parameters
+        ----------
+        eps_scf : float
+            SCF convergence threshold
+
+        Returns
+        -------
+        dict
+            Update dictionary for SCF convergence threshold
+        """
         update_d = {"FORCE_EVAL": {"DFT": {"SCF": {"EPS_SCF": eps_scf}}}}
         return update_d
 
     def set_dip_cor(self, flag):
+        """Set surface dipole correction.
+
+        Parameters
+        ----------
+        flag : bool
+            Whether to apply surface dipole correction
+
+        Returns
+        -------
+        dict
+            Update dictionary for dipole correction
+        """
         if flag:
             update_d = {"FORCE_EVAL": {"DFT": {"SURFACE_DIPOLE_CORRECTION": ".TRUE."}}}
             return update_d
@@ -236,6 +393,18 @@ class Cp2kInput:
             return {}
 
     def set_eden(self, flag):
+        """Set electron density cube output.
+
+        Parameters
+        ----------
+        flag : bool
+            Whether to output electron density cube
+
+        Returns
+        -------
+        dict
+            Update dictionary for electron density output
+        """
         if flag:
             update_d = {
                 "FORCE_EVAL": {
@@ -251,6 +420,18 @@ class Cp2kInput:
             return {}
 
     def set_mo(self, flag):
+        """Set molecular orbital cube output.
+
+        Parameters
+        ----------
+        flag : bool
+            Whether to output molecular orbital cubes
+
+        Returns
+        -------
+        dict
+            Update dictionary for MO output
+        """
         if flag:
             update_d = {
                 "FORCE_EVAL": {"DFT": {"PRINT": {"MO_CUBES": {"ADD_LAST": "NUMERIC"}}}}
@@ -260,6 +441,18 @@ class Cp2kInput:
             return {}
 
     def set_pdos(self, flag):
+        """Set projected density of states output.
+
+        Parameters
+        ----------
+        flag : bool
+            Whether to output PDOS
+
+        Returns
+        -------
+        dict
+            Update dictionary for PDOS output
+        """
         if flag:
             update_d = {
                 "FORCE_EVAL": {
@@ -280,6 +473,18 @@ class Cp2kInput:
             return {}
 
     def set_hartree(self, flag):
+        """Set Hartree potential cube output.
+
+        Parameters
+        ----------
+        flag : bool
+            Whether to output Hartree potential cube
+
+        Returns
+        -------
+        dict
+            Update dictionary for Hartree potential output
+        """
         if flag:
             update_d = {
                 "FORCE_EVAL": {
@@ -295,6 +500,18 @@ class Cp2kInput:
             return {}
 
     def set_efield(self, flag):
+        """Set electric field cube output.
+
+        Parameters
+        ----------
+        flag : bool
+            Whether to output electric field cube
+
+        Returns
+        -------
+        dict
+            Update dictionary for electric field output
+        """
         if flag:
             update_d = {
                 "FORCE_EVAL": {
@@ -310,6 +527,18 @@ class Cp2kInput:
             return {}
 
     def set_totden(self, flag):
+        """Set total density cube output.
+
+        Parameters
+        ----------
+        flag : bool
+            Whether to output total density cube
+
+        Returns
+        -------
+        dict
+            Update dictionary for total density output
+        """
         if flag:
             update_d = {
                 "FORCE_EVAL": {
@@ -328,6 +557,18 @@ class Cp2kInput:
             return {}
 
     def set_extended_fft_lengths(self, flag):
+        """Set extended FFT lengths.
+
+        Parameters
+        ----------
+        flag : bool
+            Whether to use extended FFT lengths
+
+        Returns
+        -------
+        dict
+            Update dictionary for extended FFT lengths
+        """
         if flag:
             update_d = {"GLOBAL": {"EXTENDED_FFT_LENGTHS": ".TRUE."}}
             return update_d
@@ -335,7 +576,7 @@ class Cp2kInput:
             return {}
 
     def set_smear(self, flag):
-        if flag == False:
+        if not flag:
             update_d = {
                 "FORCE_EVAL": {
                     "DFT": {
@@ -369,6 +610,8 @@ class Cp2kInput:
 
     def set_kind(self, kind_dict: dict):
         """
+        Set atom kind parameters.
+
         Parameters
         ----------
         kind_dict : dict
@@ -386,7 +629,6 @@ class Cp2kInput:
                 }
             }
         """
-
         update_d = {"FORCE_EVAL": {"SUBSYS": {}}}
         update_dict(self.input_dict, update_d)
 
@@ -402,7 +644,7 @@ class Cp2kInput:
                         old_kind_list[ii] = tmp_dict
                         flag = True
                         break
-                if flag == False:
+                if not flag:
                     old_kind_list.append(tmp_dict)
         return {}
 
@@ -410,8 +652,9 @@ class Cp2kInput:
         if flag:
             update_d = {
                 "EXT_RESTART": {
-                    "RESTART_FILE_NAME": "%s-1.restart"
-                    % self.input_dict["GLOBAL"]["PROJECT"]
+                    "RESTART_FILE_NAME": "{}-1.restart".format(
+                        self.input_dict["GLOBAL"]["PROJECT"]
+                    )
                 }
             }
             return update_d
@@ -446,7 +689,7 @@ class Cp2kInput:
                 "DEEPMD"
             ].append(
                 {
-                    "ATOMS": "%s %s" % (atype, atype),
+                    "ATOMS": f"{atype} {atype}",
                     "POT_FILE_NAME": dp_model,
                     "ATOM_DEEPMD_TYPE": ii,
                 }
@@ -456,7 +699,7 @@ class Cp2kInput:
 class Cp2kOutput:
     def __init__(self, fname="output.out", ignore_warning=False) -> None:
         self.output_file = fname
-        with open(fname, "r", encoding="UTF-8") as f:
+        with open(fname, encoding="UTF-8") as f:
             self.content = f.readlines()
         self.string = "".join(self.content)
 
@@ -494,7 +737,7 @@ class Cp2kOutput:
             line = line.strip("\n")
             if scf_pattern.search(line) is not None:
                 scf_flag = True
-            if scf_flag == False:
+            if not scf_flag:
                 continue
             if search_pattern.search(line) is not None:
                 flag = True
@@ -553,7 +796,7 @@ class Cp2kOutput:
     @property
     def coord(self):
         """
-        get atomic coordinate from cp2k output
+        Get atomic coordinate from cp2k output.
 
         Return:
             coord numpy array (n_atom, 3)
@@ -578,7 +821,7 @@ class Cp2kOutput:
     @property
     def force(self):
         """
-        get atomic force from cp2k output
+        Get atomic force from cp2k output.
 
         Return:
             force numpy array (n_atom, 3)
@@ -604,9 +847,9 @@ class Cp2kOutput:
     def fermi(self):
         if self.uks:
             fermi = []
-            for l in self.content:
-                if re.search("Fermi Energy ", l):
-                    fermi.append(float(l.split()[-1]))
+            for line in self.content:
+                if re.search("Fermi Energy ", line):
+                    fermi.append(float(line.split()[-1]))
             assert (
                 len(fermi) == 2
             ), "There should be two Fermi energy in UKS calculation"
@@ -617,9 +860,9 @@ class Cp2kOutput:
                 out = re.findall(pattern, self.string)
                 return float(out[0].split(" ")[-1]) * AU_TO_EV
             except IndexError:
-                for l in self.content:
-                    if re.search("Fermi Energy ", l):
-                        return float(l.split()[-1])
+                for line in self.content:
+                    if re.search("Fermi Energy ", line):
+                        return float(line.split()[-1])
 
     @property
     def m_charge(self):
@@ -654,9 +897,10 @@ class Cp2kOutput:
 
     @property
     def surf_dipole_moment(self):
-        """
+        """Grep surface dipole moment.
+        
         Total dipole moment perpendicular to
-        the slab [electrons-Angstroem]:              -1.5878220042
+        the slab [electrons-Angstroem]:              -1.5878220042.
         """
         pattern = "Total dipole moment perpendicular to"
         _nf, data_lines = self.grep_texts_by_nlines(pattern, 2)
@@ -696,38 +940,35 @@ class Cp2kOutput:
 
     @property
     def multiplicity(self):
-        for l in self.content:
-            if "Multiplicity" in l:
+        for line in self.content:
+            if "Multiplicity" in line:
                 break
-        return int(l.split()[-1])
+        return int(line.split()[-1])
 
     @property
     def uks(self):
-        for l in self.content:
-            if re.search("Spin unrestricted", l):
-                return True
-        return False
+        return any(re.search("Spin unrestricted", line) for line in self.content)
 
     @property
     def charge(self):
-        for l in self.content:
-            if "Charge" in l:
+        for line in self.content:
+            if "Charge" in line:
                 break
-        return int(l.split()[-1])
-    
+        return int(line.split()[-1])
+
     @property
     def timing_dict(self):
         t_dict = {}
         flag = False
-        for l in self.content:
-            if "SUBROUTINE" in l:
+        for line in self.content:
+            if "SUBROUTINE" in line:
                 flag = True
                 continue
             if flag:
-                if "---" in l:
+                if "---" in line:
                     flag = False
                     break
-                data = l.split()
+                data = line.split()
                 if len(data) == 7:
                     # print(data)
                     t_dict[data[0]] = float(data[-2])
@@ -755,7 +996,7 @@ class MultiFrameCp2kOutput(Cp2kOutput):
     @property
     def force(self):
         """
-        get atomic force from cp2k output
+        Get atomic force from cp2k output.
 
         Return:
             force numpy array (n_atom, 3)
@@ -838,9 +1079,10 @@ class MultiFrameCp2kOutput(Cp2kOutput):
 
     @property
     def surf_dipole_moment(self):
-        """
+        """Grep surface dipole moment.
+        
         Total dipole moment perpendicular to
-        the slab [electrons-Angstroem]:              -1.5878220042
+        the slab [electrons-Angstroem]:              -1.5878220042.
         """
         pattern = "Total dipole moment perpendicular to"
         nframe, data_lines = self.grep_texts_by_nlines(pattern, 2)
@@ -970,9 +1212,7 @@ class Cp2kCube:
 
     @property
     def mesh(self):
-        """
-        mesh for cube data
-        """
+        """Mesh for cube data."""
         # generate mesh from self.cube_vectors
         x = np.arange(self.n_grid[0])
         y = np.arange(self.n_grid[1])
@@ -990,9 +1230,7 @@ class Cp2kCube:
 
     @property
     def dipole(self):
-        """
-        Dipole moment [e A]
-        """
+        """Dipole moment [e A]."""
         # cube_data: charge density [e / bohr^3]
         charge = self.cube_data * (self.cube_volume / AU_TO_ANG**3)
         charge = np.reshape(charge, [self.n_grid[0], self.n_grid[1], self.n_grid[2], 1])
@@ -1048,7 +1286,7 @@ class Cp2kHartreeCube(Cp2kCube):
             pass
         else:
             # (self.ave_grid, self.ave_cube_data, self.ave_cube_data_convolve)
-            output = super().get_ave_cube(axis, gaussian_sigma)
+            super().get_ave_cube(axis, gaussian_sigma)
             self.ave_cube_data_convolve *= AU_TO_EV
             self.ave_cube_data *= AU_TO_EV
         return (self.ave_grid, self.ave_cube_data, self.ave_cube_data_convolve)
@@ -1071,9 +1309,7 @@ class Cp2kHartreeCube(Cp2kCube):
 
     @property
     def dipole(self):
-        """
-        Dipole moment of cell [e A]
-        """
+        """Dipole moment of cell [e A]."""
         d = -self.potdrop * self.cross_area * EPSILON
         return d
 
@@ -1084,7 +1320,7 @@ class Cp2kHartreeCube(Cp2kCube):
 class Cp2kPDOS:
     def __init__(self, file_name: str) -> None:
         self.file_name = file_name
-        with open(file_name, "r", encoding="UTF-8") as f:
+        with open(file_name, encoding="UTF-8") as f:
             line = f.readline()
         # grep the word after "kind"
         self.element = line.split()[line.split().index("kind") + 1]
@@ -1098,9 +1334,7 @@ class Cp2kPDOS:
         self.pdos_data = None
 
     def get_dos(self, broadening: float = 0.01, energy_step: float = 0.01):
-        """
-        Ref: https://manual.cp2k.org/trunk/CP2K_INPUT/FORCE_EVAL/PROPERTIES/BANDSTRUCTURE/DOS.html
-        """
+        """Ref: https://manual.cp2k.org/trunk/CP2K_INPUT/FORCE_EVAL/PROPERTIES/BANDSTRUCTURE/DOS.html."""
         bin_edges = np.arange(
             self.energies[0], self.energies[-1] + energy_step, energy_step
         )
@@ -1109,9 +1343,7 @@ class Cp2kPDOS:
         return self.dos_data
 
     def get_pdos(self, broadening=0.01, energy_step=0.01, dos_type="total"):
-        """
-        Ref: https://manual.cp2k.org/trunk/CP2K_INPUT/FORCE_EVAL/PROPERTIES/BANDSTRUCTURE/DOS.html
-        """
+        """Ref: https://manual.cp2k.org/trunk/CP2K_INPUT/FORCE_EVAL/PROPERTIES/BANDSTRUCTURE/DOS.html."""
         bin_edges = np.arange(
             self.energies[0], self.energies[-1] + energy_step, energy_step
         )
@@ -1123,7 +1355,7 @@ class Cp2kPDOS:
 
     def get_raw_pdos(self, dos_type):
         try:
-            return getattr(self, "_get_raw_pdos_%s" % dos_type)()
+            return getattr(self, f"_get_raw_pdos_{dos_type}")()
         except AttributeError as e:
             raise NameError("PDOS type does not exist!") from e
 
@@ -1157,7 +1389,7 @@ class Cp2kPDOS:
         mask = (self.occupation > 1e-5) & (raw_dos > 1e-3)
         try:
             return self.energies[mask].max() - self.fermi
-        except:
+        except ValueError:
             print("Warning: No VBM is found!")
             return self.energies.min() - self.fermi
 
@@ -1167,7 +1399,7 @@ class Cp2kPDOS:
         mask = (self.occupation < 1e-5) & (raw_dos > 1e-3)
         try:
             return self.energies[mask].min() - self.fermi
-        except:
+        except ValueError:
             print("Warning: No CBM is found!")
             return self.energies.max() - self.fermi
 
@@ -1178,9 +1410,28 @@ smoothing func: Gaussian kernel
 
 
 def gaussian_kernel(bins, sigma):
+    """Generate Gaussian kernel for convolution.
+
+    Parameters
+    ----------
+    bins : array_like
+        Array of bin centers
+    sigma : float
+        Standard deviation of Gaussian
+
+    Returns
+    -------
+    np.ndarray
+        Gaussian kernel values
+
+    Raises
+    ------
+    AttributeError
+        If sigma is negative
+    """
     if sigma == 0:
         output = np.zeros_like(bins)
-        one_id = np.where(a == 0.0)[0][0]
+        one_id = np.where(bins == 0.0)[0][0]
         output[one_id] = 1
         return output
     elif sigma > 0:
@@ -1193,7 +1444,23 @@ def gaussian_kernel(bins, sigma):
 
 
 def gaussian_convolve(xs, ys, sigma):
-    nbins = len(xs) - 1
+    """Convolve data with Gaussian kernel.
+
+    Parameters
+    ----------
+    xs : array_like
+        X values
+    ys : array_like
+        Y values to convolve
+    sigma : float
+        Standard deviation of Gaussian
+
+    Returns
+    -------
+    np.ndarray
+        Convolved values
+    """
+    len(xs) - 1
 
     output = []
     for x in xs:
@@ -1207,6 +1474,18 @@ def gaussian_convolve(xs, ys, sigma):
 
 
 def generate_ids_list(ids):
+    """Generate compact list representation of IDs.
+
+    Parameters
+    ----------
+    ids : array_like
+        Array of integer IDs
+
+    Returns
+    -------
+    list
+        List of IDs with ranges compressed (e.g., [1, 2..5, 7])
+    """
     ids = np.sort(ids)
     diff = np.diff(ids)
     # ids_std = ""
@@ -1226,7 +1505,7 @@ def generate_ids_list(ids):
                 ids_list.append(start_id)
             elif end_id > start_id:
                 # ids_std += "%d..%d " % (start_id, end_id)
-                ids_list.append("%d..%d" % (start_id, end_id))
+                ids_list.append(f"{start_id:d}..{end_id:d}")
             else:
                 raise ValueError("end_id is smaller than start_id")
             update_flag = True
@@ -1236,7 +1515,7 @@ def generate_ids_list(ids):
         ids_list.append(ids[-1])
     else:
         # ids_std += "%d..%d " % (start_id, ids[-1])
-        ids_list.append("%d..%d" % (start_id, ids[-1]))
+        ids_list.append(f"{start_id:d}..{ids[-1]:d}")
 
     # return ids_std.strip()
     return ids_list
@@ -1244,7 +1523,7 @@ def generate_ids_list(ids):
 
 def read_wannier_spread(fname: str = "wannier_spread.out"):
     """
-    Read wannier spread file generated by cp2k
+    Read wannier spread file generated by cp2k.
 
     Parameters
     ----------
@@ -1258,7 +1537,7 @@ def read_wannier_spread(fname: str = "wannier_spread.out"):
     """
     # skip 1, 2, and the last lines
     # save the others as array
-    with open(fname, "r", encoding="UTF-8") as f:
+    with open(fname, encoding="UTF-8") as f:
         lines = f.readlines()[2:-1]
 
     wannier = []

@@ -1,5 +1,9 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
-from typing import Dict, Optional
+"""D3 dispersion correction calculator.
+
+This module provides a calculator for Grimme's D3 dispersion
+corrections using the tad_dftd3 library.
+"""
 
 import tad_dftd3 as d3
 import torch
@@ -9,7 +13,21 @@ torch.set_default_dtype(torch.float64)
 
 
 class D3Calculator:
-    def __init__(self, params: Optional[Dict] = None) -> None:
+    """Calculator for D3 dispersion corrections.
+    
+    This calculator computes Grimme's D3 dispersion corrections
+    using the tad_dftd3 library.
+    """
+    
+    def __init__(self, params: dict | None = None) -> None:
+        """Initialize D3Calculator.
+        
+        Parameters
+        ----------
+        params : Optional[Dict], optional
+            D3 parameters dictionary, by default None.
+            If None, uses r²SCAN-D3(BJ) parameters.
+        """
         self.ref = d3.reference.Reference()
         if params is None:
             # r²SCAN-D3(BJ)
@@ -22,6 +40,18 @@ class D3Calculator:
             self.params = params
 
     def run(self, atoms: Atoms):
+        """Calculate D3 dispersion energy.
+        
+        Parameters
+        ----------
+        atoms : ase.Atoms
+            ASE Atoms object with atomic numbers and positions
+            
+        Returns
+        -------
+        torch.Tensor
+            D3 dispersion energy
+        """
         # nframes * natoms
         numbers = atoms.get_atomic_numbers().reshape(-1, len(atoms))
         numbers = torch.tensor(numbers, dtype=torch.int64)

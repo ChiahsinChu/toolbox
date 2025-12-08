@@ -1,7 +1,5 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
-"""
-Find a cutoff value for converged total energy
-"""
+"""Find a cutoff value for converged total energy."""
 
 import os
 
@@ -28,11 +26,10 @@ for cutoff in np.arange(400, 1300, 100):
     Cp2kCalculator(work_dir=dname).run(stdout="output")
     # total energy in eV
     e = Cp2kOutput(os.path.join(dname, "output")).energy[0]
-    if len(energy) > 0:
-        if np.abs(e - energy[-1]) <= E_CONVERGENCE:
-            energy.append(e)
-            _cutoff.append(cutoff)
-            break
+    if len(energy) > 0 and np.abs(e - energy[-1]) <= E_CONVERGENCE:
+        energy.append(e)
+        _cutoff.append(cutoff)
+        break
     energy.append(e)
     _cutoff.append(cutoff)
 

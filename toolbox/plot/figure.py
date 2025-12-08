@@ -1,13 +1,43 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
-from ..utils import *
-from .core import *
+import matplotlib.pyplot as plt
+import numpy as np
+
+from .core import ax_setlabel
 
 
 class Figure:
+    """Base class for matplotlib figure creation.
+    
+    This class provides a framework for creating
+    matplotlib figures with consistent styling and layout.
+    """
+    
     def __init__(self, **kwargs) -> None:
+        """Initialize Figure.
+        
+        Parameters
+        ----------
+        **kwargs
+            Additional keyword arguments passed to plt.subplots
+        """
         self.fig, self.ax = plt.subplots(**kwargs)
 
     def setup(self, x, y, xlim=None, ylim=None, **kwargs):
+        """Set up basic plot with data.
+        
+        Parameters
+        ----------
+        x : array_like
+            X data values
+        y : array_like
+            Y data values
+        xlim : tuple, optional
+            X-axis limits as (min, max), by default None
+        ylim : tuple, optional
+            Y-axis limits as (min, max), by default None
+        **kwargs
+            Additional keyword arguments passed to ax.plot
+        """
         self.ax.plot(x, y, **kwargs)
         if xlim is None:
             xlim = (np.min(x), np.max(x))
@@ -22,17 +52,44 @@ class Figure:
         self.ax.set_ylim(ylim)
 
     def set_labels(self, kw, xlabel=None, ylabel=None, **kwargs):
+        """Set axis labels from keyword dictionary.
+        
+        Parameters
+        ----------
+        kw : str
+            Keyword to look up in label dictionary
+        xlabel : str, optional
+            X-axis label, by default None
+        ylabel : str, optional
+            Y-axis label, by default None
+        **kwargs
+            Additional keyword arguments passed to ax_setlabel
+        """
         try:
             labels = label_dict.get(kw)
             xlabel = labels[0]
             ylabel = labels[1]
-        except:
+        except KeyError:
             assert (xlabel is not None) and (ylabel is not None)
-        ax_setlabel(self.ax, xlabel, ylabel, **kwargs)
+            ax_setlabel(self.ax, xlabel, ylabel, **kwargs)
 
 
 class FullCellFigure(Figure):
+    """Figure class for full cell visualization.
+    
+    This class extends Figure to provide specific
+    functionality for visualizing systems with full periodic
+    boundary conditions.
+    """
+    
     def __init__(self, **kwargs) -> None:
+        """Initialize FullCellFigure.
+        
+        Parameters
+        ----------
+        **kwargs
+            Additional keyword arguments passed to parent class
+        """
         super().__init__(**kwargs)
 
     def setup(self, x, y, xlim=None, ylim=None, z_surfs=None, **kwargs):
@@ -61,7 +118,21 @@ class FullCellFigure(Figure):
 
 
 class HalfCellFigure(Figure):
+    """Figure class for half cell visualization.
+    
+    This class extends Figure to provide specific
+    functionality for visualizing systems with half periodic
+    boundary conditions (slab geometry).
+    """
+    
     def __init__(self, **kwargs) -> None:
+        """Initialize HalfCellFigure.
+        
+        Parameters
+        ----------
+        **kwargs
+            Additional keyword arguments passed to parent class
+        """
         super().__init__(**kwargs)
 
     def setup(self, x, y, xlim=None, ylim=None, z_surf=None, **kwargs):
@@ -83,5 +154,5 @@ label_dict = {
     "hartree": [r"z [Å]", r"$V_H$ [eV]"],
     "rho": [r"z [Å]", r"$\rho$"],
     "rho_pol": [r"z [Å]", r"$\rho_{pol}$"],
-    "polarization": [r"z [Å]", r"P [eA$^{-2}$]"],
+    "polarization": [r"z [Å]", r"P [eA$^{-2}$"],
 }

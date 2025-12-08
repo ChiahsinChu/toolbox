@@ -1,17 +1,17 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
+import contextlib
 import glob
 import re
 import sys
-from typing import List, Union
 
 from doi2bib.crossref import get_bib_from_doi
 from pybtex.database import BibliographyData, parse_file, parse_string
 from tqdm import tqdm
 
 
-def extract_citation_keys(fnames: List[str]):
+def extract_citation_keys(fnames: list[str]):
     """
-    Grep all citation keys used in the tex file
+    Grep all citation keys used in the tex file.
 
     Parameters
     ----------
@@ -20,7 +20,7 @@ def extract_citation_keys(fnames: List[str]):
     """
     citation_keys = set()
     for fname in fnames:
-        with open(fname, "r") as file:
+        with open(fname) as file:
             tex_content = file.read()
         _citation_keys = set(re.findall(r"\\cite{([^}]+)}", tex_content))
         _citation_keys = {
@@ -32,12 +32,12 @@ def extract_citation_keys(fnames: List[str]):
 
 def export(
     bib_in_file: str,
-    tex_files: Union[List[str], str] = None,
+    tex_files: list[str] | str = None,
     bib_out_file: str = "export-ref.bib",
     online: bool = True,
 ):
     """
-    Export a subset of the bib file that is used in the tex file
+    Export a subset of the bib file that is used in the tex file.
 
     Parameters
     ----------
@@ -70,17 +70,15 @@ def export(
                     for tmp_kw in obj.entries:
                         print(tmp_kw)
                     new_bib_data.entries[kw] = obj.entries[tmp_kw]
-                except:
+                except KeyError:
                     new_bib_data.entries[kw] = bib_data.entries[kw]
                 new_bib_data.entries[kw].fields["title"] = bib_data.entries[kw].fields[
                     "title"
                 ]
-                try:
+                with contextlib.suppress(KeyError):
                     new_bib_data.entries[kw].fields["journal"] = bib_data.entries[
                         kw
                     ].fields["journal"]
-                except KeyError:
-                    pass
             else:
                 new_bib_data.entries[kw] = bib_data.entries[kw]
 

@@ -1,7 +1,5 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
-"""
-L-J parameters from https://pubs.acs.org/doi/full/10.1021/ct500918t
-"""
+"""L-J parameters from https://pubs.acs.org/doi/full/10.1021/ct500918t."""
 
 from toolbox.utils.utils import save_dict
 

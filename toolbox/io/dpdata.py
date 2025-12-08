@@ -1,7 +1,12 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
+"""DPData utility module.
+
+This module provides utility functions for working with DPData format,
+including setting energies, forces, and updating atom types.
+"""
+
 import glob
 import os
-from typing import List
 
 import numpy as np
 from ase import Atoms
@@ -9,19 +14,20 @@ from ase.calculators.singlepoint import SinglePointCalculator
 
 
 def set_energy_and_forces(atoms: Atoms, energy: float, forces: np.ndarray):
-    """
-    Set energy and forces to atoms object.
-    Make atoms.get_potential_energy() and atoms.get_forces() return the given energy and forces.
-
+    """Set energy and forces to atoms object.
+    
+    This function sets the energy and forces on an ASE Atoms object
+    to make atoms.get_potential_energy() and atoms.get_forces()
+    return the given energy and forces.
+    
     Parameters
     ----------
     atoms : ase.Atoms
-        The atoms object.
+        The atoms object to modify
     energy : float
-        The energy.
+        The energy value to set
     forces : np.ndarray
-        The forces.
-
+        The forces array to set
     """
     calc = SinglePointCalculator(atoms)
     atoms.set_calculator(calc)
@@ -29,7 +35,19 @@ def set_energy_and_forces(atoms: Atoms, energy: float, forces: np.ndarray):
     atoms.calc.results["forces"] = forces
 
 
-def update_atype(dname: str, type_map: List[str]):
+def update_atype(dname: str, type_map: list[str]):
+    """Update atom types in multiple directories.
+    
+    This function updates atom type files in all subdirectories
+    to match a specified type mapping.
+    
+    Parameters
+    ----------
+    dname : str
+        Directory name to search for type files
+    type_map : List[str]
+        List of element symbols in desired order
+    """
     fnames = glob.glob(os.path.join(dname, "**/type.raw"), recursive=True)
     fnames.sort()
     for fname in fnames:

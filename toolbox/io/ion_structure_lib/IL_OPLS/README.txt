@@ -3,7 +3,7 @@ This directory includes all the PDB files for the individual ions.
 [ACE]   --  Acetate
 [AlCl4] --  Tetrafluoroaluminate
 [BF4]   --  Tetrafluoroborate
-[BMIM]  --  1-Butyl-3-methylimidazolium 
+[BMIM]  --  1-Butyl-3-methylimidazolium
 [BNZ]   --  Benzoate
 [Br]    --  Bromide
 [Cl]    --  Chloride
@@ -19,6 +19,5 @@ This directory includes all the PDB files for the individual ions.
 [PF6]   --  Hexafluorophosphate
 [PROP]  --  Propionate
 [SCN]   --  Thiocyanate
-[TCM]   --  Tricyanomethanide 
+[TCM]   --  Tricyanomethanide
 [TFO]   --  Trifluoromethanesulfonate
-

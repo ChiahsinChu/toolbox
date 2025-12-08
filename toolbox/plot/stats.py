@@ -1,21 +1,42 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
+import matplotlib.pyplot as plt
+import numpy as np
 from scipy import stats
 
-from ..utils import *
-from .core import *
+# from .core import ax_setlabel
 
 
 class FDMTest:
-    """
-    finite difference method test for derivative
+    """Finite difference method test for derivative.
+    
+    This class implements finite difference methods
+    to test numerical derivatives against analytical solutions.
     """
 
     def __init__(self, **kwargs) -> None:
+        """Initialize FDMTest.
+        
+        Parameters
+        ----------
+        **kwargs
+            Additional keyword arguments passed to plt.subplots
+        """
         self.fig, self.axs = plt.subplots(
             nrows=2, figsize=[4, 6], sharex="all", **kwargs
         )
 
     def setup(self, x, y, dydx):
+        """Set up finite difference test.
+        
+        Parameters
+        ----------
+        x : array_like
+            X values
+        y : array_like
+            Y values
+        dydx : array_like
+            Analytical derivative values
+        """
         self.stats_dict = {}
         ax = self.axs[0]
         ax.scatter(x, dydx, color="blue", label="original data")

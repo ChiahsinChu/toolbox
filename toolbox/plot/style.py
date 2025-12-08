@@ -1,6 +1,11 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
-"""
-References:
+"""Matplotlib style module.
+
+This module provides functionality for using custom matplotlib styles
+and color maps for scientific plotting.
+
+References
+----------
 - https://matplotlib.org/stable/tutorials/introductory/customizing.html
 - https://matplotlib.org/stable/users/prev_whats_new/dflt_style_changes.html
 - https://matplotlib.org/stable/gallery/style_sheets/style_sheets_reference.html
@@ -15,14 +20,26 @@ MODULE_DIR = Path(__file__).resolve().parent
 
 
 def use_style(style_name):
+    """Use custom matplotlib style.
+    
+    Parameters
+    ----------
+    style_name : str
+        Name of the style to use
+        
+    Notes
+    -----
+    If the specified style is not found, falls back to fivethirtyeight
+    style and prints a warning.
+    """
     plt.style.use("fivethirtyeight")
-    fname = str(MODULE_DIR / ("mplstyle/%s.mplstyle" % style_name))
+    fname = str(MODULE_DIR / (f"mplstyle/{style_name}.mplstyle"))
     # print(fname)
     try:
         plt.style.use(fname)
-    except:
+    except OSError:
         print(
-            "Warning: no style %s is found. Use matplotlib default style." % style_name
+            f"Warning: no style {style_name} is found. Use matplotlib default style."
         )
     """
     Set colors:

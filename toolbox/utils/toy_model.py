@@ -1,37 +1,49 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
-from typing import Optional
 
 from scipy import constants
 
 
 class ParallelPlateCapacitor:
-    """
-    Parallel plate capacitor
-
+    """Class for parallel plate capacitor calculations.
+    
+    This class models a parallel plate capacitor system
+    with configurable permittivity, plate distance, and capacitance.
+    
     Parameters
     ----------
     epsilon_r : float
         Relative permittivity
     d : float
-        Distance between plates [angstrom]
+        Distance between plates in Angstroms
     capacitance : float
-        Capacitance [muF/cm^2]
-
+        Capacitance in μF/cm²
+        
     Examples
     --------
-    obj = ParallelPlateCapacitor(epsilon_r=10.0, d=4.0)
-    print(obj)
-    obj = ParallelPlateCapacitor(capacitance=20.0, d=4.0)
-    print(obj)
+    >>> obj = ParallelPlateCapacitor(epsilon_r=10.0, d=4.0)
+    >>> print(obj)
+    >>> obj = ParallelPlateCapacitor(capacitance=20.0, d=4.0)
+    >>> print(obj)
     """
 
     def __init__(
         self,
-        epsilon_r: Optional[float] = None,
-        d: Optional[float] = None,
-        capacitance: Optional[float] = None,
+        epsilon_r: float | None = None,
+        d: float | None = None,
+        capacitance: float | None = None,
     ):
-        # conversion factor from F/m^2 to muF/cm^2
+        """Initialize ParallelPlateCapacitor.
+        
+        Parameters
+        ----------
+        epsilon_r : Optional[float], optional
+            Relative permittivity, by default None
+        d : Optional[float], optional
+            Distance between plates in Angstroms, by default None
+        capacitance : Optional[float], optional
+            Capacitance in μF/cm², by default None
+        """
+        # conversion factor from F/m² to μF/cm²
         self._coeff = constants.centi**2 / constants.micro
 
         if epsilon_r is not None:
@@ -46,6 +58,7 @@ class ParallelPlateCapacitor:
 
     @property
     def capacitance(self):
+        """Get capacitance in μF/cm²."""
         try:
             return self._capacitance
         except AttributeError:
@@ -53,6 +66,7 @@ class ParallelPlateCapacitor:
 
     @property
     def epsilon_r(self):
+        """Get relative permittivity."""
         try:
             return self._epsilon_r
         except AttributeError:
@@ -60,6 +74,7 @@ class ParallelPlateCapacitor:
 
     @property
     def d_angstrom(self):
+        """Get plate distance in Angstroms."""
         return self._d / constants.angstrom
 
     def __repr__(self):

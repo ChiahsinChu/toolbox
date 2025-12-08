@@ -6,12 +6,38 @@ from sklearn import metrics
 
 
 def ax_setlabel(ax, xlabel, ylabel, **kwargs):
-    # set axis label
+    """Set axis labels for matplotlib axes.
+    
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Matplotlib axes object
+    xlabel : str
+        X-axis label
+    ylabel : str
+        Y-axis label
+    **kwargs
+        Additional keyword arguments passed to set_xlabel/set_ylabel
+    """
     ax.set_xlabel(xlabel, **kwargs)
     ax.set_ylabel(ylabel, **kwargs)
 
 
 def ax_rmse(ax, x, y):
+    """Create RMSE scatter plot with reference line.
+    
+    This function creates a scatter plot of data points
+    with a reference line (y=x) for visual comparison.
+    
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Matplotlib axes object
+    x : array_like
+        X values
+    y : array_like
+        Y values
+    """
     # scatter
     ax.scatter(x, y, color="steelblue", alpha=0.2)
     # ref line
@@ -33,9 +59,29 @@ def plot_lcurve(fname, col, xlabel=None, ylabel=None, **kwargs):
 
 
 def plot_rmse(x, y, xlabel, ylabel, **kwargs):
-    """
-    plot scatter/ref line
-    return rmse
+    """Plot RMSE scatter plot with reference line.
+    
+    This function creates a scatter plot of data points
+    with a reference line and calculates RMSE.
+    
+    Parameters
+    ----------
+    x : array_like
+        X values
+    y : array_like
+        Y values
+    xlabel : str
+        X-axis label
+    ylabel : str
+        Y-axis label
+    **kwargs
+        Additional keyword arguments passed to plotting functions
+        
+    Returns
+    -------
+    tuple
+        Tuple of (fig, ax, rmse) containing matplotlib figure,
+        axes object, and calculated RMSE
     """
     x = np.array(x)
     y = np.array(y)
@@ -50,9 +96,28 @@ def plot_rmse(x, y, xlabel, ylabel, **kwargs):
 
 
 def plot_bin_stats(x, y, xlabel, ylabel, bins=None):
-    """
-    plot scatter/ref line
-    return rmse
+    """Plot binned statistics with confidence intervals.
+    
+    This function creates a plot showing mean, standard deviation,
+    and min/max ranges for binned data.
+    
+    Parameters
+    ----------
+    x : array_like
+        X values
+    y : array_like
+        Y values
+    xlabel : str
+        X-axis label
+    ylabel : str
+        Y-axis label
+    bins : int, optional
+        Number of bins, by default len(x)//10
+        
+    Returns
+    -------
+    tuple
+        Tuple of (fig, ax) containing matplotlib figure and axes
     """
     x = np.array(x).flatten()
     y = np.array(y).flatten()
@@ -67,6 +132,24 @@ def plot_bin_stats(x, y, xlabel, ylabel, bins=None):
 
 
 def ax_bin_stats(ax, x, y, bins):
+    """Create binned statistics plot on given axes.
+    
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Matplotlib axes object
+    x : array_like
+        X values
+    y : array_like
+        Y values
+    bins : int
+        Number of bins
+        
+    Returns
+    -------
+    dict
+        Dictionary containing binned statistics data
+    """
     # ref line (y = 0)
     ax.axhline(y=0, color="gray")
     # mean
@@ -108,8 +191,30 @@ def ax_bin_stats(ax, x, y, bins):
 
 
 def plot_colormap_lines(xs, ys, legends, xlabel, ylabel, colormap="GnBu"):
-    """
-    TBC
+    """Plot multiple lines with colormap.
+    
+    This function creates a plot with multiple lines colored
+    according to a colormap.
+    
+    Parameters
+    ----------
+    xs : list
+        List of x data arrays
+    ys : list
+        List of y data arrays
+    legends : list
+        List of legend labels
+    xlabel : str
+        X-axis label
+    ylabel : str
+        Y-axis label
+    colormap : str, optional
+        Matplotlib colormap name, by default "GnBu"
+        
+    Returns
+    -------
+    tuple
+        Tuple of (fig, ax) containing matplotlib figure and axes
     """
     fig, ax = plt.subplots(figsize=[6, 4], dpi=200)
     ax_colormap_lines(ax, xs, ys, legends, colormap)
@@ -121,11 +226,37 @@ def plot_colormap_lines(xs, ys, legends, xlabel, ylabel, colormap="GnBu"):
 def ax_colormap_lines(
     ax, xs, ys, labels, scale=(0.0, 1.0), colormap="GnBu", fmt="%f", **kwargs
 ):
+    """Plot multiple colored lines on axes.
+    
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Matplotlib axes object
+    xs : list
+        List of x data arrays
+    ys : list
+        List of y data arrays
+    labels : list
+        List of legend labels
+    scale : tuple, optional
+        Scale range for normalization, by default (0.0, 1.0)
+    colormap : str, optional
+        Matplotlib colormap name, by default "GnBu"
+    fmt : str, optional
+        Format string for legend labels, by default "%f"
+    **kwargs
+        Additional keyword arguments passed to ax.plot
+        
+    Returns
+    -------
+    None
+        Function modifies the axes object in place
+    """
     labels = np.array(labels)
     # normalization
     labels = (labels - labels.min()) / (labels.max() - labels.min())
     cm_scales = (labels - scale[0]) / (scale[1] - scale[0])
-    for x, y, label, cm_scale in zip(xs, ys, labels, cm_scales):
+    for x, y, label, cm_scale in zip(xs, ys, labels, cm_scales, strict=False):
         ax.plot(
             x, y, color=plt.get_cmap(colormap)(cm_scale), label=fmt % label, **kwargs
         )

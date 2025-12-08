@@ -1,4 +1,10 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
+"""CP2K quantum chemistry calculator interface.
+
+This module provides a calculator interface for running CP2K quantum
+chemistry calculations with proper error handling and output checking.
+"""
+
 import logging
 import os
 import sys
@@ -8,7 +14,20 @@ from .bash import BashCalculator
 
 
 class Cp2kCalculator(BashCalculator):
+    """A calculator for running CP2K quantum chemistry calculations.
+
+    This class extends BashCalculator to provide specific functionality for
+    CP2K calculations, including error handling and output checking.
+    """
+
     def __init__(self, work_dir) -> None:
+        """Initialize the Cp2kCalculator.
+
+        Parameters
+        ----------
+        work_dir : str
+            The working directory where CP2K calculations will be executed
+        """
         super().__init__(work_dir)
 
     def run(
@@ -18,18 +37,48 @@ class Cp2kCalculator(BashCalculator):
         stdout="output.out",
         stderr="cp2k.stderr",
         mpi_command: str = "mpiexec.hydra",
-        ignore_finished_tag=False,
-        ignore_err=True,
+        ignore_finished_tag: bool = False,
+        ignore_err: bool = True,
     ):
+        """Run a CP2K calculation.
+
+        Parameters
+        ----------
+        command : str, optional
+            CP2K executable command, by default "cp2k.popt"
+        stdin : str, optional
+            Input file name, by default "input.inp"
+        stdout : str, optional
+            Standard output file name, by default "output.out"
+        stderr : str, optional
+            Standard error file name, by default "cp2k.stderr"
+        mpi_command : str, optional
+            MPI command to use, by default "mpiexec.hydra"
+        ignore_finished_tag : bool, optional
+            Whether to ignore existing finished tag, by default False
+        ignore_err : bool, optional
+            Whether to ignore calculation errors, by default True
+        """
         self.ignore_err = ignore_err
         super().run(command, stdin, stdout, stderr, mpi_command, ignore_finished_tag)
 
     def _make_finished_tag(self, stdout):
+        """Create a finished tag after successful CP2K calculation.
+
+        Parameters
+        ----------
+        stdout : str
+            Name of the CP2K output file to check for completion
+
+        Raises
+        ------
+        SystemExit
+            If CP2K calculation did not finish and ignore_err is False
+        """
         try:
-            cp2k_out = Cp2kOutput(stdout)
-            with open(os.path.join("finished_tag"), "w") as f:
-                pass
-        except:
+            Cp2kOutput(stdout)
+            open(os.path.join("finished_tag"), "w").close()
+        except Exception:
             warning_msg = "CP2K calculation does not finish!"
             if self.ignore_err:
                 logging.warning(warning_msg)

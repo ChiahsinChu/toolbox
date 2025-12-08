@@ -1,4 +1,16 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
+"""Coulomb interaction calculators for molecular simulations.
+
+This module provides calculators for:
+- Coulomb cutoff interactions
+- Ewald summation methods
+- Particle Mesh Ewald (PME) calculations
+- D3 dispersion corrections
+
+These calculators are used for computing electrostatic interactions
+in molecular dynamics simulations.
+"""
+
 import numpy as np
 from MDAnalysis.lib.distances import distance_array, minimize_vectors
 from scipy import constants, special
@@ -18,7 +30,7 @@ try:
 except ImportError:
     import warnings
 
-    warnings.warn("torch not found, DMFFPMECalculator cannot be used.")
+    warnings.warn("torch not found, DMFFPMECalculator cannot be used.", stacklevel=2)
 try:
     from dp_dmff.dmff.constants import ENERGY_COEFF
     from dp_dmff.dmff.pme import energy_pme, setup_ewald_parameters
@@ -27,24 +39,53 @@ try:
 except ImportError:
     import warnings
 
-    warnings.warn("dp_dmff not found, DMFFPMECalculator cannot be used.")
+    warnings.warn("dp_dmff not found, DMFFPMECalculator cannot be used.", stacklevel=2)
 
 
 def coul(qi, qj, rij):
-    """
-    qi/qj: e
-    rij: A
-    return eV
+    """Calculate Coulomb energy between two point charges.
+    
+    Parameters
+    ----------
+    qi : float
+        First charge in elementary charge units (e)
+    qj : float
+        Second charge in elementary charge units (e)
+    rij : float
+        Distance between charges in Angstroms (A)
+        
+    Returns
+    -------
+    float
+        Coulomb energy in electron volts (eV)
     """
     e = qqrd2e * qi * qj / rij
     return e
 
 
 def real_coul(qi, qj, xi, xj, gewald, force=False):
-    """
-    qi/qj: e
-    rij: A
-    return eV
+    """Calculate real-space Coulomb energy with Ewald summation.
+    
+    Parameters
+    ----------
+    qi : float
+        First charge in elementary charge units (e)
+    qj : float
+        Second charge in elementary charge units (e)
+    xi : array_like
+        Position of first charge
+    xj : array_like
+        Position of second charge
+    gewald : float
+        Ewald screening parameter
+    force : bool, optional
+        Whether to calculate forces, by default False
+        
+    Returns
+    -------
+    float or tuple
+        If force=False, returns Coulomb energy in eV
+        If force=True, returns tuple of (energy, force)
     """
     rij = np.linalg.norm(xi - xj)
     prefactor = qqrd2e * qi * qj / rij
@@ -64,10 +105,36 @@ def real_coul(qi, qj, xi, xj, gewald, force=False):
 
 
 class CoulCutCalculator:
+    """Calculator for Coulomb interactions with cutoff.
+    
+    This calculator computes Coulomb interactions between atoms
+    using a simple cutoff scheme.
+    """
+    
     def __init__(self, cutoff=5.0) -> None:
+        """Initialize CoulCutCalculator.
+        
+        Parameters
+        ----------
+        cutoff : float, optional
+            Cutoff distance in Angstroms, by default 5.0
+        """
         self.cutoff = cutoff
 
     def calculate(self, atoms):
+        """Calculate Coulomb energy and forces.
+        
+        Parameters
+        ----------
+        atoms : ase.Atoms
+            ASE Atoms object with positions and charges
+            
+        Returns
+        -------
+        tuple
+            Tuple of (energy, forces) where energy is in eV
+            and forces is an array in eV/A
+        """
         cellpar = atoms.cell.cellpar()
         coords = atoms.get_positions()
         charges = atoms.get_initial_charges()
@@ -90,11 +157,39 @@ class CoulCutCalculator:
 
 
 class CoulLongCalculator:
+    """Calculator for long-range Coulomb interactions with Ewald summation.
+    
+    This calculator computes Coulomb interactions using Ewald summation
+    with complementary error function screening.
+    """
+    
     def __init__(self, gewald, cutoff=5.0) -> None:
+        """Initialize CoulLongCalculator.
+        
+        Parameters
+        ----------
+        gewald : float
+            Ewald screening parameter
+        cutoff : float, optional
+            Real-space cutoff distance in Angstroms, by default 5.0
+        """
         self.cutoff = cutoff
         self.gewald = gewald
 
     def calculate(self, atoms):
+        """Calculate Coulomb energy and forces with Ewald summation.
+        
+        Parameters
+        ----------
+        atoms : ase.Atoms
+            ASE Atoms object with positions and charges
+            
+        Returns
+        -------
+        tuple
+            Tuple of (energy, forces) where energy is in eV
+            and forces is an array in eV/A
+        """
         cellpar = atoms.cell.cellpar()
         coords = atoms.get_positions()
         charges = atoms.get_initial_charges()
@@ -122,10 +217,37 @@ class CoulLongCalculator:
 
 
 class DMFFPMECalculator:
+    """Calculator for Coulomb interactions using Particle Mesh Ewald (PME).
+    
+    This calculator uses the DMFF library to compute Coulomb interactions
+    with PME for efficient long-range electrostatics.
+    """
+    
     def __init__(self, cutoff=6.0) -> None:
+        """Initialize DMFFPMECalculator.
+        
+        Parameters
+        ----------
+        cutoff : float, optional
+            Real-space cutoff distance in Angstroms, by default 6.0
+        """
         self.cutoff = cutoff
 
     def calculate(self, atoms, ethresh=1e-6) -> float:
+        """Calculate Coulomb energy using PME.
+        
+        Parameters
+        ----------
+        atoms : ase.Atoms
+            ASE Atoms object with positions and charges
+        ethresh : float, optional
+            Ewald threshold, by default 1e-6
+            
+        Returns
+        -------
+        float
+            Coulomb energy in eV/particle
+        """
         positions = atoms.get_positions()
         box = atoms.get_cell()
         charges = atoms.get_initial_charges()
@@ -181,6 +303,21 @@ class DMFFPMECalculator:
         return (energy * ENERGY_COEFF).item()
 
     def setup_ewald(self, box, ethresh):
+        """Set up Ewald parameters for PME calculation.
+        
+        Parameters
+        ----------
+        box : array_like
+            Simulation box vectors
+        ethresh : float
+            Ewald threshold
+            
+        Returns
+        -------
+        tuple
+            Tuple of (kappa, K) where kappa is the screening parameter
+            and K is the grid dimensions
+        """
         kappa, K1, K2, K3 = setup_ewald_parameters(
             torch.tensor(self.cutoff), torch.tensor(ethresh), box, 0.01, "openmm"
         )
@@ -189,7 +326,20 @@ class DMFFPMECalculator:
 
 
 def calculate_pairs(atoms, rcut):
-    # calculate pairs
+    """Calculate atom pairs within cutoff distance.
+    
+    Parameters
+    ----------
+    atoms : ase.Atoms
+        ASE Atoms object
+    rcut : float
+        Cutoff distance in Angstroms
+        
+    Returns
+    -------
+    list
+        List of atom pairs within cutoff, each as [i, j, 0]
+    """
     cellpar = atoms.cell.cellpar()
     positions = atoms.get_positions()
 
