@@ -1,0 +1,51 @@
+/* Custom styles for Toolbox documentation */
+
+.md-typeset {
+  font-size: 0.9rem;
+}
+
+.md-typeset h1 {
+  color: var(--md-primary-fg-color);
+}
+
+.md-typeset h2 {
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+  padding-bottom: 0.3rem;
+}
+
+.md-typeset .admonition {
+  border-left: 0.2rem solid var(--md-primary-fg-color);
+}
+
+.md-typeset .admonition.title {
+  font-weight: 600;
+}
+
+/* Code block styling */
+.md-typeset .highlight {
+  background-color: var(--md-code-bg-color);
+  border-radius: 0.3rem;
+}
+
+/* Table styling */
+.md-typeset table:not([class]) {
+  border-radius: 0.3rem;
+  overflow: hidden;
+}
+
+.md-typeset table:not([class]) th {
+  background-color: var(--md-primary-fg-color--light);
+  color: var(--md-primary-bg-color);
+}
+
+/* API reference styling */
+.md-typeset .doc-contents {
+  border-left: 2px solid var(--md-default-fg-color--lightest);
+  padding-left: 1rem;
+  margin-left: 0.5rem;
+}
+
+/* Math styling */
+.md-typeset .MathJax {
+  font-size: 1.1em;
+}
