@@ -10,6 +10,7 @@ import contextlib
 import glob
 import re
 import sys
+from typing import List, Optional, Union
 
 from doi2bib.crossref import get_bib_from_doi
 from pybtex.database import BibliographyData, parse_file, parse_string
@@ -39,7 +40,7 @@ def extract_citation_keys(fnames: list[str]):
 
 def export(
     bib_in_file: str,
-    tex_files: list[str] | str = None,
+    tex_files: Optional[Union[List[str], str]] = None,
     bib_out_file: str = "export-ref.bib",
     online: bool = True,
 ):

@@ -5,7 +5,7 @@ This module provides an extended MDLogger class that can write
 trajectory files during molecular dynamics simulations.
 """
 
-from typing import IO, Any
+from typing import IO, Any, Dict, Optional, Union
 
 from ase import Atoms
 from ase.md import MDLogger as _MDLogger
@@ -22,9 +22,9 @@ class MDLogger(_MDLogger):
         self,
         dyn: Any,  # not fully annotated so far to avoid a circular import
         atoms: Atoms,
-        logfile: IO | str,
+        logfile: Union[IO, str],
         fname: str,
-        write_kwargs: dict = None,
+        write_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
         if write_kwargs is None:

@@ -8,6 +8,7 @@ to existing systems.
 
 import glob
 import os
+from typing import List, Optional, Union
 
 import MDAnalysis as mda
 import mdapackmol
@@ -34,8 +35,8 @@ class SolutionBox:
 
     def __init__(
         self,
-        boundary: list | np.ndarray,
-        slit: float | list | np.ndarray = 1.0,
+        boundary: Union[List, np.ndarray],
+        slit: Union[float, List, np.ndarray] = 1.0,
     ) -> None:
         """Initialize SolutionBox.
         
@@ -87,8 +88,8 @@ class WaterBox(SolutionBox):
 
     def __init__(
         self,
-        boundary: list | np.ndarray,
-        slit: float | list | np.ndarray = 1.0,
+        boundary: Union[List, np.ndarray],
+        slit: Union[float, List, np.ndarray] = 1.0,
         rho: float = 1.0,
     ) -> None:
         """Initialize WaterBox.
@@ -110,7 +111,7 @@ class WaterBox(SolutionBox):
     def write(
         self,
         fname,
-        n_wat: int | None = None,
+        n_wat: Optional[int] = None,
         seed: int = -1,
         verbose: bool = False,
         **kwargs,
@@ -168,7 +169,7 @@ class ElectrolyteBox(WaterBox):
 
     def __init__(
         self,
-        boundary: list | np.ndarray,
+        boundary: Union[List, np.ndarray],
         solutes: dict[str, float],
         **kwargs,
     ) -> None:
@@ -189,7 +190,7 @@ class ElectrolyteBox(WaterBox):
     def write(
         self,
         fname,
-        n_wat: int | None = None,
+        n_wat: Optional[int] = None,
         seed: int = -1,
         verbose=False,
         **kwargs,
@@ -288,9 +289,9 @@ class Interface:
     def run(
         self,
         rho: float = 1.0,
-        n_wat: int | None = None,
+        n_wat: Optional[int] = None,
         seed: int = -1,
-        sol: SolutionBox | None = None,
+        sol: Optional[SolutionBox] = None,
         verbose=False,
     ) -> Atoms:
         """Create interface system.

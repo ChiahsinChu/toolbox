@@ -10,7 +10,7 @@
 
 import copy
 
-from ..utils.utils import update_dict
+from toolbox.utils.utils import update_dict
 
 # cp2k input templates
 cp2k_default_input = {
@@ -556,43 +556,7 @@ spce_wat = {
         },
     },
 }
-"""
-**Lennard-Jones potential**
 
-In CP2K/lammps V(r) = 4.0 * EPSILON * [(SIGMA/r)^12-(SIGMA/r)^6]
-In lj_param dict, epsilon in kcal/mol and simga in angstrom
-
-Parameters from:
-- https://docs.lammps.org/Howto_spc.html# (SPC/E water)
-- https://pubs.acs.org/doi/10.1021/jp801931d (metal)
-- https://pubs.acs.org/doi/full/10.1021/ct500918t (ion)
-
-Other sources:
-- https://pubs.acs.org/doi/10.1021/acs.jctc.9b00941 (Na, K, Cl)
-- https://pubs.acs.org/doi/10.1021/ct600252r
-- https://ambermd.org/AmberModels_ions.php
-"""
-lj_params = {
-    "O": {"epsilon": 0.1553, "sigma": 3.166},
-    "H": {"epsilon": 0.0, "sigma": 0.4},
-    "Ag": {"epsilon": 4.56, "sigma": 2.6326057121047},
-    "Al": {"epsilon": 4.02, "sigma": 2.60587875056049},
-    "Au": {"epsilon": 5.29, "sigma": 2.62904211723214},
-    "Cu": {"epsilon": 4.72, "sigma": 2.33059104665513},
-    "Ni": {"epsilon": 5.65, "sigma": 2.27357352869415},
-    "Pb": {"epsilon": 2.93, "sigma": 3.17605393017031},
-    "Pd": {"epsilon": 6.15, "sigma": 2.51144348643762},
-    "Pt": {"epsilon": 7.80, "sigma": 2.53460685310927},
-    "Li": {"epsilon": 0.00274091, "sigma": 2.2415011748410936},
-    "Na": {"epsilon": 0.02639002, "sigma": 2.5907334723521065},
-    "K": {"epsilon": 0.12693448, "sigma": 2.998765085260382},
-    "Rb": {"epsilon": 0.20665151, "sigma": 3.192981005814976},
-    "Cs": {"epsilon": 0.34673208, "sigma": 3.4798503930561653},
-    "F": {"epsilon": 0.22878796, "sigma": 3.2410895365945542},
-    "Cl": {"epsilon": 0.64367011, "sigma": 4.112388482935805},
-    "Br": {"epsilon": 0.74435812, "sigma": 4.401039667613277},
-    "I": {"epsilon": 0.86877007, "sigma": 4.9355788984974795},
-}
 # lj_param = {
 #     "O": {
 #         "epsilon": 0.0067,

@@ -18,7 +18,7 @@ import csv
 import json
 import os
 import pickle
-from typing import Any
+from typing import Any, List, Optional, Union
 
 import h5py
 import numpy as np
@@ -35,8 +35,6 @@ except ImportError:
     warnings.warn("calc_coord_number and wrap_water cannot be used without MDAnalysis", stacklevel=2)
     
 import contextlib
-
-from ..io.template import lj_params
 
 
 def iterdict(
@@ -152,7 +150,7 @@ def symlink(src: str, _dst: str) -> None:
     os.symlink(src, dst)
 
 
-def save_dict(d: dict[str, Any], fname: str, fmt: str | None = None) -> None:
+def save_dict(d: dict[str, Any], fname: str, fmt: Optional[str] = None) -> None:
     """
     Save a dictionary to a file in various formats.
 
@@ -253,7 +251,7 @@ def save_dict_yaml(d: dict[str, Any], fname: str) -> None:
         yaml.safe_dump(d, f)
 
 
-def load_dict(fname: str, fmt: str | None = None) -> dict[str, Any]:
+def load_dict(fname: str, fmt: Optional[str] = None) -> dict[str, Any]:
     """
     Load a dictionary from a file in various formats.
 
@@ -432,8 +430,8 @@ def safe_symlink(src: str, dst: str, **kwargs) -> None:
 
 
 def calc_density(
-    n: int | np.ndarray, v: float | np.ndarray, mol_mass: float
-) -> float | np.ndarray:
+    n: Union[int, np.ndarray], v: Union[float, np.ndarray], mol_mass: float
+) -> Union[float, np.ndarray]:
     """
     Calculate density (g/cm³) from the number of particles.
 
@@ -458,8 +456,8 @@ def calc_density(
 
 
 def calc_water_density(
-    n: int | np.ndarray, v: float | np.ndarray
-) -> float | np.ndarray:
+    n: Union[int, np.ndarray], v: Union[float, np.ndarray]
+) -> Union[float, np.ndarray]:
     """
     Calculate water density using water molar mass (18.015 g/mol).
 
@@ -478,7 +476,7 @@ def calc_water_density(
     return calc_density(n, v, 18.015)
 
 
-def calc_number(rho: float | np.ndarray, v: float | np.ndarray, mol_mass: float) -> int:
+def calc_number(rho: Union[float, np.ndarray], v: Union[float, np.ndarray], mol_mass: float) -> int:
     """
     Calculate number of particles from density and volume.
 
@@ -505,7 +503,7 @@ def calc_number(rho: float | np.ndarray, v: float | np.ndarray, mol_mass: float)
     return int(n)
 
 
-def calc_water_number(rho: float | np.ndarray, v: float | np.ndarray) -> int:
+def calc_water_number(rho: Union[float, np.ndarray], v: Union[float, np.ndarray]) -> int:
     """
     Calculate number of water molecules from density and volume.
 
@@ -528,7 +526,7 @@ def calc_coord_number(
     atoms: Atoms,
     c_ids: np.ndarray,
     neigh_ids: np.ndarray,
-    cutoff: float | None = None,
+    cutoff: Optional[float] = None,
     voronoi: bool = False,
 ) -> np.ndarray:
     """
@@ -657,8 +655,8 @@ def wrap_water(atoms: Atoms) -> Atoms:
 
 
 def calc_molar_concentration(
-    number_density: int | float | np.ndarray, grid_volume: float | np.ndarray
-) -> float | np.ndarray:
+    number_density: Union[int, float, np.ndarray], grid_volume: Union[float, np.ndarray]
+) -> Union[float, np.ndarray]:
     """
     Calculate molar concentration from number density.
 
@@ -688,6 +686,43 @@ def calc_molar_concentration(
 
     return molar_concentration
 
+"""
+**Lennard-Jones potential**
+
+In CP2K/lammps V(r) = 4.0 * EPSILON * [(SIGMA/r)^12-(SIGMA/r)^6]
+In lj_param dict, epsilon in kcal/mol and simga in angstrom
+
+Parameters from:
+- https://docs.lammps.org/Howto_spc.html# (SPC/E water)
+- https://pubs.acs.org/doi/10.1021/jp801931d (metal)
+- https://pubs.acs.org/doi/full/10.1021/ct500918t (ion)
+
+Other sources:
+- https://pubs.acs.org/doi/10.1021/acs.jctc.9b00941 (Na, K, Cl)
+- https://pubs.acs.org/doi/10.1021/ct600252r
+- https://ambermd.org/AmberModels_ions.php
+"""
+lj_params = {
+    "O": {"epsilon": 0.1553, "sigma": 3.166},
+    "H": {"epsilon": 0.0, "sigma": 0.4},
+    "Ag": {"epsilon": 4.56, "sigma": 2.6326057121047},
+    "Al": {"epsilon": 4.02, "sigma": 2.60587875056049},
+    "Au": {"epsilon": 5.29, "sigma": 2.62904211723214},
+    "Cu": {"epsilon": 4.72, "sigma": 2.33059104665513},
+    "Ni": {"epsilon": 5.65, "sigma": 2.27357352869415},
+    "Pb": {"epsilon": 2.93, "sigma": 3.17605393017031},
+    "Pd": {"epsilon": 6.15, "sigma": 2.51144348643762},
+    "Pt": {"epsilon": 7.80, "sigma": 2.53460685310927},
+    "Li": {"epsilon": 0.00274091, "sigma": 2.2415011748410936},
+    "Na": {"epsilon": 0.02639002, "sigma": 2.5907334723521065},
+    "K": {"epsilon": 0.12693448, "sigma": 2.998765085260382},
+    "Rb": {"epsilon": 0.20665151, "sigma": 3.192981005814976},
+    "Cs": {"epsilon": 0.34673208, "sigma": 3.4798503930561653},
+    "F": {"epsilon": 0.22878796, "sigma": 3.2410895365945542},
+    "Cl": {"epsilon": 0.64367011, "sigma": 4.112388482935805},
+    "Br": {"epsilon": 0.74435812, "sigma": 4.401039667613277},
+    "I": {"epsilon": 0.86877007, "sigma": 4.9355788984974795},
+}
 
 def calc_lj_params(ks: list[str]) -> None:
     """
@@ -720,7 +755,7 @@ def calc_lj_params(ks: list[str]) -> None:
             print(ks[i], ks[j], (sigma_i + sigma_j) / 2, np.sqrt(epsilon_i * epsilon_j))
 
 
-def get_bins_from_bin_edge(bin_edges: np.ndarray | list[float]) -> np.ndarray:
+def get_bins_from_bin_edge(bin_edges: Union[np.ndarray, List[float]]) -> np.ndarray:
     """
     Get bin centers from bin edges.
 

@@ -5,6 +5,8 @@ This module provides simple physics models for educational purposes,
 including a parallel plate capacitor model.
 """
 
+from typing import Optional
+
 from scipy import constants
 
 
@@ -33,9 +35,9 @@ class ParallelPlateCapacitor:
 
     def __init__(
         self,
-        epsilon_r: float | None = None,
-        d: float | None = None,
-        capacitance: float | None = None,
+        epsilon_r: Optional[float] = None,
+        d: Optional[float] = None,
+        capacitance: Optional[float] = None,
     ):
         """Initialize ParallelPlateCapacitor.
         

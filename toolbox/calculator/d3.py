@@ -5,6 +5,8 @@ This module provides a calculator for Grimme's D3 dispersion
 corrections using the tad_dftd3 library.
 """
 
+from typing import Optional
+
 import tad_dftd3 as d3
 import torch
 from ase import Atoms
@@ -19,7 +21,7 @@ class D3Calculator:
     using the tad_dftd3 library.
     """
     
-    def __init__(self, params: dict | None = None) -> None:
+    def __init__(self, params: Optional[dict] = None) -> None:
         """Initialize D3Calculator.
         
         Parameters

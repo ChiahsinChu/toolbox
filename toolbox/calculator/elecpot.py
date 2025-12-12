@@ -12,6 +12,7 @@ Reference:
 
 import os
 import time
+from typing import Optional
 
 import numpy as np
 from ase import Atoms, io
@@ -206,8 +207,8 @@ class GaussianElecPotentialCalculator:
         grids: np.ndarray,
         l_box: float,
         cross_area: float,
-        spread_dict: dict[str, float] | None = None,
-        charge_dict: dict[str, float] | None = None,
+        spread_dict: Optional[dict[str, float]] = None,
+        charge_dict: Optional[dict[str, float]] = None,
     ) -> None:
         """Initialize GaussianElecPotentialCalculator.
         
@@ -287,10 +288,10 @@ class GaussianElecPotentialCalculator:
 
     def run(
         self,
-        mu: np.ndarray | None = None,
-        spread: np.ndarray | None = None,
-        charge: np.ndarray | None = None,
-        atoms: Atoms | None = None,
+        mu: Optional[np.ndarray] = None,
+        spread: Optional[np.ndarray] = None,
+        charge: Optional[np.ndarray] = None,
+        atoms: Optional[Atoms] = None,
     ):
         """Calculate electrostatic potential from Gaussian charge distributions.
         
@@ -339,8 +340,8 @@ class WannierHartreePotentialCalculator(GaussianElecPotentialCalculator):
         grids: np.ndarray,
         l_box: float,
         cross_area: float,
-        spread_dict: dict[str, float] | None = None,
-        charge_dict: dict[str, float] | None = None,
+        spread_dict: Optional[dict[str, float]] = None,
+        charge_dict: Optional[dict[str, float]] = None,
     ) -> None:
         """Initialize WannierHartreePotentialCalculator.
         
@@ -361,13 +362,13 @@ class WannierHartreePotentialCalculator(GaussianElecPotentialCalculator):
 
     def run(
         self,
-        mu: np.ndarray | None = None,
-        spread: np.ndarray | None = None,
-        charge: np.ndarray | None = None,
-        atoms: Atoms | None = None,
-        dname: str | None = None,
-        fname_coord: str | None = "coord.xyz",
-        fname_wannier: str | None = "wannier.xyz",
+        mu: Optional[np.ndarray] = None,
+        spread: Optional[np.ndarray] = None,
+        charge: Optional[np.ndarray] = None,
+        atoms: Optional[Atoms] = None,
+        dname: Optional[str] = None,
+        fname_coord: Optional[str] = "coord.xyz",
+        fname_wannier: Optional[str] = "wannier.xyz",
     ):
         """Calculate Hartree potential from Wannier functions.
         

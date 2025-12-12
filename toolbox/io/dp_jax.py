@@ -7,6 +7,7 @@ using DeepMD JAX implementation with trajectory dumping functionality.
 
 import sys
 import time
+from typing import List, Optional
 
 import numpy as np
 from ase import Atoms, io
@@ -110,7 +111,7 @@ class Simulation(_Simulation):
         routine,
         dt,
         initial_position,
-        log_file: str | None = "deepmd_jax.stdout",
+        log_file: Optional[str] = "deepmd_jax.stdout",
         **kwargs,
     ):
         """Initialize Simulation.
@@ -179,7 +180,7 @@ class Simulation(_Simulation):
         self._print_report()
         self._is_initial_state = False
 
-    def run(self, steps, dump_list: list[TrajDump]):
+    def run(self, steps, dump_list: List[TrajDump]):
         """Run the simulation for a number of steps."""
         self._initialize_run(steps)
         remaining_steps = steps
