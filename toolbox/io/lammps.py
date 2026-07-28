@@ -435,6 +435,7 @@ class OHHWaterLammpsData(LammpsData):
 
         oxygen_ids = np.where(atoms.symbols == "O")[0] + 1
         hydrogen_ids = np.where(atoms.symbols == "H")[0] + 1
+        assert len(oxygen_ids) * 2 == len(hydrogen_ids), "Number of H atoms should be twice the number of O atoms for water molecules."
 
         bonds, angles = generate_water_bonds_and_angles(
             oxygen_ids,
@@ -442,8 +443,12 @@ class OHHWaterLammpsData(LammpsData):
         )
 
         n_water = len(oxygen_ids)
-        res_id = np.arange(n_water) + 1
-        res_id = np.tile(res_id.reshape(-1, 1), [1, 3]).reshape(-1)
+        res_id = np.zeros(len(atoms), dtype=int)
+        res_id[oxygen_ids - 1] = np.arange(n_water) + 1
+        res_id[hydrogen_ids - 1] = np.repeat(np.arange(n_water) + 1, 2)
+        # for the non-water atoms, res_id fill from n_water + 1
+        non_water_ids = np.setdiff1d(np.arange(1, len(atoms) + 1), np.concatenate((oxygen_ids, hydrogen_ids)))
+        res_id[non_water_ids - 1] = np.arange(n_water + 1, n_water + 1 + len(non_water_ids))
 
         self.set_bonds(bonds)
         self.set_angles(angles)
